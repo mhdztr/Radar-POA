@@ -1,27 +1,29 @@
 # PRD.md — Product Requirements Document
 
 ## Nama Proyek
-Radar POA (Pusat Aggregator & Eksekutif Dashboard)
+**Radar POA** (Rekapitulasi Data Strategis POA) — Aplikasi Pusat Aggregator & Executive Cockpit
+
+## Latar Belakang
+Transformasi Nautika menjadi Radar POA beralih fungsi menjadi aggregator dashboard eksekutif murni yang mengonsolidasi data dari aplikasi satelit dan modul eksternal. Satu-satunya modul input eksklusif adalah **Kegiatan Direktorat**.
 
 ## Tujuan
-Mendukung transformasi arsitektur Nautika menjadi ekosistem terdistribusi Radar POA sesuai Master Blueprint v2.1.0.
+Menyajikan data agregasi strategis Direktorat POA secara real-time/near real-time untuk pimpinan (Direktur, Eselon, Kadiv) dalam satu tampilan terpadu.
 
 ## Ruang Lingkup
-Aggregator murni, modul Kegiatan Direktorat eksklusif, federasi data dari satelit + ingesti eksternal, dashboard eksekutif SiMata-style
+- **Modul Kegiatan Direktorat (Input Eksklusif)**: Pre-Award Meeting, Rapat Koordinasi, Kunjungan Kerja Direktur, Monitoring ABT Pimpinan, Serah Terima, dll. RBAC terbatas (SUPERADMIN, DIREKTUR, KADIV).
+- **Aggregator Engine**: Penarikan data dari 4 aplikasi satelit (SISTIK/TU, SIKAP/Logistik, SIAGA/Pengawakan, Nakhoda/Harwat) + spreadsheet eksternal (Operasi Laut/Udara, Intelijen, Pelayanan VMS).
+- **Executive Dashboard (SiMata-style)**: 4 KPI cards, Peta Taktis 34 Kapal Pengawas Besar, Executive Monitoring Grid 8 Unit Kerja, Feed Kegiatan Direktorat, Peringkat Kapal Terbaik Triwulan.
+- **Data Mart**: Sinkronisasi ke `RadarPOA_Looker_Mart` untuk Looker Studio.
+- **Caching**: CacheService (TTL ~15 menit) + tombol "Sinkronkan Data" / "Sync Now".
 
-## Prinsip
-- Desentralisasi input, agregasi terpusat (kecuali Radar POA yang juga punya modul Kegiatan Direktorat)
-- Anti-gabruk (modul terpisah, validasi terisolasi)
-- RBAC ditegakkan di server
-- Versioning & anulir (tidak overwrite historis)
-- Perhitungan server-side
-- Kontrol UI 3-tier (LG/MD/SM)
+## Batasan
+- Bukan aplikasi input untuk Operasi/Intelijen/Pelayanan (hanya ingest dari spreadsheet mereka)
+- Modul input utama kecuali Kegiatan Direktorat TIDAK berada di Radar POA
+- Semua agregasi dihitung server-side
 
-## RBAC Umum
-Mengacu pada pola aplikasi Nautika dengan penegakan scope per divisi/role di server.
+## RBAC
+- **SUPERADMIN/DIREKTUR/KADIV**: Akses penuh dashboard + input/modifikasi/anulir Kegiatan Direktorat
+- **Staf**: Hanya view dashboard sesuai scope (tanpa akses form Kegiatan Direktorat)
 
-## Data
-Mengacu pada `DATA_SCHEMA.md`. Menggunakan master data bersama dari `RadarPOA_Master_DB` (untuk aplikasi satelit) sesuai kebutuhan.
-
-## Desain
-Mengacu pada `DESIGN.md` (Apple HIG, 3-tier control, negative prompt).
+## Referensi
+Master Blueprint v2.1.0 - BAB 8 (Radar POA)

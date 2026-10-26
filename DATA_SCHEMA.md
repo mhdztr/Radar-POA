@@ -1,22 +1,30 @@
 # DATA_SCHEMA.md — Skema Data
 
-## Prinsip
-- Skema persis, jangan mengarang nama kolom
-- Setiap sheet transaksi wajib memiliki kolom standar:
-  - `RowID` (unik)
-  - `DivisiID`
-  - `Periode`
-  - `SubmittedBy`
-  - `Timestamp`
-  - `Status` (ACTIVE/SUPERSEDED/VOID)
-  - `SupersedesRowID`
-  - `VoidReason`
-  - `VoidedBy`
-  - `VoidedAt`
+## Spreadsheet Pusat
+- `RadarPOA_Pusat_DB`
+- `RadarPOA_Master_DB` (shared read-only untuk referensi)
+- `RadarPOA_Looker_Mart` (data mart untuk Looker Studio)
 
-## Spreadsheet
-- Aplikasi satelit: spreadsheet terisolasi per divisi sesuai blueprint
-- Radar POA: `RadarPOA_Pusat_DB` untuk `TX_KegiatanDirektorat` dan log terkait
-- Master Data: `RadarPOA_Master_DB` (dibaca bersama)
+## Kolom Standar Transaksi
+Semua sheet transaksi wajib memiliki:
+`RowID`, `DivisiID`, `Periode`, `SubmittedBy`, `Timestamp`, `Status`, `SupersedesRowID`, `VoidReason`, `VoidedBy`, `VoidedAt`
 
-Rincian sheet per modul akan dikembangkan sesuai scope proyek masing-masing mengikuti blueprint v2.1.0.
+## TX_KegiatanDirektorat (usulan awal)
+| Kolom | Tipe | Keterangan |
+|---|---|---|
+| RowID | String(UUID) | Primary key |
+| Tanggal | Date | Tanggal pelaksanaan |
+| JudulKegiatan | String | Wajib |
+| Deskripsi | Text | Wajib (notula inti) |
+| PihakHadir | String | Pejabat/instansi |
+| LampiranEvidence | Text/JSON | Daftar file/link evidence |
+| DivisiID | String | Bisa 'PUSAT'/'DIREKTORAT' atau disesuaikan |
+| Periode | String | YYYY-MM |
+| SubmittedBy | String | UserID/Email |
+| Timestamp | DateTime | Server time |
+| Status | Enum(ACTIVE/SUPERSEDED/VOID) | Default ACTIVE |
+| SupersedesRowID | String | Jika revisi |
+| VoidReason | String | Wajib jika VOID |
+| VoidedBy/VoidedAt | String/DateTime | Jika VOID |
+
+Rincian lengkap akan disempurnakan saat implementasi Fase 2 tanpa mengubah pola versioning.

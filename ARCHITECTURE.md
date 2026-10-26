@@ -1,26 +1,34 @@
 # ARCHITECTURE.md — Arsitektur Teknis
 
+## Peran Sistem
+Radar POA = **Central Aggregator & Strategic Dashboard**. Mengkonsolidasi data dari 4 aplikasi satelit dan ingesti eksternal. Satu-satunya input pusat: **Kegiatan Direktorat**.
+
+## Topologi
+Federasi lintas-spreadsheet:
+- Sumber: `RadarPOA_TU_DB`, `RadarPOA_Logistik_DB`, `RadarPOA_Pengawakan_DB`, `RadarPOA_Harwat_DB`, spreadsheet eksternal tim lain
+- Target agregasi: tampilan eksekutif + `RadarPOA_Pusat_DB` (TX_KegiatanDirektorat)
+- Master Data: `RadarPOA_Master_DB` (baca)
+
 ## Struktur Folder GAS
-Mengikuti pola Nautika:
-- `utils/` (Constants, DateUtil, Lock, helpers)
-- `services/` (business logic per modul)
-- `data/` (SheetAccess, ValidationRules)
-- `html/` (Index, Style, Script_*, views)
+- `utils/` — Constants, DateUtil, Lock, helpers
+- `services/` — `AggregatorService.js`, `KegiatanDirektoratService.js`, dsb
+- `data/` — SheetAccess, ValidationRules
+- `html/` — Index, Style, Script_Main/Charts, views
 
-## Entry Point
-`Code.js` (doGet / routing). Struktur mengikuti arsitektur proyek.
+## Aggregator Engine
+- `SpreadsheetApp.openById()` untuk tarik batch
+- `CacheService.getScriptCache()` dengan TTL ~900 detik
+- Tombol **Sinkronkan Data / Sync Now** untuk invalidate cache
+- Hanya baca sheet dengan `Status == 'ACTIVE'` dimana relevan
 
-## Service Functions
-Penamaan: `modul_aksi` (contoh: `tataUsaha_submitMingguan`). Semua fungsi publik yang dipanggil via `google.script.run` wajib diurutkan/terdefinisi dengan jelas.
+## Modul Kegiatan Direktorat
+- Disimpan di `RadarPOA_Pusat_DB` sheet `TX_KegiatanDirektorat`
+- RBAC: `SUPERADMIN`, `DIREKTUR`, `KADIV` saja (server-side assertion)
+- Versioning: `SUPERSEDED` + `VOID` dengan alasan wajib
+- Evidence: file upload atau Drive link copy
 
 ## LockService
-Semua endpoint tulis wajib menggunakan `LockService.getScriptLock()` dengan timeout yang wajar.
+Wajib untuk semua endpoint tulis (terutama Kegiatan Direktorat).
 
-## Versioning & Anulir
-Transaksi menggunakan pola `RowID`, `SupersedesRowID`, `Status` (`ACTIVE/SUPERSEDED/VOID`), `VoidReason`, `VoidedBy`, `VoidedAt`. Jangan UPDATE baris historis.
-
-## RBAC
-Ditegakkan di server (service layer). UI hanya penyajian.
-
-## Federasi (Radar POA)
-Radar POA menggunakan `SpreadsheetApp.openById()` untuk menarik data satelit, `CacheService` untuk caching, dan tombol `Sync Now` untuk cache-bust.
+## Keamanan
+Tidak ada rahasia hardcoded. Menggunakan `PropertiesService` bila diperlukan.
