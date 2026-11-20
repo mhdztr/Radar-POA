@@ -12,6 +12,6 @@
 1. `PRD.md` — Kebutuhan fungsional dan aturan bisnis (Sumber kebenaran tertinggi).
 2. `ARCHITECTURE.md` — Struktur aggregator engine, in-memory CacheService, dan cross-spreadsheet federation.
 3. `DATA_SCHEMA.md` — Skema kolom tabel transaksi dan master.
-4. `.agents/skills/` — Koleksi skill desain & engineering dari Nakhoda dan SIKAP (pengganti `DESIGN.md` lama untuk perancangan UI dari ground-up).
+4. `DESIGN.md` — Kontrak sistem desain *ground-up* Radar POA (berbasis skill `unslop`, `design-taste-frontend`, `colorize`, `apple-hig`, `apple-design`, `d3-visualization`, `animate`, dan `emilkowalski-motion`).
 5. `PHASES.md` — Roadmap dan rencana pengembangan bertahap.
 6. `AGENTS.md` — Instruksi dan batasan kerja bagi coding agent.

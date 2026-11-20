@@ -1,13 +1,12 @@
-# AGENTS.md — Panduan Kerja Agent: Radar POA
+zzzzzzzzzzzzzzzzzzzzzz# AGENTS.md — Panduan Kerja Agent: Radar POA
 
 ## 1. Urutan Baca Wajib
 1. `PRD.md` — Sumber kebenaran tertinggi mengenai kebutuhan agregasi dan kegiatan direktorat.
 2. `ARCHITECTURE.md` — Arsitektur teknis, federasi lintas spreadsheet, dan in-memory caching.
 3. `DATA_SCHEMA.md` — Skema persis seluruh tabel, jangan mengarang nama kolom.
-4. `.agents/skills/` — Koleksi *design & engineering skills* (hasil gabungan dari **Nakhoda** dan **SIKAP**) yang menjadi acuan utama perancangan UI/UX dari *ground-up*.
-5. `PHASES.md` — Roadmap dan rencana tahapan kerja aktif.
-
-*(Catatan: `DESIGN.md` dan `html/Style.html` lama telah dihapus secara sengaja agar desain antarmuka Radar POA dibangun ulang dari ground-up dengan memprioritaskan skill di `.agents/skills/`.)*
+4. `DESIGN.md` — Kontrak sistem desain *ground-up* Radar POA (hasil sintesis skill `unslop`, `design-taste-frontend`, `colorize`, `apple-hig`, `apple-design`, `d3-visualization`, `animate`, dan `emilkowalski-motion`).
+5. `.agents/skills/` — Koleksi *design & engineering skills* acuan implementasi UI/UX.
+6. `PHASES.md` — Roadmap dan rencana tahapan kerja aktif.
 
 ## 2. Aturan Keras & Non-Negotiable
 - **Git & GitHub Hanya Milik User:** Agent dilarang menjalankan perintah `git add`, `git commit`, `git push`, dsb. Agent hanya bertugas menyiapkan kode, mengingatkan user, dan **selalu menyertakan usulan *commit message* di akhir respons setiap kali selesai mengerjakan satu iterasi/perubahan**.
