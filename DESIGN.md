@@ -17,7 +17,9 @@ Sebelum menulis satu baris CSS atau komponen HTML, seluruh keputusan visual Rada
 4. **Moments (Momen Visual Utama):**
    - **Momen 1:** *Peta Taktis Interaktif WPPNRI 571–718 & Disposisi 34 Kapal Pengawas Ukuran Besar* (26 Operasional di Laut, 6 Siap Operasi di Pangkalan, 2 Pemeliharaan di Galangan) dengan lapisan poligon WPP bergradasi satu-hue hidrografis.
    - **Momen 2:** *Matriks Eksekutif Lintas Satelit (SIKAP $\times$ Nakhoda $\times$ Pusat)* — strip KPI terpadu dengan bar komposisi linear (D3/SVG *bullet & plan tracks*) dan kalimat temuan otomatis berbasis data.
-5. **Signature (Detail Khas Tunggal):** **Lencana Telemetri Satelit (`Satellite Sync Pulse & Provenance Tag`)** — setiap kartu agregasi mencantumkan asal basis data satelit secara eksplisit (`SIKAP · TX_TataUsaha`, `NAKHODA · TX_Pengawakan_AKN`, `PUSAT · TX_KegiatanDirektorat`) beserta indikator kesegaran cache 15 menit dan pemicu *Sinkronkan Sekarang*.
+5. **Signature (Detail Khas Tunggal):**
+   - **Identitas Instansi Resmi — Lambang Ditjen PSDKP (`PSDKP Crest Outline`):** Sama seperti satelit **SIKAP** dan **Nakhoda**, puncak sidebar, bilah mobile, dan kartu autentikasi menampilkan **Lambang Resmi Ditjen PSDKP** (base64 PNG transparan dengan SVG filter `#psdkp-crest-outline` tanpa kotak latar kaku), didampingi wordmark **Radar POA**, lencana `Dit. POA`, dan sub-judul `Pusat Agregasi & Executive Cockpit`.
+   - **Lencana Telemetri Satelit (`Satellite Sync Pulse & Provenance Tag`):** Setiap kartu agregasi mencantumkan asal basis data satelit secara eksplisit (`SIKAP · TX_TataUsaha`, `NAKHODA · TX_Pengawakan_AKN`, `PUSAT · TX_KegiatanDirektorat`) beserta indikator kesegaran cache 15 menit dan pemicu *Sinkronkan Sekarang*.
 
 ---
 
@@ -193,6 +195,7 @@ Radar POA menggunakan tata letak **Open-Plane Cockpit** dengan proporsi aplikasi
 
 - **Sidebar (`248px` tetap di desktop):**
   - Berada di atas `--bg-ground` (`#F3F5F8`) dengan pemisah kanan `1px solid var(--border-card)`.
+  - **Puncak Sidebar (Brand Box Resmi Ditjen PSDKP):** Menampilkan **Logo Ditjen PSDKP** (`width="34" height="39"` dengan filter `url(#psdkp-crest-outline)`), judul **Radar POA** (`17px/700`), lencana `Dit. POA`, dan deskripsi `Pusat Agregasi & Executive Cockpit` — selaras penuh dengan identitas visual **SIKAP** dan **Nakhoda**.
   - Baris navigasi setinggi `34px`, jarak antarbaris `2px`, ikon SVG `16px` (`stroke-width: 1.5`), dalam satu kolom lurus (`gap: 10px`).
   - Item aktif menggunakan latar `--bg-active` (`#E1E8F0`), teks `--ink-primary` (`font-weight: 500`), dan indikator bar vertikal `2px` `--accent-radar` di sisi dalam kiri.
   - Label kelompok navigasi (`Utama`, `Sistem`) ditulis dalam **kalimat biasa (*sentence case*)** `12px` `--ink-muted` (`margin-top: 20px; margin-bottom: 6px`), bukan huruf kapital berjarak.
