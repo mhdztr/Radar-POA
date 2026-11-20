@@ -1,76 +1,25 @@
 /**
  * services/RiwayatService.js
- * Service backend halaman Riwayat Laporan — PRD §7.5.
- *
- * Agregasi seluruh baris transaksi lintas modul (semua sheet TX_*) menjadi satu
- * feed kronologis yang mencakup ACTIVE, SUPERSEDED, dan VOID, dengan status
- * jelas (siapa melakukan apa), dan data siap-tampil (ringkasan 1 baris +
- * pasangan label/nilai untuk modal detail) supaya client cukup merender tanpa
- * perlu tahu skema tiap sheet.
- *
- * RBAC (PRD §3): semua akun APPROVED boleh buka halaman; data dibatasi divisi —
- *   SUPERADMIN / DIREKTUR → seluruh entri lintas divisi.
- *   KADIV → baris divisinya sendiri + seluruh TX_KegiatanDirektorat (modul
- *           lintas-divisi yang memang bisa ia CRUD — PRD §5.10).
- *   STAF  → baris divisinya sendiri.
- * Filter global (bulanan/rentang) menyaring kolom Timestamp.
+ * Feed kronologis terpadu Radar POA:
+ *   - Lokal (RadarPOA_Pusat_DB): TX_KegiatanDirektorat
+ *   - Federasi SIKAP (RadarPOA_SIKAP_DB): TX_TataUsaha, TX_Paket_Progres, TX_TU_Pegawai
+ *   - Federasi Nakhoda (RadarPOA_Nakhoda_DB): TX_Pengawakan_AKN, TX_Pengawakan_Kegiatan
+ * Mencakup status ACTIVE, SUPERSEDED, dan VOID dalam rentang filter.
  */
 
-// ===========================================================================
-// KONFIGURASI PER SHEET — label modul & pembangun ringkasan/detail.
-// Semua fungsi dibaca di dalam pemanggilan (bukan saat load file — urutan load
-// GAS belum menjamin utils/* termuat duluan).
-// ===========================================================================
-
-function _riwModules() {
+function _riwSources() {
   return [
-    { sheet: SHEET_TX.TATA_USAHA,        label: 'Tata Usaha',        ringkas: _riwRingkasTU,        detail: _riwDetailTU },
-    { sheet: SHEET_TX.OPERASI_LAUT,      label: 'Operasi Laut',      ringkas: _riwRingkasOpsLaut,   detail: _riwDetailOpsLaut },
-    { sheet: SHEET_TX.OPERASI_UDARA,     label: 'Operasi Udara',     ringkas: _riwRingkasOpsUdara,  detail: _riwDetailOpsUdara },
-    { sheet: SHEET_TX.INTELIJEN,         label: 'Intelijen',         ringkas: _riwRingkasIntel,     detail: _riwDetailIntel },
-    { sheet: SHEET_TX.PEMANTAUAN,        label: 'Pemantauan',        ringkas: _riwRingkasPantau,    detail: _riwDetailPantau },
-    { sheet: SHEET_TX.PERAWATAN_KESIAPAN,label: 'Perawatan — Kesiapan', ringkas: _riwRingkasRawKep,  detail: _riwDetailRawKep },
-    { sheet: SHEET_TX.PERAWATAN_DOCKING, label: 'Perawatan — Docking',  ringkas: _riwRingkasRawDok,  detail: _riwDetailRawDok },
-    { sheet: SHEET_TX.PERAWATAN_ITEM,    label: 'Perawatan — Item',  ringkas: _riwRingkasRawItem,   detail: _riwDetailRawItem },
-    { sheet: SHEET_TX.LOGISTIK_AMUNISI,  label: 'Logistik — Amunisi',  ringkas: _riwRingkasLogAmm,   detail: _riwDetailLogAmm },
-    { sheet: SHEET_TX.LOGISTIK_BBM,      label: 'Logistik — BBM',    ringkas: _riwRingkasLogBbm,    detail: _riwDetailLogBbm },
-    { sheet: SHEET_TX.LOGISTIK_PERSONIL, label: 'Logistik — Personil', ringkas: _riwRingkasLogPer,   detail: _riwDetailLogPer },
-    { sheet: SHEET_TX.PENGAWAKAN_AKN,    label: 'Pengawakan — Komposisi AKN', ringkas: _riwRingkasAwkAkn, detail: _riwDetailAwkAkn },
-    { sheet: SHEET_TX.PENGAWAKAN_KEGIATAN,label: 'Pengawakan — Kegiatan Personel', ringkas: _riwRingkasAwkKeg, detail: _riwDetailAwkKeg },
-    { sheet: SHEET_TX.KEGIATAN_DIREKTORAT, label: 'Kegiatan Pendukung', ringkas: _riwRingkasKgd,    detail: _riwDetailKgd }
+    { kind: 'PUSAT',   sheet: SHEET_PUSAT.KEGIATAN_DIREKTORAT,  label: 'Kegiatan Direktorat',               ringkas: _riwRingkasKgd,    detail: _riwDetailKgd },
+    { kind: 'SIKAP',   sheet: SHEET_SIKAP.TATA_USAHA,           label: 'SIKAP \u2014 Tata Usaha',           ringkas: _riwRingkasTU,     detail: _riwDetailTU },
+    { kind: 'SIKAP',   sheet: SHEET_SIKAP.PAKET_PROGRES,        label: 'SIKAP \u2014 Paket Pengadaan',      ringkas: _riwRingkasPaket,  detail: _riwDetailPaket },
+    { kind: 'SIKAP',   sheet: SHEET_SIKAP.PEGAWAI,              label: 'SIKAP \u2014 Kepegawaian TU',       ringkas: _riwRingkasTuPeg,  detail: _riwDetailTuPeg },
+    { kind: 'NAKHODA', sheet: SHEET_NAKHODA.PENGAWAKAN_AKN,     label: 'Nakhoda \u2014 Komposisi AKN',      ringkas: _riwRingkasAwkAkn, detail: _riwDetailAwkAkn },
+    { kind: 'NAKHODA', sheet: SHEET_NAKHODA.PENGAWAKAN_KEGIATAN,label: 'Nakhoda \u2014 Kegiatan Personel',  ringkas: _riwRingkasAwkKeg, detail: _riwDetailAwkKeg }
   ];
 }
 
-// ===========================================================================
-// SESSION & LOOKUP
-// ===========================================================================
-
-function _riwSession(token) {
-  var session = _getSession(token);
-  if (!session || session.status !== USER_STATUS.APPROVED) {
-    throw new Error('UNAUTHORIZED: Sesi tidak valid atau belum disetujui.');
-  }
-  return session;
-}
-
-// Map referensi dari master, untuk menerjemahkan ID → nama pada ringkasan/detail.
 function _riwLookups() {
-  var kapal = {}, kawasan = {}, wpp = {}, user = {}, divisi = {};
-  try {
-    sheetToObjects(openMasterSheet(SHEET_MASTER.KAPAL)).forEach(function (r) {
-      kapal[String(r['KapalID'])] = String(r['Nama'] || '');
-    });
-  } catch (e) {}
-  try {
-    sheetToObjects(openMasterSheet(SHEET_MASTER.KAWASAN_KONSERVASI)).forEach(function (r) {
-      kawasan[String(r['KawasanID'])] = String(r['Nama'] || '');
-    });
-  } catch (e) {}
-  try {
-    sheetToObjects(openMasterSheet(SHEET_MASTER.WPP)).forEach(function (r) {
-      wpp[String(r['WPPCode'])] = String(r['NamaWilayah'] || '');
-    });
-  } catch (e) {}
+  var user = {}, divisi = {};
   try {
     sheetToObjects(openMasterSheet(SHEET_MASTER.USERS)).forEach(function (r) {
       user[String(r['UserID'])] = String(r['Nama'] || '');
@@ -81,22 +30,16 @@ function _riwLookups() {
       divisi[String(r['DivisiID'])] = String(r['NamaDashboard'] || r['NamaResmi'] || '');
     });
   } catch (e) {}
-  return { kapal: kapal, kawasan: kawasan, wpp: wpp, user: user, divisi: divisi };
+  return { user: user, divisi: divisi };
 }
-
-// ===========================================================================
-// UTIL TAMPIL
-// ===========================================================================
 
 function _riwNum(v) {
   var n = Number(v);
-  if (isNaN(n)) return 0;
-  return n;
+  return isNaN(n) ? 0 : n;
 }
 
 function _riwRupiah(v) {
-  var n = _riwNum(v);
-  return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+  return 'Rp ' + Math.round(_riwNum(v)).toLocaleString('id-ID');
 }
 
 function _riwTgl(v) {
@@ -106,295 +49,121 @@ function _riwTgl(v) {
   return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-function _riwTglWaktu(v) {
-  if (!v) return '';
-  var d = new Date(v);
-  if (isNaN(d.getTime())) return String(v);
-  return d.toLocaleString('id-ID');
+function _riwRingkasKgd(r) {
+  return (r['JudulKegiatan'] || '\u2014') + ' \u00B7 ' + _riwTgl(r['Tanggal']);
+}
+function _riwDetailKgd(r) {
+  return [
+    ['Judul', r['JudulKegiatan'] || '\u2014'],
+    ['Tanggal', _riwTgl(r['Tanggal'])],
+    ['Deskripsi', r['Deskripsi'] || '\u2014'],
+    ['Pihak Hadir', r['PihakHadir'] || '\u2014']
+  ];
 }
 
-function _riwYaTidak(v) {
-  return v === true || v === 'TRUE' || v === 1 || v === 'true' ? 'Ya' : 'Tidak';
+function _riwRingkasTU(r) {
+  return 'SP2D ' + _riwRupiah(r['RealisasiSP2D_Minggu']) + ' \u00B7 Akrual ' + _riwRupiah(r['RealisasiAkrual_Minggu']);
 }
-
-// ===========================================================================
-// PEMBANGUN RINGKASAN / DETAIL PER MODUL
-// Setiap modul: ringkas(r, L) → string; detail(r, L) → Array<[label, value]>.
-// ===========================================================================
-
-function _riwRingkasTU(r, L) {
-  return 'SP2D ' + _riwRupiah(r['RealisasiSP2D_Minggu']) + ' · Akrual ' + _riwRupiah(r['RealisasiAkrual_Minggu']);
-}
-function _riwDetailTU(r, L) {
+function _riwDetailTU(r) {
   return [
     ['Pagu Reguler', _riwRupiah(r['PaguReguler'])],
     ['Pagu ABT', _riwRupiah(r['PaguABT'])],
     ['Realisasi SP2D (minggu ini)', _riwRupiah(r['RealisasiSP2D_Minggu'])],
     ['Realisasi Akrual (minggu ini)', _riwRupiah(r['RealisasiAkrual_Minggu'])],
-    ['Catatan Revisi Pagu', r['CatatanRevisiPagu'] || '—']
+    ['Catatan Revisi Pagu', r['CatatanRevisiPagu'] || '\u2014']
   ];
 }
 
-function _riwRingkasOpsLaut(r, L) {
-  var wpp = L.wpp[String(r['WPPCode'] || '')] || r['WPPCode'] || '—';
-  return 'WPP ' + wpp + ' · KII ' + _riwNum(r['KII_Ditangkap']) + ' · KIA ' + _riwNum(r['KIA_Ditangkap']);
+function _riwRingkasPaket(r) {
+  return (r['PaketID'] || '\u2014') + ' \u00B7 ' + (r['TahapPekerjaan'] || '\u2014') + ' (' + _riwNum(r['ProgresFisikPct']) + '%)';
 }
-function _riwDetailOpsLaut(r, L) {
-  var wpp = L.wpp[String(r['WPPCode'] || '')] || r['WPPCode'] || '—';
+function _riwDetailPaket(r) {
   return [
-    ['WPP', wpp],
-    ['KII Ditangkap', _riwNum(r['KII_Ditangkap'])],
-    ['KIA Ditangkap', _riwNum(r['KIA_Ditangkap'])],
-    ['Asal Negara Asing', r['AsalNegaraAsing'] || '—'],
-    ['Valuasi Illegal Fishing', _riwRupiah(r['ValuasiIllegalFishing'])],
-    ['Rumpon Ditertibkan', _riwNum(r['RumponDitertibkan'])],
-    ['Valuasi Rumpon', _riwRupiah(r['ValuasiRumpon'])],
-    ['Hasil Riksa — Kategori', r['HasilRiksa_Kategori'] || '—'],
-    ['Hasil Riksa — KII', _riwNum(r['HasilRiksa_KII'])],
-    ['Hasil Riksa — KIA', _riwNum(r['HasilRiksa_KIA'])],
-    ['Hasil Riksa — Objek SDK', _riwNum(r['HasilRiksa_ObjekSDK'])],
-    ['Hari Operasi — Kategori', r['HariOperasi_Kategori'] || '—'],
-    ['Hari Operasi — Jumlah', _riwNum(r['HariOperasi_Jumlah'])],
-    ['Hari Operasi — Target', _riwNum(r['HariOperasi_Target'])]
+    ['PaketID', r['PaketID'] || '\u2014'],
+    ['Tahap', r['TahapPekerjaan'] || '\u2014'],
+    ['Nilai Kontrak', _riwRupiah(r['NilaiKontrak'])],
+    ['Progres Fisik', _riwNum(r['ProgresFisikPct']) + '%'],
+    ['Realisasi Keuangan', _riwRupiah(r['RealisasiKeuangan'])]
   ];
 }
 
-function _riwRingkasOpsUdara(r, L) {
-  var wpp = L.wpp[String(r['WPPCode'] || '')] || r['WPPCode'] || '—';
-  return 'WPP ' + wpp + ' · KII ' + _riwNum(r['KII']) + ' · KIA ' + _riwNum(r['KIA']);
+function _riwRingkasTuPeg(r) {
+  return (r['Kategori'] || '\u2014') + ' \u00B7 ' + _riwNum(r['Jumlah']) + ' orang';
 }
-function _riwDetailOpsUdara(r, L) {
-  var wpp = L.wpp[String(r['WPPCode'] || '')] || r['WPPCode'] || '—';
+function _riwDetailTuPeg(r) {
   return [
-    ['WPP', wpp],
-    ['KII', _riwNum(r['KII'])],
-    ['KIA', _riwNum(r['KIA'])],
-    ['Objek SDK', _riwNum(r['ObjekSDK'])],
-    ['Rumpon Lokal Teridentifikasi', _riwNum(r['RumponLokalTeridentifikasi'])],
-    ['Cakupan Wilayah (NM²)', _riwNum(r['CakupanWilayah_NM2'])],
-    ['Hari Operasi — Jumlah', _riwNum(r['HariOperasi_Jumlah'])],
-    ['Hari Operasi — Target', _riwNum(r['HariOperasi_Target'])]
-  ];
-}
-
-function _riwIntelLabel() {
-  return {
-    DREDGING:                  'Dredging / Underwater Ops',
-    PELANGGARAN_PERIZINAN:     'Pelanggaran Perizinan Berusaha',
-    PELANGGARAN_TRANSMITTER:   'Pelanggaran Mematikan Transmitter',
-    NOTA_DINAS:                'Nota Dinas Data Intelijen',
-    KAWASAN_KONSERVASI:        'Pelanggaran Kawasan Konservasi',
-    KAPAL_PENGANGKUT_IKAN_HIDUP:'Kapal Pengangkut Ikan Hidup'
-  };
-}
-function _riwRingkasIntel(r, L) {
-  var lbl = (_riwIntelLabel()[r['Jenis']] || r['Jenis'] || '—');
-  return lbl + ' · ' + _riwNum(r['Jumlah']);
-}
-function _riwDetailIntel(r, L) {
-  return [
-    ['Jenis', _riwIntelLabel()[r['Jenis']] || r['Jenis'] || '—'],
+    ['Kategori', r['Kategori'] || '\u2014'],
     ['Jumlah', _riwNum(r['Jumlah'])],
-    ['Kawasan', r['KawasanID'] ? (L.kawasan[String(r['KawasanID'])] || r['KawasanID']) : '—'],
-    ['Keterangan', r['Keterangan'] || '—']
+    ['Keterangan', r['Keterangan'] || '\u2014']
   ];
 }
 
-function _riwPantauLabel() {
-  return {
-    PERSETUJUAN_PENYEDIA: 'Persetujuan Penyedia SPKP',
-    USERNAME:             'Penerbitan Username',
-    SKAT:                 'Penerbitan SKAT',
-    PEMASANGAN_MIGRASI:   'Pemasangan SPKP Kapal Migrasi',
-    MARABAHAYA:           'Kapal Kondisi Marabahaya'
-  };
+function _riwRingkasAwkAkn(r) {
+  return (r['Scope'] || '\u2014') + ' / ' + (r['Kategori'] || '\u2014') + ' \u00B7 ' + _riwNum(r['Jumlah']);
 }
-function _riwRingkasPantau(r, L) {
-  var lbl = (_riwPantauLabel()[r['Jenis']] || r['Jenis'] || '—');
-  var ada = r['NamaPenyedia'] || (r['KapalID'] ? (L.kapal[String(r['KapalID'])] || r['KapalID']) : '');
-  return lbl + (ada ? ' — ' + ada : '') + (r['Jumlah'] !== '' && r['Jumlah'] != null ? ' · ' + _riwNum(r['Jumlah']) : '');
-}
-function _riwDetailPantau(r, L) {
+function _riwDetailAwkAkn(r) {
   return [
-    ['Jenis', _riwPantauLabel()[r['Jenis']] || r['Jenis'] || '—'],
-    ['Jumlah', (r['Jumlah'] !== '' && r['Jumlah'] != null) ? _riwNum(r['Jumlah']) : '—'],
-    ['Nama Penyedia', r['NamaPenyedia'] || '—'],
-    ['Kapal', r['KapalID'] ? (L.kapal[String(r['KapalID'])] || r['KapalID']) : '—'],
-    ['Kondisi Darurat', r['KondisiDarurat'] || '—'],
-    ['Status Penanganan', r['StatusPenanganan'] || '—']
+    ['Scope', r['Scope'] || '\u2014'],
+    ['Kategori', r['Kategori'] || '\u2014'],
+    ['Jumlah', _riwNum(r['Jumlah'])],
+    ['Keterangan', r['Keterangan'] || '\u2014']
   ];
 }
 
-function _riwRingkasRawKep(r, L) {
-  var kapal = L.kapal[String(r['KapalID'] || '')] || r['KapalID'] || '—';
-  return kapal + ' — ' + (_riwYaTidak(r['StatusSiap']) === 'Ya' ? 'Siap Operasi' : 'Tidak Siap');
+function _riwRingkasAwkKeg(r) {
+  return (r['JudulKegiatan'] || '\u2014') + ' \u00B7 ' + _riwTgl(r['TanggalMulai']);
 }
-function _riwDetailRawKep(r, L) {
+function _riwDetailAwkKeg(r) {
   return [
-    ['Kapal', L.kapal[String(r['KapalID'] || '')] || r['KapalID'] || '—'],
-    ['Status Siap', _riwYaTidak(r['StatusSiap'])],
-    ['Penyebab', r['Penyebab'] || '—']
-  ];
-}
-
-// Label docking (lokasi & tahap) & kategori dibaca dari sheet `Opsi`.
-function _riwLokasiLbl(t) { return getOpsiLabelMap(OPSI_KODE.RAWAT_LOKASI)[String(t || '')] || t || '\u2014'; }
-function _riwTahapLbl(t)  { return getOpsiLabelMap(OPSI_KODE.RAWAT_TAHAP)[String(t || '')] || t || '\u2014'; }
-function _riwKategoriLbl(t){ return getOpsiLabelMap(OPSI_KODE.RAWAT_KATEGORI)[String(t || '')] || t || '\u2014'; }
-function _riwAknScopeLbl(t)  { return getOpsiLabelMap(OPSI_KODE.AWAK_SCOPE)[String(t || '')] || t || '\u2014'; }
-function _riwAknKategoriLbl(t){ return getOpsiLabelMap(OPSI_KODE.AWAK_KATEGORI)[String(t || '')] || t || '\u2014'; }
-function _riwRingkasRawDok(r, L) {
-  var kapal = L.kapal[String(r['KapalID'] || '')] || r['KapalID'] || '—';
-  return kapal + ' — ' + _riwLokasiLbl(r['Lokasi']) + ' / ' + _riwTahapLbl(r['Tahap']);
-}
-function _riwDetailRawDok(r, L) {
-  return [
-    ['Kapal', L.kapal[String(r['KapalID'] || '')] || r['KapalID'] || '—'],
-    ['Lokasi', _riwLokasiLbl(r['Lokasi'])],
-    ['Tahap', _riwTahapLbl(r['Tahap'])],
-    ['Nilai Kontrak', (r['NilaiKontrak'] !== '' && r['NilaiKontrak'] != null) ? _riwRupiah(r['NilaiKontrak']) : '—'],
-    ['Kontraktor', r['Kontraktor'] || '—']
-  ];
-}
-
-function _riwRingkasRawItem(r, L) {
-  return (r['NamaPekerjaan'] || '—') + ' · ' + _riwRupiah(r['Nilai']);
-}
-function _riwDetailRawItem(r, L) {
-  return [
-    ['Nama Pekerjaan', r['NamaPekerjaan'] || '—'],
-    ['Kategori', _riwKategoriLbl(r['Kategori'])],
-    ['Nilai', _riwRupiah(r['Nilai'])],
-    ['Terkait Docking', r['DockingRowID'] ? 'Ya (' + r['DockingRowID'] + ')' : '—']
-  ];
-}
-
-function _riwRingkasLogAmm(r, L) {
-  var basis = (String(r['StokAwal']) !== '' && r['StokAwal'] != null);
-  return (r['JenisAmunisi'] || '—') + (basis ? ' · Stok Awal ' + _riwNum(r['StokAwal']) : ' · Penggunaan ' + _riwNum(r['Penggunaan_Minggu']));
-}
-function _riwDetailLogAmm(r, L) {
-  var basis = (String(r['StokAwal']) !== '' && r['StokAwal'] != null);
-  return [
-    ['Jenis Amunisi', r['JenisAmunisi'] || '—'],
-    ['Jenis Baris', basis ? 'Baseline (Stok Awal)' : 'Penggunaan Mingguan'],
-    ['Stok Awal', basis ? _riwNum(r['StokAwal']) : '—'],
-    ['Penggunaan (Minggu Ini)', basis ? '—' : _riwNum(r['Penggunaan_Minggu'])]
-  ];
-}
-
-function _riwRingkasLogBbm(r, L) {
-  var basis = (String(r['Pagu']) !== '' && r['Pagu'] != null);
-  return (r['Jenis'] || '—') + (basis ? ' · Pagu ' + _riwRupiah(r['Pagu']) : ' · Realisasi ' + _riwRupiah(r['Realisasi_Minggu']));
-}
-function _riwDetailLogBbm(r, L) {
-  var basis = (String(r['Pagu']) !== '' && r['Pagu'] != null);
-  return [
-    ['Jenis', r['Jenis'] || '—'],
-    ['Jenis Baris', basis ? 'Baseline (Pagu)' : 'Realisasi Mingguan'],
-    ['Pagu', basis ? _riwRupiah(r['Pagu']) : '—'],
-    ['Realisasi (Minggu Ini)', basis ? '—' : _riwRupiah(r['Realisasi_Minggu'])],
-    ['Harga Acuan', _riwRupiah(r['HargaAcuan'])],
-    ['Status Tunggakan', r['Tunggakan_Status'] || '—']
-  ];
-}
-
-function _riwRingkasLogPer(r, L) {
-  return (r['Komponen'] || '—') + ' · ' + _riwRupiah(r['Nilai_Minggu']);
-}
-function _riwDetailLogPer(r, L) {
-  return [
-    ['Komponen', r['Komponen'] || '—'],
-    ['Nilai (Minggu Ini)', _riwRupiah(r['Nilai_Minggu'])]
-  ];
-}
-
-function _riwRingkasAwkAkn(r, L) {
-  return _riwAknScopeLbl(r['Scope']) + ' / ' + _riwAknKategoriLbl(r['Kategori']) + ' · ' + _riwNum(r['Jumlah']);
-}
-function _riwDetailAwkAkn(r, L) {
-  return [
-    ['Scope', _riwAknScopeLbl(r['Scope'])],
-    ['Kategori', _riwAknKategoriLbl(r['Kategori'])],
-    ['Jumlah', _riwNum(r['Jumlah'])]
-  ];
-}
-
-function _riwRingkasAwkKeg(r, L) {
-  return (r['JudulKegiatan'] || '—') + ' · ' + _riwTgl(r['TanggalMulai']);
-}
-function _riwDetailAwkKeg(r, L) {
-  return [
-    ['Judul', r['JudulKegiatan'] || '—'],
+    ['Judul', r['JudulKegiatan'] || '\u2014'],
     ['Tanggal Mulai', _riwTgl(r['TanggalMulai'])],
     ['Tanggal Selesai', _riwTgl(r['TanggalSelesai'])],
-    ['Wilayah', r['Wilayah'] || '—'],
-    ['Jumlah Peserta', (r['JumlahPeserta'] !== '' && r['JumlahPeserta'] != null) ? _riwNum(r['JumlahPeserta']) : '—'],
-    ['Deskripsi', r['Deskripsi'] || '—']
+    ['Wilayah', r['Wilayah'] || '\u2014'],
+    ['Jumlah Peserta', _riwNum(r['JumlahPeserta'])],
+    ['Deskripsi', r['Deskripsi'] || '\u2014']
   ];
 }
 
-function _riwRingkasKgd(r, L) {
-  return (r['JudulKegiatan'] || '—') + ' · ' + _riwTgl(r['Tanggal']);
-}
-function _riwDetailKgd(r, L) {
-  return [
-    ['Judul', r['JudulKegiatan'] || '—'],
-    ['Tanggal', _riwTgl(r['Tanggal'])],
-    ['Deskripsi', r['Deskripsi'] || '—'],
-    ['Pihak Hadir', r['PihakHadir'] || '—']
-  ];
-}
-
-// ===========================================================================
-// ENDPOINT
-// ===========================================================================
-
-/**
- * Seluruh entri lintas modul dalam rentang filter (oleh Timestamp),
- * urut Timestamp menurun, dengan ringkasan + pasangan label/nilai siap-tampil.
- */
 function riwayat_getAll(token, filter) {
   try {
-    var session = _riwSession(token);
-    var allowAll = (session.role === ROLE.SUPERADMIN || session.role === ROLE.DIREKTUR);
-    var isKadiv = (session.role === ROLE.KADIV);
-    var isStaf = (session.role === ROLE.STAF);
+    var session = _requireSession(token);
+    assertScope(session, null, null);
 
+    var allowAll = (session.role === ROLE.SUPERADMIN || session.role === ROLE.DIREKTUR);
+    var isStaf = (session.role === ROLE.STAF);
     var range = filterToDateRange(filter || { mode: 'monthly', month: new Date().getMonth() + 1, year: new Date().getFullYear() });
     var L = _riwLookups();
-    var modules = _riwModules();
-
+    var sources = _riwSources();
     var out = [];
-    for (var m = 0; m < modules.length; m++) {
-      var mod = modules[m];
-      var sheet;
-      try {
-        sheet = openTransaksiSheet(mod.sheet);
-      } catch (e) { continue; }
-      var rows = sheetToObjects(sheet);
 
-      for (var i = 0; i < rows.length; i++) {
-        var r = rows[i];
+    sources.forEach(function (src) {
+      var rows = [];
+      if (src.kind === 'PUSAT') {
+        try {
+          rows = sheetToObjects(openTransaksiSheet(src.sheet));
+        } catch (eP) { rows = []; }
+      } else if (src.kind === 'SIKAP') {
+        rows = readSatelliteRows([PROP_KEY.SIKAP_SS_ID, PROP_KEY.TU_SS_ID], src.sheet, false).rows || [];
+      } else if (src.kind === 'NAKHODA') {
+        rows = readSatelliteRows([PROP_KEY.NAKHODA_SS_ID, PROP_KEY.AWAK_SS_ID], src.sheet, false).rows || [];
+      }
 
-        // RBAC pembacaan lintas divisi
+      rows.forEach(function (r) {
         if (!allowAll) {
-          if (mod.sheet === SHEET_TX.KEGIATAN_DIREKTORAT) {
-            if (isStaf) continue; // Staf tidak punya akses modul Kegiatan (§5.10)
-            // KADIV → boleh lihat semua entri kegiatan
+          if (src.sheet === SHEET_PUSAT.KEGIATAN_DIREKTORAT) {
+            if (isStaf) return;
           } else if (String(r['DivisiID'] || '') !== String(session.divisiId || '')) {
-            continue;
+            return;
           }
         }
 
         var t = new Date(r['Timestamp']);
-        if (isNaN(t.getTime())) continue;
-        if (t < range.startDate || t > range.endDate) continue;
+        if (isNaN(t.getTime()) || t < range.startDate || t > range.endDate) return;
 
         out.push({
           rowId: String(r['RowID'] || ''),
-          sheet: mod.sheet,
-          sheetLabel: mod.label,
+          sheet: src.sheet,
+          sheetLabel: src.label,
           periode: String(r['Periode'] || ''),
           divisiId: String(r['DivisiID'] || ''),
           divisiNama: L.divisi[String(r['DivisiID'] || '')] || String(r['DivisiID'] || ''),
@@ -407,14 +176,13 @@ function riwayat_getAll(token, filter) {
           voidedBy: String(r['VoidedBy'] || ''),
           voidedByName: L.user[String(r['VoidedBy'] || '')] || String(r['VoidedBy'] || ''),
           voidedAt: (r['VoidedAt'] instanceof Date) ? r['VoidedAt'].toISOString() : String(r['VoidedAt'] || ''),
-          ringkasan: mod.ringkas(r, L),
-          detail: mod.detail(r, L)
+          ringkasan: src.ringkas(r),
+          detail: src.detail(r)
         });
-      }
-    }
+      });
+    });
 
     out.sort(function (a, b) { return new Date(b.timestamp) - new Date(a.timestamp); });
-
     return { success: true, data: out };
   } catch (e) {
     return { success: false, error: e.message };

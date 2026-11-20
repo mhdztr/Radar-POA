@@ -1,20 +1,17 @@
-# Radar POA
+# Radar POA (Rekapitulasi Data Strategis POA)
+> **Pusat Agregasi Strategis & Executive Cockpit — Dit. POA (Ditjen PSDKP - KKP)**
 
-Aplikasi pusat agregator eksekutif untuk Direktorat POA (Kegiatan Direktorat, KPI eksekutif, konsolidasi data satelit)
+- **Script ID (Google Apps Script):** `1qLwCu-2tmCuA8_ICOI8SpystzSP25rGyVftvEPKwFS65K-bnBareyFY4`
+- **Repositori GitHub:** `https://github.com/mhdztr/Radar-POA.git`
+- **Spreadsheet Basis Data:** `RadarPOA_Pusat_DB`
+- **Spreadsheet Data Mart:** `RadarPOA_Looker_Mart`
+- **Drive Folder Evidence:** `POA_Evidence_Pusat`
+- **Peran Sistem:** Pusat agregasi eksekutif nasional yang mengonsolidasi data dari 4 aplikasi satelit mandiri (**SIKAP**, **Sistik**, **Nakhoda**, **Siaga**) dan subsistem eksternal, serta menjadi portal input eksklusif bagi pelaporan **Kegiatan Direktorat**.
 
-## Arsitektur
-Bagian dari ekosistem terdistribusi **Radar POA** (desentralisasi input, agregasi terpusat). Setiap aplikasi satelit memiliki Google Apps Script terpisah, Google Sheet terisolasi, dan Google Drive folder terpisah.
-
-## Dokumen Wajib
-- [PRD.md](PRD.md)
-- [ARCHITECTURE.md](ARCHITECTURE.md)
-- [DATA_SCHEMA.md](DATA_SCHEMA.md)
-- [DESIGN.md](DESIGN.md)
-- [AGENTS.md](AGENTS.md)
-- [CHANGELOG.md](CHANGELOG.md)
-- [PHASES.md](PHASES.md)
-
-## Deployment
-Menggunakan [clasp](https://github.com/google/clasp). Push dilakukan oleh user sesuai aturan AGENTS.md §5b.
-
-
+## Referensi Wajib
+1. `PRD.md` — Kebutuhan fungsional dan aturan bisnis (Sumber kebenaran tertinggi).
+2. `ARCHITECTURE.md` — Struktur aggregator engine, in-memory CacheService, dan cross-spreadsheet federation.
+3. `DATA_SCHEMA.md` — Skema kolom tabel transaksi dan master.
+4. `.agents/skills/` — Koleksi skill desain & engineering dari Nakhoda dan SIKAP (pengganti `DESIGN.md` lama untuk perancangan UI dari ground-up).
+5. `PHASES.md` — Roadmap dan rencana pengembangan bertahap.
+6. `AGENTS.md` — Instruksi dan batasan kerja bagi coding agent.

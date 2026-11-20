@@ -126,6 +126,7 @@ function master_kapalExists(kapalId) {
 function _mdEnsureKapalJenisOpsi() {
   try {
     if (getOpsiDetail(OPSI_KODE.KAPAL_JENIS).length) return;
+    if (typeof _seedOpsi !== 'function') return;
     var masterSS = SpreadsheetApp.openById(getSpreadsheetIds().masterId);
     if (_seedOpsi(masterSS)) {
       clearOpsiCache();

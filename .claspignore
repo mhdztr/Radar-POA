@@ -6,13 +6,15 @@
 .gitignore
 # Git
 .git/**
-# Script pembantu / artifact verifikasi — BUKAN bagian GAS project.
-# (Pernah ter-push duluan dan bikin duplikat function di GAS editor → merah.)
+# Script pembantu / artifact verifikasi — BUKAN bagian GAS project
 test.js
 test_pure.js
 fix.py
 hotfix.py
 lint_ui.js
-# Data geospasial besar — di-fetch dari GitHub oleh frontend, bukan di-host GAS
+tests/
+# Data geospasial besar — di-fetch dari GitHub oleh frontend
 *.geojson
+# Agent skills & workflows — tidak di-push ke GAS
 .agents/
+.agent/

@@ -81,42 +81,19 @@ function notifikasi_getRingkasan(token) {
       .filter(function (r) { return String(r['UserID']) === session.userId; });
 
     var divisiBelum = null;
-    // Banner hanya relevan untuk akun dengan divisi non-kosong (Kadiv/Staf).
-    // OPTIMASI: daripada panggil _dashMelaporDetail() (baca semua 7+ sheet TX,
-    // mahal), cari hanya sheet divisi user yang bersangkutan.
     if (session.divisiId) {
       try {
-        var divisiList = _ovMelaporDivisiList();
-        var weekRange = periodeToDateRange(getCurrentPeriode());
-        for (var i = 0; i < divisiList.length; i++) {
-          var d = divisiList[i];
+        var melaporList = _dashMelaporDetail();
+        for (var i = 0; i < melaporList.length; i++) {
+          var d = melaporList[i];
           if (String(d.divisiId) !== String(session.divisiId)) continue;
-          // Hanya baca sheet divisi ini
-          var melapor = false;
-          if (weekRange) {
-            for (var s = 0; s < d.sheets.length && !melapor; s++) {
-              try {
-                _dashActiveRows(d.sheets[s], true).forEach(function (r) {
-                  if (melapor) return;
-                  if (String(r['DivisiID'] || '').trim() &&
-                      String(r['DivisiID']) !== String(session.divisiId)) return;
-                  var pr = periodeToDateRange(String(r['Periode'] || ''));
-                  var inWeek = pr
-                    ? (pr.startDate <= weekRange.endDate && pr.endDate >= weekRange.startDate)
-                    : isInRange(new Date(r['Timestamp']), weekRange);
-                  if (inWeek) melapor = true;
-                });
-              } catch (eSheet) {}
-            }
-          }
-          if (!melapor) {
+          if (!d.melapor) {
             divisiBelum = { divisiId: d.divisiId, label: d.label };
           }
           break;
         }
       } catch (eDivisi) {
         Logger.log('[notifikasi_getRingkasan] Cek melapor gagal: ' + eDivisi.message);
-        // Tidak kritis — banner tidak tampil, bukan crash
       }
     }
 
