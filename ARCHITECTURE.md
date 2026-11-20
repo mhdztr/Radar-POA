@@ -1,6 +1,6 @@
 # ARCHITECTURE.md — Arsitektur Teknis: Radar POA
-**Rekapitulasi Data Strategis POA (Pusat Agregasi & Executive Cockpit)**  
-*Direktorat Pemantauan dan Operasi Armada (Dit. POA) · Ditjen PSDKP · KKP RI*
+**Rekapitulasi Data Strategis POA (Pusat Agregasi Data Strategis)**  
+*Direktorat Pengendalian Operasi Armada (Dit. POA) · Ditjen PSDKP · KKP RI*
 
 ---
 
@@ -31,7 +31,7 @@ Radar-POA/
 │   └── SheetAccess.js                   # RBAC assertScope(), SHA-256 hashPassword(), federated readSatelliteRows(), applyFormalSheetFormatting()
 ├── services/
 │   ├── AggregatorService.js             # Engine federasi lintas spreadsheet (SIKAP, Nakhoda, Pusat) & CacheService 15 menit
-│   ├── DashboardService.js              # Kalkulasi Executive Cockpit SiMata, Peta Taktis 34 Kapal, Scoring Kapal Terbaik TW I-IV, & Profil Kapal
+│   ├── DashboardService.js              # Kalkulasi Dasbor Strategis SiMata, Peta Taktis 34 Kapal, Scoring Kapal Terbaik TW I-IV, & Profil Kapal
 │   ├── KegiatanDirektoratService.js     # CRUD eksklusif Kegiatan Direktorat (SUPERADMIN, DIREKTUR, KADIV)
 │   ├── LookerMartService.js             # Batch ETL sinkronisasi tabel flat bersih ke RadarPOA_Looker_Mart
 │   ├── RiwayatService.js                # Feed riwayat transaksi terfederasi (Pusat + SIKAP + Nakhoda)
@@ -41,8 +41,8 @@ Radar-POA/
 │   ├── AdminService.js                  # Manajemen akun, konfigurasi koneksi satelit, & Audit Log viewer
 │   └── NotifikasiService.js             # Pusat notifikasi in-app & pengingat mingguan otomatis
 ├── html/
-│   ├── Index.html                       # Shell SPA Open-Plane dengan Logo Resmi Ditjen PSDKP
-│   ├── Style.html                       # Ground-up CSS Design System (Hydrographic Mineral Ramp, 3-Tier 40/32/26px)
+│   ├── Index.html                       # Shell SPA Dark-Ink Rail & Split Auth 52/48 dengan Logo Resmi Ditjen PSDKP
+│   ├── Style.html                       # Ground-up CSS Design System (Archival Maritime Briefing, Sharp 6px/4px/3px, 3-Tier 40/32/26px)
 │   ├── Script_Charts.html               # Engine visualisasi Chart.js / SVG linear context (tanpa gauge/3D)
 │   ├── Script_Main.html                 # SPA Controller, router hash, peta Leaflet WPP 34 Kapal, & modal handler
 │   └── views/

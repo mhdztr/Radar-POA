@@ -11,7 +11,7 @@
 - Penyesuaian AGENTS.md (agent boleh commit, dilarang push, format commit feat/chore/fix/docs)
 
 **Keputusan teknis:**
-- Radar POA berperan sebagai **Central Aggregator & Executive Cockpit**, bukan monolit input
+- Radar POA berperan sebagai **Central Aggregator & Rekapitulasi Data Strategis**, bukan monolit input
 - Hanya modul **Kegiatan Direktorat** yang diinput langsung di pusat dengan RBAC ketat
 - Federasi via `SpreadsheetApp.openById` + `CacheService` + manual Sync Now
 - Standar versioning/anulir, RBAC server-side, kontrol UI 3-tier tetap diterapkan

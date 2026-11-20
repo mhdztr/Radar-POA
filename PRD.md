@@ -1,16 +1,16 @@
 # PRD.md — Product Requirements Document: Radar POA
-**Rekapitulasi Data Strategis POA (Pusat Agregasi & Executive Cockpit - Dit. POA)**
+**Rekapitulasi Data Strategis POA (Pusat Agregasi & Dasbor Strategis Pimpinan - Dit. POA)**
 
 ## 1. Pendahuluan & Latar Belakang
-Transformasi dari sistem Nautika monolitik melahirkan **Radar POA** sebagai pusat kendali (*executive cockpit*) dan agregasi strategis bagi Direktur Pemantauan dan Operasi Armada, para Pejabat Eselon, dan Kepala Divisi. Radar POA tidak lagi mengelola input teknis harian/mingguan staf (yang telah didelegasikan ke aplikasi satelit SIKAP, Sistik, Nakhoda, dan Siaga), melainkan berfokus pada visualisasi performa makro nasional dan mengelola input eksklusif **Kegiatan Direktorat**.
+Transformasi dari sistem Nautika monolitik melahirkan **Radar POA** sebagai pusat kendali strategis (**Rekapitulasi Data Strategis POA**) bagi Direktur Pengendalian Operasi Armada, para Pejabat Eselon, dan Kepala Divisi. Radar POA tidak lagi mengelola input teknis harian/mingguan staf (yang telah didelegasikan ke aplikasi satelit SIKAP, Sistik, Nakhoda, dan Siaga), melainkan berfokus pada visualisasi performa makro nasional dan mengelola input eksklusif **Kegiatan Direktorat**.
 
 ## 2. Ruang Lingkup Sistem & Modul Utama
 
 ```
-RADAR POA (PUSAT AGREGASI & EXECUTIVE COCKPIT)
+RADAR POA (REKAPITULASI DATA STRATEGIS DIT. POA)
 ├── [Modul Eksklusif] Input & Feed Kegiatan Direktorat
 ├── [Aggregator Engine] Federasi Data 4 Satelit & Subsistem Eksternal
-├── [Executive Cockpit] 4 Top KPI, Peta Taktis 34 Kapal, & Grid 8 Unit Kerja
+├── [Dasbor Strategis Pimpinan] 4 Top KPI, Peta Taktis 34 Kapal, & Grid 8 Unit Kerja
 └── [Reporting Pipeline] Data Mart Konsolidasi Looker Studio
 ```
 
@@ -38,7 +38,7 @@ RADAR POA (PUSAT AGREGASI & EXECUTIVE COCKPIT)
   5. **Modul Eksternal:** Membaca spreadsheet tim lain (Operasi Laut, Operasi Udara, Intelijen, Pelayanan VMS).
 - **In-Memory Caching:** Hasil konsolidasi di-cache selama 15 menit menggunakan `CacheService`. Dilengkapi tombol *"Sinkronkan Data" / "Sync Now"* untuk pembaruan paksa real-time.
 
-### 3.3 Executive Cockpit (Pola Data-First SiMata)
+### 3.3 Dasbor Strategis Pimpinan (Pola Data-First SiMata)
 1. **Top Action Toolbar & 4 KPI Utama SiMata:**
    - Format angka tegas: `Pagu & Serapan Anggaran`, `Realisasi SP2D Kas Nasional`, `Kesiapan Armada Kapal Besar (X dari 34 Siap)`, dan `Intensitas Kegiatan Strategis`.
 2. **Peta Taktis 34 Kapal Pengawas Ukuran Besar:**

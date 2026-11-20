@@ -1,5 +1,5 @@
 # Radar POA (Rekapitulasi Data Strategis POA)
-> **Pusat Agregasi Strategis & Executive Cockpit — Dit. POA (Ditjen PSDKP - KKP)**
+> **Pusat Agregasi Data Strategis — Direktorat Pengendalian Operasi Armada, Ditjen PSDKP - KKP RI**
 
 - **Script ID (Google Apps Script):** `1qLwCu-2tmCuA8_ICOI8SpystzSP25rGyVftvEPKwFS65K-bnBareyFY4`
 - **Repositori GitHub:** `https://github.com/mhdztr/Radar-POA.git`

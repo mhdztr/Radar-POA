@@ -1,7 +1,7 @@
 /**
  * utils/Constants.js
- * Radar POA (Rekapitulasi Data Strategis POA) — Pusat Agregasi & Executive Cockpit
- * Direktorat Pemantauan dan Operasi Armada (Dit. POA), Ditjen PSDKP - KKP RI
+ * Radar POA — Rekapitulasi Data Strategis POA
+ * Direktorat Pengendalian Operasi Armada (Dit. POA), Ditjen PSDKP - KKP RI
  */
 
 // ===========================================================================

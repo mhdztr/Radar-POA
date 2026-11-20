@@ -1,6 +1,6 @@
 /**
  * services/DashboardService.js
- * Executive Cockpit Service — mengonsumsi data teragregasi dari AggregatorService.js.
+ * Dasbor Strategis Pimpinan Service — mengonsumsi data teragregasi dari AggregatorService.js.
  *
  * Endpoint publik:
  *   radar_getExecutiveDashboard(token, filter)  — alias kanonik ARCHITECTURE.md
@@ -12,7 +12,7 @@
  */
 
 // ===========================================================================
-// EXECUTIVE COCKPIT
+// DASBOR STRATEGIS PIMPINAN
 // ===========================================================================
 
 function radar_getExecutiveDashboard(token, filter) {

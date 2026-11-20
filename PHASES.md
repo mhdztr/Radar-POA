@@ -1,6 +1,6 @@
 # PHASES.md — Roadmap Pengembangan & Verifikasi QA: Radar POA
-**Rekapitulasi Data Strategis POA (Pusat Agregasi & Executive Cockpit)**  
-*Direktorat Pemantauan dan Operasi Armada (Dit. POA)*  
+**Rekapitulasi Data Strategis POA (Pusat Agregasi & Dasbor Strategis Pimpinan)**  
+*Direktorat Pengendalian Operasi Armada (Dit. POA)*  
 *Direktorat Jenderal Pengawasan Sumber Daya Kelautan dan Perikanan (Ditjen PSDKP)*  
 *Kementerian Kelautan dan Perikanan Republik Indonesia (KKP RI)*
 
@@ -8,15 +8,15 @@
 
 ## 1. Ikhtisar Siklus Pengembangan (8 Fase Terukur)
 
-Pengembangan **Radar POA** sebagai pusat agregasi strategis dan *executive cockpit* dilaksanakan melalui 8 fase terstruktur dari *ground-up*, dengan integrasi langsung ke aplikasi satelit yang telah beroperasi (**SIKAP** dan **Nakhoda**) serta kesiapan konektor untuk satelit berikutnya (**Sistik**, **Siaga**, **Operasi**):
+Pengembangan **Radar POA** sebagai pusat agregasi dan dasbor strategis pimpinan dilaksanakan melalui 8 fase terstruktur dari *ground-up*, dengan integrasi langsung ke aplikasi satelit yang telah beroperasi (**SIKAP** dan **Nakhoda**) serta kesiapan konektor untuk satelit berikutnya (**Sistik**, **Siaga**, **Operasi**):
 
 ```
 ROADMAP PENGEMBANGAN RADAR POA v1.0
 ├── [Fase 0] Penyelarasan Dokumen Inti, Migrasi 51 Design Skills, & Kontrak DESIGN.md Ground-Up
 ├── [Fase 1] Sanitasi Monolitik Nautika, Setup Constants Satelit, & Federated Data Layer
 ├── [Fase 2] Aggregator Engine Lintas Spreadsheet (SIKAP & Nakhoda), Cache 15m, & Riwayat Federasi
-├── [Fase 3] Ground-Up Design System (Style.html), Branding Logo PSDKP, & Open-Plane Executive Shell
-├── [Fase 4] Executive Cockpit SiMata, Kalimat Temuan, Peta Taktis 34 Kapal, & Analitik SIKAP/Nakhoda
+├── [Fase 3] Ground-Up Design System (Hydrographic Briefing & Dark Rail), Split Auth 52/48, & Logo PSDKP
+├── [Fase 4] Dasbor Strategis SiMata, Kalimat Temuan, Peta Taktis 34 Kapal, & Analitik SIKAP/Nakhoda
 ├── [Fase 5] Modul Eksklusif Kegiatan Direktorat, Calendar Picker Anti-Ketik, & Multi-Evidence Drive
 ├── [Fase 6] Pipeline Data Mart Looker Studio (LookerMartService), Sheet Formal, & Scheduled Trigger
 └── [Fase 7] Admin Panel, Konektor Satelit, Linter Otomatis (lint_ui.js), & Final QA Audit
@@ -33,10 +33,10 @@ ROADMAP PENGEMBANGAN RADAR POA v1.0
   - Migrasi 51 entri skill dari `SIKAP/.agents/skills/` dan `Nakhoda/.agents/skills/` ke [`.agents/skills/`](file:///home/pinefeast/Projects/Radar-POA/.agents/skills) (`unslop`, `design-taste-frontend` v2.5.0, `colorize`, `apple-hig`, `apple-design`, `d3-visualization`, `animate`, `emilkowalski-motion`, `impeccable`, `ponytail*`, `ui-ux-pro-max`, dll.).
   - Pembaruan [`.claspignore`](file:///home/pinefeast/Projects/Radar-POA/.claspignore) agar direktori `.agents/`, `.agent/`, dan `tests/` tidak ter-push ke Google Apps Script.
   - Penyusunan [DESIGN.md](file:///home/pinefeast/Projects/Radar-POA/DESIGN.md) dari *ground-up*:
-    - *5-Line Direction Contract* (Anjungan Komando Armada & Peta Hidrografi Maritim WPPNRI 571–718).
-    - Identitas resmi **Logo Ditjen PSDKP** (base64 crest + SVG filter `#psdkp-crest-outline`) selaras dengan SIKAP dan Nakhoda.
-    - Tangga warna netral OKLCH (*Hydrographic Mineral Ramp* `#F3F5F8` / `#FFFFFF` / `#0C1117`) & kode warna data satelit (*60% Hydrographic Cerulean `#0369A1`, 30% Jade SIKAP `#065F46` & Safety Orange Nakhoda `#D9480F`, 10% Semantik Status*).
-    - Tipografi optik (`Geist` / `Plus Jakarta Sans` + `Geist Mono` dengan `tabular-nums` wajib) dan geometri kontrol 3-tier (`LG: 40px`, `MD: 32px`, `SM: 26px`).
+    - *5-Line Direction Contract* (Hydrographic Maritime Briefing & Dark-Ink Institutional Rail untuk pengawasan WPPNRI 571–718).
+    - Identitas resmi **Logo Ditjen PSDKP** (base64 crest + SVG filter `#psdkp-crest-outline`) pada panel kiri split-screen autentikasi, puncak rail gelap sidebar, dan bilah mobile.
+    - Tangga warna *Dark Institutional Rail* (`#0E1722` / `#C88A2E`) berpadu kanvas hidrografis sejuk (*Cool Hydrographic Chart* `#EFF4F7` / `#F7FAFC` / `#FFFFFF` / `#14191F`), aksen primer *Deep Admiralty Blue* (`#0B4F6C`), serta kode warna data satelit (*SIKAP Teal `#0F766E`, Nakhoda Burnt Clay `#C2410C`, Pusat Admiralty `#0B4F6C`, dan Semantik Status*).
+    - Tipografi publikasi resmi (`Public Sans` + `JetBrains Mono` dengan `tabular-nums` wajib), sudut tajam (`6px / 4px / 3px`), dan geometri kontrol 3-tier (`LG: 40px`, `MD: 32px`, `SM: 26px`).
 - **Deliverables & Checklist:**
   - [x] 51 entri skill tersedia di `.agents/skills/` dan dikecualikan di `.claspignore`.
   - [x] `DESIGN.md`, `AGENTS.md`, `PRD.md`, `ARCHITECTURE.md`, `DATA_SCHEMA.md`, `PHASES.md`, dan `README.md` sinkron 100%.
@@ -72,31 +72,31 @@ ROADMAP PENGEMBANGAN RADAR POA v1.0
 
 ---
 
-### Fase 3: Ground-Up Design System (`html/Style.html`), Branding Logo PSDKP, & Open-Plane Executive Shell
+### Fase 3: Ground-Up Design System (`html/Style.html`), Branding Logo PSDKP, & Dark-Ink Institutional Rail Shell
 - **Status:** **Selesai (`[x]`)**
-- **Tujuan Utama:** Membangun `html/Style.html` baru dari *ground-up* sesuai kontrak [DESIGN.md](file:///home/pinefeast/Projects/Radar-POA/DESIGN.md) dan memperbarui shell [html/Index.html](file:///home/pinefeast/Projects/Radar-POA/html/Index.html) dengan identitas resmi **Logo Ditjen PSDKP** seperti pada SIKAP dan Nakhoda.
+- **Tujuan Utama:** Membangun `html/Style.html` baru dari *ground-up* sesuai kontrak [DESIGN.md](file:///home/pinefeast/Projects/Radar-POA/DESIGN.md) dengan karakter visual mandiri (*Hydrographic Maritime Briefing & Dark-Ink Institutional Rail* yang berbeda total dari SIKAP & Nakhoda) serta memperbarui shell [html/Index.html](file:///home/pinefeast/Projects/Radar-POA/html/Index.html) dengan **Logo Resmi Ditjen PSDKP**.
 - **Komponen yang Harus Dikerjakan:**
   1. **Pembuatan `html/Style.html` dari Ground-Up:**
-     - Deklarasi seluruh token CSS `:root` sesuai `DESIGN.md` §3–§8: *Hydrographic Mineral Ramp* (`--bg-ground: #F3F5F8`, `--bg-surface: #FFFFFF`, `--bg-raised: #EAEFF5`, `--bg-active: #E1E8F0`, `--ink-primary: #0C1117`, `--ink-secondary: #3B4654`, `--ink-muted: #5C6878`), aksen data (`--accent-radar: #0369A1`, `--sat-sikap: #065F46`, `--sat-nakhoda: #D9480F`), dan token status semantik (`--sem-pos`, `--sem-warn`, `--sem-crit`).
-     - Tipografi optik (`Geist`, `Plus Jakarta Sans`, `Geist Mono`) dengan `tabular-nums` otomatis pada `.kpi-val`, `.tnum`, `td.num`, `.kt-table td`.
+     - Deklarasi seluruh token CSS `:root` sesuai `DESIGN.md`: Dark Institutional Rail (`--rail-bg: #0E1722`, `--rail-active: #1D2E42`, `--rail-accent: #C88A2E`, `--rail-ink: #F5F2EB`), Cool Hydrographic Chart (`--bg-ground: #EFF4F7`, `--bg-header: #F7FAFC`, `--bg-surface: #FFFFFF`, `--bg-raised: #E4ECF1`, `--ink-primary: #14191F`), primer `--action-primary: #0B4F6C` (*Deep Admiralty Blue*), kode data satelit (`--sat-sikap: #0F766E`, `--sat-nakhoda: #C2410C`, `--sat-pusat: #0B4F6C`), dan token status semantik (`--sem-pos`, `--sem-warn`, `--sem-crit`).
+     - Tipografi publikasi statistik (`Public Sans`, `JetBrains Mono`) dengan hierarki tegas (`h1: 26px`, `h2: 18px`, `body: 14px`) dan `tabular-nums` otomatis pada `.kpi-val`, `.tnum`, `td.num`, `.kt-table td`.
      - Sistem kontrol 3-tier ketat (`--ctl-h-lg: 40px`, `--ctl-h-md: 32px`, `--ctl-h-sm: 26px`) beserta class `.ctl-row`, `.ctl-lg`, `.ctl-md`, `.ctl-sm`, `.ctl-fill`, `.ctl-stack`, dan perluasan area sentuh `44px` di layar sentuh.
-     - Arsitektur shell *Open-Plane* (`sidebar 248px`, `app-main` fluid dengan `max-width: 1520px`, equal edges `28px`, sticky header `backdrop-filter: blur(16px)`), kartu autentikasi 2-ruang (*Executive Brand Header + Form Body*), strip 4 KPI terpadu dengan pembagi garis `1px`, tabel eksekutif `44px`, modal dialog, drawer kanan, dan toaster kanan bawah.
-     - Fisika gerak Emil Kowalski (`--ease-out: cubic-bezier(0.23, 1, 0.32, 1)`, `--dur-press: 90ms`, `--dur-fast: 150ms`, `--dur-modal: 200ms`, `--dur-drawer: 240ms`), gating `@media (hover: hover) and (pointer: fine)`, serta `@media (prefers-reduced-motion: reduce)` dan `@media (prefers-reduced-transparency: reduce)`.
-  2. **Integrasi Logo Resmi Ditjen PSDKP di `html/Index.html`:**
-     - Menyertakan definisi SVG `<filter id="psdkp-crest-outline">` di awal `<body>` (identik dengan SIKAP).
+     - Arsitektur shell terpisah total dari SIKAP/Nakhoda: *Full-Viewport Split-Screen Auth 52/48* (`auth-monolith` gelap solid + `auth-panel` kanvas sejuk terbuka tanpa kartu/ikon dalam input), *Dark Left Rail* `256px` `#0E1722`, header `#F7FAFC` solid tanpa blur, garis tajuk broadsheet `2px solid #0E1722` pada strip 4 KPI, tab garis bawah rata (`2px solid #0B4F6C`), tabel publikasi `border-bottom: 1.5px solid #0E1722`, serta sudut arsitektural tajam `6px/4px/3px` tanpa bayangan kartu statis.
+     - Fisika gerak (`--ease-out: cubic-bezier(0.22, 1, 0.36, 1)`), gating `@media (hover: hover) and (pointer: fine)`, serta `@media (prefers-reduced-motion: reduce)` dan `@media (prefers-reduced-transparency: reduce)`.
+  2. **Integrasi Logo Resmi Ditjen PSDKP & Split Auth di `html/Index.html`:**
+     - Menyertakan definisi SVG `<filter id="psdkp-crest-outline">` di awal `<body>`.
      - Memasang **Logo Ditjen PSDKP** (base64 PNG resmi) pada:
-       - **Layar Login, Register, & Pending (`#auth-wrapper`):** Header kartu autentikasi menampilkan Crest Ditjen PSDKP (`46x52`), akronim **Radar POA**, badge `Dit. POA`, sub-judul `Rekapitulasi Data Strategis & Executive Cockpit`, dan atribusi `Direktorat Pemantauan dan Operasi Armada · Ditjen PSDKP KKP RI`.
-       - **Puncak Sidebar (`aside.sidebar`):** `.brand-box` dengan Crest Ditjen PSDKP (`34x39`), judul **Radar POA**, badge `Dit. POA`, dan deskripsi `Pusat Agregasi & Executive Cockpit`.
-       - **Mobile Topbar (`<= 768px`):** Crest Ditjen PSDKP (`20x23`) + nama layar aktif + tombol toggle menu.
-     - Mengaktifkan kembali `<?!= html_include('html/Style'); ?>` di `<head>` `html/Index.html` dan memuat font `Geist` + `Geist Mono` + `Plus Jakarta Sans`.
+       - **Layar Login, Register, & Pending (`#auth-wrapper`):** Tata letak *Split-Screen 52/48* dengan `.auth-monolith` menampilkan Crest Ditjen PSDKP (`64x72`), wordmark **Radar POA**, garis aksen kuningan `#C88A2E`, deskripsi `Rekapitulasi Data Strategis`, dan atribusi `Direktorat Pengendalian Operasi Armada`, bersebelahan dengan `.auth-panel` formulir terbuka di atas kanvas hidrografis `#EFF4F7`.
+       - **Puncak Sidebar Gelap (`aside.sidebar`):** `.sb-brand` dengan Crest Ditjen PSDKP (`34x39`), judul **Radar POA**, badge `Dit. POA` bertepi brass, dan sub-judul `Pengendalian Operasi Armada`.
+       - **Mobile Topbar (`<= 900px`):** Bilah gelap `#0E1722` berisi tombol menu, Crest Ditjen PSDKP (`22x25`), dan judul layar aktif.
+     - Memuat font `Public Sans` + `JetBrains Mono` serta menyertakan `<?!= html_include('html/Style'); ?>` di `<head>`.
 - **Kriteria Verifikasi:**
   - [x] `html/Style.html` ter-include dengan benar di `html/Index.html` tanpa error template GAS.
-  - [x] Logo PSDKP tampil tajam dengan outline kontur putih halus di layar masuk, sidebar, dan mobile topbar.
-  - [x] Seluruh kontrol mematuhi tier `40px / 32px / 26px` (`_uiAudit()` melaporkan `0 violations`).
+  - [x] Logo PSDKP tampil tajam dengan outline kontur putih halus di split auth monolith, sidebar gelap, loading splash, dan mobile topbar.
+  - [x] Seluruh kontrol mematuhi tier `40px / 32px / 26px` serta bebas peringatan `impeccable detect` dan bebas kesamaan visual dengan SIKAP maupun Nakhoda.
 
 ---
 
-### Fase 4: Executive Cockpit SiMata, Kalimat Temuan, Peta Taktis 34 Kapal, & Analitik SIKAP/Nakhoda
+### Fase 4: Dasbor Strategis SiMata, Kalimat Temuan, Peta Taktis 34 Kapal, & Analitik SIKAP/Nakhoda
 - **Status:** **Siap Dikerjakan (`[ ]`)**
 - **Tujuan Utama:** Menyempurnakan tampilan dan interaksi **Ikhtisar Eksekutif (`overview`)**, **Kapal Terbaik (`kapal-terbaik`)**, dan **Profil Kapal (`profil-kapal`)** sesuai standar visualisasi D3/Leaflet di `DESIGN.md` §6–§7.
 - **Komponen yang Harus Dikerjakan:**

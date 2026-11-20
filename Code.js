@@ -1,6 +1,6 @@
 /**
  * Code.js — Entry point Google Apps Script (Radar POA)
- * Pusat Agregasi Strategis & Executive Cockpit — Dit. POA, Ditjen PSDKP - KKP RI
+ * Pusat Agregasi Data Strategis — Direktorat Pengendalian Operasi Armada, Ditjen PSDKP - KKP RI
  */
 
 /**
