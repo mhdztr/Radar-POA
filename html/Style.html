@@ -6,7 +6,7 @@
    - Dark Prussian Left Rail (#0E1722) + Maritime Brass Marker (#C88A2E)
    - Cool Hydrographic Chart Canvas (#EFF4F7) + Solid Mist Header (#F7FAFC)
    - Deep Admiralty Blue Primary Action (#0B4F6C)
-   - Public Sans + JetBrains Mono (mandatory tabular-nums, strong type scale)
+   - Public Sans (single-family institutional sans, mandatory tabular-nums, no fixed-pitch font)
    - Sharp Architectural Radii (6px / 4px / 3px), 1px Hairlines, 0 Card Shadow
    - 3-Tier Control Geometry (LG: 40px, MD: 32px, SM: 26px)
    ============================================================================ */
@@ -91,7 +91,6 @@
 
   /* ── 6. Tipografi Publikasi & Geometri Tajam ──────────────────────────── */
   --font-sans:            'Public Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono:            'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
   --fs-hero-num:          32px;
   --fs-kpi-num:           28px;
@@ -175,8 +174,7 @@ body {
 }
 
 h1,
-.page-title,
-.auth-title {
+.page-title {
   font-size: var(--fs-h1);
   font-weight: 700;
   line-height: 1.2;
@@ -185,6 +183,7 @@ h1,
 }
 
 h2,
+.auth-title,
 .n-modal h2,
 .n-drawer-hd h2 {
   font-size: var(--fs-h2);
@@ -256,7 +255,6 @@ a {
 /* Mandatory Tabular Numerals */
 .tnum,
 .tabular-nums,
-.font-mono,
 .table-num,
 .kpi-val,
 .kpi-value,
@@ -276,10 +274,6 @@ th.num,
 input[type="number"] {
   font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings: "tnum" 1, "lnum" 1;
-}
-
-.font-mono {
-  font-family: var(--font-mono);
 }
 
 .font-bold     { font-weight: 700; }
@@ -417,133 +411,110 @@ input[type="number"] {
 }
 
 /* ============================================================================
-   3. AUTH SCREENS — 52/48 FULL-VIEWPORT ARCHITECTURAL SPLIT
-   (Anti-SIKAP Centered Card · Anti-Nakhoda Light Box)
+   3. AUTH SCREENS — 50/50 PHOTOGRAPHIC SPLIT SCREEN
    ============================================================================ */
 #auth-wrapper {
   min-height: 100dvh;
-  background-color: var(--bg-ground);
-}
-
-.auth-screen {
-  min-height: 100dvh;
-  width: 100%;
-  background-color: var(--bg-ground);
 }
 
 .auth-split {
   display: grid;
-  grid-template-columns: 52fr 48fr;
+  grid-template-columns: 1fr 1fr;
   min-height: 100dvh;
   width: 100%;
 }
 
-/* Left Panel — Solid Dark Prussian Maritime Monolith */
-.auth-monolith {
+/* Left Panel — Sticky Full-Bleed PSDKP Personnel Photograph */
+.auth-media {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  overflow: hidden;
   background-color: var(--rail-bg);
-  color: var(--rail-ink);
-  border-right: 1px solid rgba(245, 242, 235, 0.08);
-  padding: 40px 48px;
+}
+
+.auth-media-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 34% 24%;
+  display: block;
+}
+
+/* Right Panel — Clean White Institutional Form Workspace */
+.auth-panel {
+  min-height: 100dvh;
+  background-color: var(--bg-surface);
+  border-left: 1px solid var(--border-rule);
+  padding: 48px clamp(32px, 6vw, 72px) 64px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 32px;
-}
-
-.auth-monolith-head {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.auth-mono-kicker {
-  font-family: var(--font-mono);
-  font-size: var(--fs-sm);
-  color: var(--rail-ink-muted);
-  border-left: 1px solid var(--rail-rule);
-  padding-left: 14px;
-}
-
-.auth-monolith-body {
-  max-width: 480px;
-}
-
-.auth-monolith-title {
-  font-size: 30px;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1.15;
-  color: var(--rail-ink);
-}
-
-.auth-brass-rule {
-  width: 44px;
-  height: 2px;
-  background-color: var(--rail-accent);
-  margin: 14px 0 16px;
-}
-
-.auth-monolith-sub {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--rail-ink);
-  margin-bottom: 4px;
-}
-
-.auth-monolith-dir {
-  font-size: 14px;
-  font-weight: 500;
-  color: #D2DAE4;
-  margin-bottom: 14px;
-}
-
-.auth-monolith-desc {
-  font-size: var(--fs-body);
-  color: var(--rail-ink-muted);
-  line-height: 1.6;
-  max-width: 46ch;
-}
-
-.auth-monolith-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  padding-top: 16px;
-  border-top: 1px solid var(--rail-rule);
-  font-family: var(--font-mono);
-  font-size: var(--fs-sm);
-  color: var(--rail-ink-muted);
-}
-
-/* Right Panel — Open Chart Canvas (No Box-in-Box Card Container) */
-.auth-panel {
-  background-color: var(--bg-ground);
-  padding: 40px 48px;
-  display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
 }
 
-.auth-form-wrap {
+.auth-panel-inner {
   width: 100%;
   max-width: 400px;
 }
 
-.auth-form-wrap .auth-title {
-  margin-bottom: 6px;
-}
-
-.auth-subtitle {
-  font-size: var(--fs-body);
-  color: var(--ink-secondary);
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 24px;
   margin-bottom: 24px;
-  line-height: 1.45;
+  border-bottom: 1px solid var(--border-rule);
 }
 
-.auth-form-wrap .form-grp input,
-.auth-form-wrap .form-grp select,
+.auth-brand-crest {
+  flex-shrink: 0;
+}
+
+.auth-brand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.auth-brand-name {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+  color: var(--rail-bg);
+}
+
+.auth-brand-poa {
+  color: var(--action-primary);
+}
+
+.auth-brand-exp {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink-primary);
+  margin-top: 4px;
+}
+
+.auth-brand-org {
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
+
+.auth-screen {
+  width: 100%;
+}
+
+.auth-screen .auth-title {
+  margin-bottom: 16px;
+}
+
+.auth-screen .form-grp input,
+.auth-screen .form-grp select,
 .btn-primary.auth-submit-btn,
 .auth-submit-btn,
 #form-register button[type="submit"],
@@ -568,7 +539,7 @@ input[type="number"] {
 .auth-foot {
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid var(--border-card);
+  border-top: 1px solid var(--border-rule);
   font-size: var(--fs-md);
   color: var(--ink-secondary);
 }
@@ -997,7 +968,7 @@ button:active:not(:disabled),
 }
 
 /* ============================================================================
-   5. DARK-INK INSTITUTIONAL RAIL & WARM ARCHIVAL SHELL
+   5. DARK-INK INSTITUTIONAL RAIL & HYDROGRAPHIC SHELL
    ============================================================================ */
 #app-wrapper {
   display: flex;
@@ -1555,7 +1526,8 @@ button:active:not(:disabled),
 .sync-pop-data {
   font-size: var(--fs-sm);
   color: var(--ink-secondary);
-  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
   margin-bottom: 6px;
 }
 
@@ -1829,7 +1801,7 @@ button:active:not(:disabled),
 
 .sat-tag {
   border-radius: var(--r-sm);
-  font-family: var(--font-mono);
+  font-weight: 600;
 }
 
 .sat-tag-sikap   { background-color: var(--sat-sikap-soft);   color: var(--sat-sikap); }
@@ -2955,22 +2927,32 @@ button:active:not(:disabled),
   :root { --edge-pad: 16px; }
   .auth-split {
     grid-template-columns: 1fr;
-    min-height: 100dvh;
   }
-  .auth-monolith {
-    padding: 24px 20px;
-    border-right: none;
-    border-bottom: 2px solid var(--rail-accent);
-    gap: 16px;
+  .auth-media {
+    position: relative;
+    height: 220px;
   }
-  .auth-monolith-desc,
-  .auth-monolith-foot {
-    display: none;
+  .auth-media-img {
+    object-position: 34% 22%;
   }
-  .auth-monolith-title { font-size: 24px; }
   .auth-panel {
-    padding: 28px 20px 40px;
-    align-items: flex-start;
+    min-height: auto;
+    border-left: none;
+    border-top: 1px solid var(--border-rule);
+    padding: 32px 20px 44px;
+    justify-content: flex-start;
+  }
+  .auth-brand {
+    gap: 14px;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+  }
+  .auth-brand-crest {
+    width: 48px;
+    height: 55px;
+  }
+  .auth-brand-name {
+    font-size: 26px;
   }
   #app-wrapper { flex-direction: column; }
   #mobile-topbar { display: flex; }
