@@ -1,20 +1,40 @@
-# Dokumentasi — tidak perlu di-push ke GAS
+# .claspignore — Radar POA (Direktorat POA, Ditjen PSDKP KKP RI)
+
+# Dokumentasi & Desain — tidak perlu di-push ke GAS
 *.md
-# Config lokal — tidak dibutuhkan di GAS
+**/*.md
+LICENSE
+
+# Konfigurasi & Lingkungan Lokal
 .clasp.json
 .claspignore
 .gitignore
-# Git
+package.json
+package-lock.json
+skills-lock.json
+
+# Tooling, AI Skills & Cache (TIDAK BOLEH di-push ke GAS; clasp memakai glob **)
 .git/**
-# Script pembantu / artifact verifikasi — BUKAN bagian GAS project
+.taste-skill/**
+.agents/**
+**/.agents/**
+.agent/**
+**/.agent/**
+.impeccable/**
+.codex/**
+assets/**
+skills/**
+
+# Pengujian Unit Lokal & Script Linter Node.js
+tests/**
+*.test.js
+**/*.test.js
+lint_ui.js
 test.js
 test_pure.js
 fix.py
 hotfix.py
-lint_ui.js
-tests/
+
 # Data geospasial besar — di-fetch dari GitHub oleh frontend
 *.geojson
-# Agent skills & workflows — tidak di-push ke GAS
-.agents/
-.agent/
+**/*.geojson
