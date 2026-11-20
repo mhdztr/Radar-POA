@@ -34,7 +34,10 @@ function dashboard_getOverview(token, filter) {
     // Kesiapan armada: 34 kapal besar (dari master/tactical seed + Siaga jika terhubung)
     var fleet = _dashGetTacticalFleet([]);
     var totalArmada = fleet.length || 34;
-    var siapCount = fleet.filter(function (k) { return k.status !== 'GALANGAN'; }).length;
+    var opCount = fleet.filter(function (k) { return k.status === 'OPERASIONAL'; }).length;
+    var pangkalanCount = fleet.filter(function (k) { return k.status === 'SIAP_PANGKALAN'; }).length;
+    var galanganCount = fleet.filter(function (k) { return k.status === 'GALANGAN'; }).length;
+    var siapCount = opCount + pangkalanCount;
     var siapPct = totalArmada > 0 ? Math.round(siapCount / totalArmada * 100) : 0;
 
     // Kepatuhan pelaporan minggu berjalan (dari satelit yang terhubung)
@@ -45,6 +48,8 @@ function dashboard_getOverview(token, filter) {
     var headline = [
       {
         label: 'Pagu & Serapan Anggaran (SP2D)',
+        source: 'SIKAP \u00B7 Anggaran',
+        sourceTone: 'sikap',
         value: ang.sp2dPct,
         unit: '%',
         sub: 'Realisasi Rp ' + _dashCompact(ang.realisasiSP2D) + ' \u00B7 Pagu Rp ' + _dashCompact(ang.paguTotal),
@@ -56,28 +61,34 @@ function dashboard_getOverview(token, filter) {
       },
       {
         label: 'Postur Awak Kapal (Nakhoda)',
+        source: 'NAKHODA \u00B7 Postur AKN',
+        sourceTone: 'nakhoda',
         value: n.akn.keseluruhan,
         unit: 'personel',
         sub: 'AKN POA ' + n.akn.poa + ' orang \u00B7 Sertifikat aktif ' + n.kompetensi.berlaku,
         foot: {
-          left:  { lbl: 'POA',        val: n.akn.poa + ' orang' },
+          left:  { lbl: 'POA',         val: n.akn.poa + ' orang' },
           right: { lbl: 'Kedaluwarsa', val: n.kompetensi.kedaluwarsa + ' sert.' }
         },
         pct: n.akn.keseluruhan > 0 ? Math.round(n.akn.poa / n.akn.keseluruhan * 100) : 0
       },
       {
         label: 'Kesiapan Armada Kapal Besar',
+        source: 'ARMADA \u00B7 ' + totalArmada + ' Kapal',
+        sourceTone: 'radar',
         value: siapCount,
         unit: '/ ' + totalArmada,
-        sub: '26 Operasional \u00B7 6 Siap Pangkalan \u00B7 2 Galangan',
+        sub: opCount + ' Operasional \u00B7 ' + pangkalanCount + ' Siap Pangkalan \u00B7 ' + galanganCount + ' Galangan',
         foot: {
           left:  { lbl: 'Siap',     val: siapCount + ' kapal' },
-          right: { lbl: 'Galangan', val: (totalArmada - siapCount) + ' kapal' }
+          right: { lbl: 'Galangan', val: galanganCount + ' kapal' }
         },
         pct: siapPct
       },
       {
         label: 'Kegiatan Direktorat (YTD)',
+        source: 'PUSAT \u00B7 Kegiatan Dit.',
+        sourceTone: 'pusat',
         value: p.kegiatanYtd,
         unit: 'kegiatan',
         sub: 'Periode ini ' + p.kegiatanPeriode + ' kegiatan \u00B7 ' + nMelapor + '/7 divisi melapor',
@@ -103,7 +114,7 @@ function dashboard_getOverview(token, filter) {
       {
         title: 'Tata Usaha (SIKAP)',
         order: 0,
-        span: 4,
+        span: 6,
         metrics: [
           { lbl: 'Realisasi SP2D (YTD)',   val: ang.sp2dPct,   unit: '%',   prog: true },
           { lbl: 'Realisasi Akrual (YTD)', val: ang.akrualPct, unit: '%',   prog: true },
@@ -131,7 +142,7 @@ function dashboard_getOverview(token, filter) {
       {
         title: 'Cakupan Laporan & Satelit',
         order: 1,
-        span: 2,
+        span: 6,
         metrics: [
           { lbl: 'Divisi Melapor Minggu Ini', val: nMelapor, unit: '/ 7', prog: true, raw: Math.round(nMelapor / 7 * 100) },
           { lbl: 'Disparitas SIKAP-Nakhoda',  val: s.kepegawaian.disparitasNakhoda, unit: 'item', prog: false,
@@ -145,7 +156,7 @@ function dashboard_getOverview(token, filter) {
       {
         title: 'Pengawakan (Nakhoda)',
         order: 2,
-        span: 3,
+        span: 6,
         metrics: [
           { lbl: 'Total Personel AKN', val: n.akn.keseluruhan, unit: 'orang', prog: false },
           { lbl: 'Awak Kapal (POA)',   val: n.akn.poa, unit: 'orang', prog: false,
@@ -159,7 +170,7 @@ function dashboard_getOverview(token, filter) {
       {
         title: 'BMN & Pengadaan (SIKAP)',
         order: 3,
-        span: 3,
+        span: 6,
         metrics: [
           { lbl: 'Total Unit BMN Aktif', val: s.bmn.totalUnit, unit: 'unit', prog: false },
           { lbl: 'BMN Rusak Berat',      val: s.bmn.kondisi.RUSAK_BERAT, unit: 'unit', prog: false,
@@ -181,7 +192,7 @@ function dashboard_getOverview(token, filter) {
       {
         title: 'Kegiatan Direktorat (Pusat)',
         order: 4,
-        span: 3,
+        span: 6,
         metrics: [
           { lbl: 'Kegiatan Terlaksana (YTD)', val: p.kegiatanYtd,     unit: 'kegiatan', prog: false },
           { lbl: 'Kegiatan Periode Ini',      val: p.kegiatanPeriode, unit: 'kegiatan', prog: false },
@@ -199,7 +210,7 @@ function dashboard_getOverview(token, filter) {
       {
         title: 'Satelit Dalam Integrasi (Sistik, Siaga, Operasi)',
         order: 5,
-        span: 3,
+        span: 6,
         metrics: [
           { lbl: 'Sistik (Logistik)', val: agg.satellites.SISTIK.connected ? 'Terhubung' : 'Menunggu Integrasi', unit: '', prog: false },
           { lbl: 'Siaga (Harwat)',    val: agg.satellites.SIAGA.connected ? 'Terhubung' : 'Menunggu Integrasi',  unit: '', prog: false },
@@ -209,6 +220,16 @@ function dashboard_getOverview(token, filter) {
         viz: null
       }
     ];
+
+    var aknLabels = AKN_KATEGORI_LIST.map(function (kat) {
+      return kat === 'P3K_PARUH_WAKTU' ? 'P3K Paruh' : kat.replace(/_/g, ' ');
+    });
+    var aknKes = AKN_KATEGORI_LIST.map(function (kat) {
+      return Number(((n.akn.byKategori && n.akn.byKategori[kat]) || {}).keseluruhan) || 0;
+    });
+    var aknPoa = AKN_KATEGORI_LIST.map(function (kat) {
+      return Number(((n.akn.byKategori && n.akn.byKategori[kat]) || {}).poa) || 0;
+    });
 
     var data = {
       periode: agg.meta.periodeAktif,
@@ -224,8 +245,14 @@ function dashboard_getOverview(token, filter) {
       charts: {
         trendMonths: months,
         realisasi: { sp2d: ang.sp2dMonthly, akrual: ang.akrualMonthly },
+        aknPostur: { labels: aknLabels, keseluruhan: aknKes, poa: aknPoa },
+        armadaStatus: [
+          { label: 'Operasional di Laut', val: opCount,        tone: 'deep' },
+          { label: 'Siap di Pangkalan',   val: pangkalanCount, tone: 'ok' },
+          { label: 'Galangan',            val: galanganCount,  tone: 'warn' }
+        ],
         hariOperasi: { kapal: months.map(function () { return 0; }), pesawat: months.map(function () { return 0; }) },
-        kesiapan: { siap: siapCount, tidakSiap: totalArmada - siapCount, totalArmada: totalArmada },
+        kesiapan: { siap: siapCount, tidakSiap: galanganCount, totalArmada: totalArmada },
         penindakan: [],
         kapalTeraktif: fleet.slice().sort(function (a, b) { return b.hariOperasi - a.hariOperasi; }).slice(0, 5)
           .map(function (k) { return { label: k.nama, val: k.hariOperasi }; }),
@@ -251,9 +278,35 @@ function dashboard_profilKapal(token, params) {
     var kapalId = String(p.kapalId || '').trim();
     if (!kapalId) return { success: false, error: 'kapalId wajib diisi.' };
 
+    var fleetSeed = null;
+    for (var fi = 0; fi < FLEET_34_TACTICAL_SEED.length; fi++) {
+      if (FLEET_34_TACTICAL_SEED[fi].id === kapalId) {
+        fleetSeed = FLEET_34_TACTICAL_SEED[fi];
+        break;
+      }
+    }
+
     var kapalInfo = _dashKapalInfo(kapalId);
+    if (!kapalInfo && fleetSeed) {
+      kapalInfo = {
+        kapalId: fleetSeed.id,
+        nama: fleetSeed.nama,
+        kelas: fleetSeed.kelas,
+        homebaseUpt: fleetSeed.pangkalan,
+        statusAktif: fleetSeed.status !== 'GALANGAN'
+      };
+    }
     if (!kapalInfo) {
       return { success: false, error: 'Kapal dengan ID ' + kapalId + ' tidak ditemukan di master.' };
+    }
+    if (fleetSeed) {
+      kapalInfo.wpp = fleetSeed.wpp;
+      kapalInfo.statusTaktis = fleetSeed.status;
+      kapalInfo.komandan = fleetSeed.komandan;
+      kapalInfo.pangkalan = fleetSeed.pangkalan;
+      kapalInfo.hariOperasi = fleetSeed.hari;
+      kapalInfo.lat = fleetSeed.lat;
+      kapalInfo.lng = fleetSeed.lng;
     }
 
     // Tarik penugasan awak aktif kapal dari satelit Nakhoda
@@ -287,20 +340,35 @@ function dashboard_profilKapal(token, params) {
     var asetKapal = (bmnRes.rows || []).filter(function (b) {
       return String(b['KapalID'] || '').trim() === kapalId;
     });
+    var asetList = asetKapal.slice(0, 25).map(function (b) {
+      return {
+        kodeBarang: String(b['KodeBarang'] || b['AsetID'] || ''),
+        namaBarang: String(b['NamaBarang'] || b['NamaAset'] || ''),
+        kondisi: String(b['Kondisi'] || 'BAIK'),
+        nilaiBuku: Number(b['NilaiBuku']) || 0
+      };
+    });
+
+    var statusKesiapan = fleetSeed ? (fleetSeed.status !== 'GALANGAN') : kapalInfo.statusAktif;
+    var dockingAktif = fleetSeed ? (fleetSeed.status === 'GALANGAN') : false;
 
     return {
       success: true,
       data: {
         kapal: kapalInfo,
         summary: {
-          statusKesiapan: true,
+          statusKesiapan: statusKesiapan,
+          statusTaktis: fleetSeed ? fleetSeed.status : (statusKesiapan ? 'SIAP' : 'GALANGAN'),
           statusKesiapanPeriode: getCurrentPeriode(),
-          penyebabTidakSiap: '',
-          dockingAktif: false,
+          penyebabTidakSiap: dockingAktif ? 'Pemeliharaan terencana di galangan' : '',
+          dockingAktif: dockingAktif,
+          lokasiDocking: dockingAktif && fleetSeed ? fleetSeed.pangkalan : '',
+          totalHariOperasiLaut: fleetSeed ? fleetSeed.hari : 0,
           totalKruAktif: kruAktif.length,
           totalBmnKapal: asetKapal.length
         },
         kruAktif: kruAktif,
+        asetKapal: asetList,
         riwayat: {
           kesiapan: [], docking: [], operasiLaut: [], operasiUdara: [], amunisi: [], bbm: [], marabahaya: []
         }

@@ -39,10 +39,10 @@ function _loadCharts(cb) {
     Chart.register(_CHART_VALUE_PLUGIN);
     Chart.register(_CHART_LINEEND_PLUGIN);
     Chart.register(_CHART_DONUT_PLUGIN);
-    Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+    Chart.defaults.font.family = "'Public Sans', system-ui, sans-serif";
     Chart.defaults.font.size   = 12;
     Chart.defaults.color       = _CHART_COLORS.textSecondary;
-    Chart.defaults.borderColor = '#E2E8F0';
+    Chart.defaults.borderColor = '#D1DCE5';
     var queue = _chartsQueue.slice();
     _chartsQueue = [];
     queue.forEach(function (fn) { try { fn(); } catch (e) {} });
@@ -58,17 +58,22 @@ function _loadCharts(cb) {
 // WARNA — mirror token Style.html (canvas tak bisa baca CSS var)
 // ============================================================
 var _CHART_COLORS = {
-  primary:       '#2B3674',            // --n-primary (navy sidebar — disetujui jadi aksen)
-  primarySoft:   'rgba(43,54,116,0.6)',// variasi navy, seri pembanding ke-2
-  primaryAlpha:  'rgba(43,54,116,0.35)',// variasi navy, seri pembanding ke-3 (vs DESIGN §6: beda via opacity)
-  ok:            '#10B981',            // --n-ok
-  warn:          '#F59E0B',            // --n-warn
-  crit:          '#EF4444',            // --n-crit
-  neutral:       '#E2E8F0',            // abu netral untuk referensi/target
-  textPrimary:   '#2B3674',
-  textSecondary: '#4A5568',
-  textMuted:     '#A3AED0',
-  grid:          'rgba(0,0,0,0.06)'    // ~ --n-border-subtle
+  primary:       '#0B4F6C',
+  primarySoft:   'rgba(11, 79, 108, 0.56)',
+  primaryAlpha:  'rgba(11, 79, 108, 0.28)',
+  sikap:         '#0F766E',
+  sikapSoft:     'rgba(15, 118, 110, 0.45)',
+  nakhoda:       '#C2410C',
+  nakhodaSoft:   'rgba(194, 65, 12, 0.45)',
+  brass:         '#B4761F',
+  ok:            '#15803D',
+  warn:          '#B45309',
+  crit:          '#B91C1C',
+  neutral:       '#D1DCE5',
+  textPrimary:   '#14191F',
+  textSecondary: '#3E4752',
+  textMuted:     '#535D68',
+  grid:          'rgba(20, 25, 31, 0.08)'
 };
 
 function _chartRgba(hex, alpha) {
@@ -170,7 +175,7 @@ var _CHART_VALUE_PLUGIN = {
     var ctx = chart.ctx;
     var fmt = cfg.formatter || _chartNum;
     ctx.save();
-    ctx.font = '600 11px "Plus Jakarta Sans", sans-serif';
+    ctx.font = '600 11px "Public Sans", system-ui, sans-serif';
     ctx.fillStyle = cfg.color || _CHART_COLORS.textSecondary;
     ctx.textBaseline = 'middle';
     chart.data.datasets.forEach(function (ds, di) {
@@ -205,7 +210,7 @@ var _CHART_LINEEND_PLUGIN = {
     var ctx = chart.ctx;
     var fmt = cfg.formatter || _chartNum;
     ctx.save();
-    ctx.font = '600 11px "Plus Jakarta Sans", sans-serif';
+    ctx.font = '600 11px "Public Sans", system-ui, sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     chart.data.datasets.forEach(function (ds, di) {
@@ -243,7 +248,7 @@ var _CHART_DONUT_PLUGIN = {
     ctx.save();
     // Label persen di tiap segmen (hanya bila segmen cukup besar)
     if (cfg.showPct !== false && total > 0) {
-      ctx.font = '600 11px "Plus Jakarta Sans", sans-serif';
+      ctx.font = '600 11px "Public Sans", system-ui, sans-serif';
       ctx.fillStyle = '#FFFFFF';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -267,11 +272,11 @@ var _CHART_DONUT_PLUGIN = {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = _CHART_COLORS.textPrimary;
-      ctx.font = '700 22px "Plus Jakarta Sans", sans-serif';
+      ctx.font = '700 22px "Public Sans", system-ui, sans-serif';
       ctx.fillText(String(cfg.center), cx, cy - (cfg.centerSub ? 8 : 0));
       if (cfg.centerSub) {
         ctx.fillStyle = _CHART_COLORS.textMuted;
-        ctx.font = '500 11px "Plus Jakarta Sans", sans-serif';
+        ctx.font = '500 11px "Public Sans", system-ui, sans-serif';
         ctx.fillText(String(cfg.centerSub), cx, cy + 12);
       }
     }
@@ -290,14 +295,14 @@ function _chartBase(opts, extra) {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: '#1E293B',
-        titleColor: '#F8FAFC',
-        bodyColor: '#E2E8F0',
+        backgroundColor: '#0E1722',
+        titleColor: '#F5F2EB',
+        bodyColor: '#D2DAE4',
         padding: 10,
-        cornerRadius: 8,
+        cornerRadius: 4,
         displayColors: false,
-        titleFont: { family: "'Plus Jakarta Sans', sans-serif", weight: '600' },
-        bodyFont: { family: "'Plus Jakarta Sans', sans-serif" }
+        titleFont: { family: "'Public Sans', system-ui, sans-serif", weight: '600' },
+        bodyFont: { family: "'Public Sans', system-ui, sans-serif" }
       }
     }
   };
@@ -439,6 +444,7 @@ function _chartBar(canvasId, labels, datasets, opts) {
 
     var yScale = {
       beginAtZero: true,
+      grace: horizontal ? undefined : '14%',
       grid: { color: _CHART_COLORS.grid },
       ticks: {
         color: _CHART_COLORS.textMuted,
@@ -456,7 +462,7 @@ function _chartBar(canvasId, labels, datasets, opts) {
         layout: {
           padding: horizontal
             ? { top: 6, right: 16, bottom: 12, left: 6 }
-            : { top: 6, right: 6, bottom: 6, left: 6 }
+            : { top: 18, right: 6, bottom: 6, left: 6 }
         },
         plugins: {
           nvVal: { enabled: showValLabel && !horizontal, formatter: opts.fmt || _chartNum, color: _CHART_COLORS.textSecondary, horizontal: false },

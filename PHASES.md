@@ -94,7 +94,7 @@ ROADMAP PENGEMBANGAN RADAR POA v1.0
 ---
 
 ### Fase 4: Dasbor Strategis SiMata, Kalimat Temuan, Peta Taktis 34 Kapal, & Analitik SIKAP/Nakhoda
-- **Status:** **Siap Dikerjakan (`[ ]`)**
+- **Status:** **Selesai (`[x]`)**
 - **Tujuan Utama:** Menyempurnakan tampilan dan interaksi **Ikhtisar Eksekutif (`overview`)**, **Kapal Terbaik (`kapal-terbaik`)**, dan **Profil Kapal (`profil-kapal`)** sesuai standar visualisasi D3/Leaflet di `DESIGN.md` §6–§7.
 - **Komponen yang Harus Dikerjakan:**
   1. **Header Layar & Kalimat Temuan Otomatis (`_renderPageHeader` & `_ovRenderData`):**
@@ -112,8 +112,9 @@ ROADMAP PENGEMBANGAN RADAR POA v1.0
      - Podium Top 3 Kapal Terbaik Triwulan (`TW I–IV`) dan tabel peringkat 34 kapal besar dengan kolom angka `tabular-nums` rata kanan.
      - Halaman Profil Kapal menampilkan daftar kru aktif yang ditarik langsung dari `TX_Penugasan_Kapal` & `Master_Awak` (Nakhoda) serta jumlah BMN kapal dari `TX_BMN_Aset` (SIKAP).
 - **Kriteria Verifikasi:**
-  - [ ] Tidak ada lagi warna legacy `#2B3674` di `Script_Charts.html` maupun `Script_Main.html`.
-  - [ ] Klik indikator sinkronisasi memicu `radar_triggerSyncNow` dan memperbarui tampilan secara *live*.
+  - [x] Tidak ada lagi warna legacy `#2B3674` di `Script_Charts.html` maupun `Script_Main.html`.
+  - [x] Klik indikator sinkronisasi memicu `radar_triggerSyncNow` dan memperbarui tampilan secara *live*.
+  - [x] Audit visual Playwright desktop (`1440×900`) & mobile (`390×844`) lolos tanpa overflow horizontal dan seluruh screenshot telah diverifikasi langsung.
 
 ---
 
