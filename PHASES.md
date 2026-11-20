@@ -73,7 +73,7 @@ ROADMAP PENGEMBANGAN RADAR POA v1.0
 ---
 
 ### Fase 3: Ground-Up Design System (`html/Style.html`), Branding Logo PSDKP, & Open-Plane Executive Shell
-- **Status:** **Siap Dikerjakan (`[ ]`)**
+- **Status:** **Selesai (`[x]`)**
 - **Tujuan Utama:** Membangun `html/Style.html` baru dari *ground-up* sesuai kontrak [DESIGN.md](file:///home/pinefeast/Projects/Radar-POA/DESIGN.md) dan memperbarui shell [html/Index.html](file:///home/pinefeast/Projects/Radar-POA/html/Index.html) dengan identitas resmi **Logo Ditjen PSDKP** seperti pada SIKAP dan Nakhoda.
 - **Komponen yang Harus Dikerjakan:**
   1. **Pembuatan `html/Style.html` dari Ground-Up:**
@@ -90,9 +90,9 @@ ROADMAP PENGEMBANGAN RADAR POA v1.0
        - **Mobile Topbar (`<= 768px`):** Crest Ditjen PSDKP (`20x23`) + nama layar aktif + tombol toggle menu.
      - Mengaktifkan kembali `<?!= html_include('html/Style'); ?>` di `<head>` `html/Index.html` dan memuat font `Geist` + `Geist Mono` + `Plus Jakarta Sans`.
 - **Kriteria Verifikasi:**
-  - [ ] `html/Style.html` ter-include dengan benar di `html/Index.html` tanpa error template GAS.
-  - [ ] Logo PSDKP tampil tajam dengan outline kontur putih halus di layar masuk, sidebar, dan mobile topbar.
-  - [ ] Seluruh kontrol mematuhi tier `40px / 32px / 26px` (`_uiAudit()` melaporkan `0 violations`).
+  - [x] `html/Style.html` ter-include dengan benar di `html/Index.html` tanpa error template GAS.
+  - [x] Logo PSDKP tampil tajam dengan outline kontur putih halus di layar masuk, sidebar, dan mobile topbar.
+  - [x] Seluruh kontrol mematuhi tier `40px / 32px / 26px` (`_uiAudit()` melaporkan `0 violations`).
 
 ---
 

@@ -272,14 +272,14 @@ function _syncCheckDeferred() {
 // minRoles: null = semua APPROVED; array = hanya role tsb
 var NAV_SECTIONS = [
   {
-    label: 'UTAMA',
+    label: 'Utama',
     items: [
       { id: 'overview',      label: 'Ikhtisar',            divisiId: null,         minRoles: null },
       { id: 'kegiatan',      label: 'Kegiatan Direktorat', divisiId: null,         minRoles: ['SUPERADMIN','DIREKTUR','KADIV'] }
     ]
   },
   {
-    label: 'SISTEM',
+    label: 'Sistem',
     items: [
       { id: 'notifikasi',  label: 'Notifikasi',       divisiId: null, minRoles: null },
       { id: 'kelola-akun', label: 'Admin Panel',      divisiId: null, minRoles: ['SUPERADMIN','DIREKTUR'] },
@@ -512,7 +512,7 @@ function _onRegistrationApproved(data) {
   var email = data.email || (_lastPendingPayload && _lastPendingPayload.email) || '';
   var nama  = data.nama  || (_lastPendingPayload && _lastPendingPayload.nama)  || 'Pengguna';
 
-  try { sessionStorage.removeItem('NAUTIKA_PENDING_REG'); } catch (e) {}
+  try { sessionStorage.removeItem('RADARPOA_PENDING_REG'); } catch (e) {}
 
   var titleEl = document.querySelector('#v-pending .auth-title');
   if (titleEl) titleEl.textContent = 'Pendaftaran Disetujui';
@@ -533,11 +533,11 @@ function _onRegistrationApproved(data) {
     '<div class="n-banner-approved" role="alert">' +
       '<div class="n-banner-approved-head">' +
         '<span class="n-banner-approved-icon">&#10003;</span>' +
-        '<span>Akun Anda Berhasil Disetujui!</span>' +
+        '<span>Akun Anda Berhasil Disetujui</span>' +
       '</div>' +
       '<p class="n-banner-approved-text">' +
         'Pendaftaran akun atas nama <b>' + _esc(nama) + '</b> telah diterima dan disetujui oleh atasan/administrator. ' +
-        'Akun Anda kini aktif. Silakan masuk untuk mengakses sistem Nautika.' +
+        'Akun Anda kini aktif. Silakan masuk untuk mengakses sistem Radar POA.' +
       '</p>' +
       '<div class="n-banner-approved-actions">' +
         '<button type="button" class="btn-primary" onclick="_pendingGoToLogin(\'' + _esc(email) + '\')">' +
@@ -577,7 +577,7 @@ function _onRegistrationRejected(data) {
   var email  = data.email || (_lastPendingPayload && _lastPendingPayload.email) || '';
   var alasan = data.alasanReject || 'Pendaftaran tidak memenuhi kriteria verifikasi.';
 
-  try { sessionStorage.removeItem('NAUTIKA_PENDING_REG'); } catch (e) {}
+  try { sessionStorage.removeItem('RADARPOA_PENDING_REG'); } catch (e) {}
 
   var titleEl = document.querySelector('#v-pending .auth-title');
   if (titleEl) titleEl.textContent = 'Pendaftaran Ditolak';
@@ -653,7 +653,7 @@ function _pendingCancelOrNew() {
   _clearPendingAutoRedirect();
   _stopPendingStatusPolling();
   _lastPendingPayload = null;
-  try { sessionStorage.removeItem('NAUTIKA_PENDING_REG'); } catch (e) {}
+  try { sessionStorage.removeItem('RADARPOA_PENDING_REG'); } catch (e) {}
   _clearPendingBanners();
   _showAuthView('register');
   _regResetOtp();
@@ -1074,6 +1074,22 @@ function _renderSidebar() {
   nav.innerHTML = html;
 }
 
+function _toggleMobileNav() {
+  var sb = document.getElementById('app-sidebar');
+  var bd = document.getElementById('sidebar-backdrop');
+  if (!sb) return;
+  var willOpen = !sb.classList.contains('mobile-open');
+  sb.classList.toggle('mobile-open', willOpen);
+  if (bd) bd.classList.toggle('show', willOpen);
+}
+
+function _closeMobileNav() {
+  var sb = document.getElementById('app-sidebar');
+  var bd = document.getElementById('sidebar-backdrop');
+  if (sb) sb.classList.remove('mobile-open');
+  if (bd) bd.classList.remove('show');
+}
+
 // ── USER ACCOUNT MENU (Drop-Up Popover) ───────────────────
 function _toggleUserMenu(e) {
   if (e) e.stopPropagation();
@@ -1129,6 +1145,11 @@ function _updateActiveNav(viewId) {
   if (active) active.classList.add('active');
 }
 
+function _updateMobileRouteLabel(viewId) {
+  var el = document.getElementById('mobile-route-label');
+  if (el) el.textContent = _viewTitle(viewId);
+}
+
 // ── ROUTING ───────────────────────────────────────────────
 function _routeTo(viewId) {
   // Rute khusus — bukan nav sidebar (dibuka dari Master Data / kartu Ikhtisar)
@@ -1144,6 +1165,8 @@ function _routeTo(viewId) {
   if (window.location.hash !== '#' + viewId) {
     window.location.hash = viewId;
   }
+  _closeMobileNav();
+  _updateMobileRouteLabel(viewId);
   _updateActiveNav(viewId);
   _renderPageHeader(viewId);
   _renderViewContent(viewId);
@@ -1155,6 +1178,8 @@ function _routeProfil() {
   if (window.location.hash !== '#profil-kapal') {
     window.location.hash = 'profil-kapal';
   }
+  _closeMobileNav();
+  _updateMobileRouteLabel('profil-kapal');
   _updateActiveNav('profil-kapal');
   _renderPageHeader('profil-kapal');
   _renderViewContent('profil-kapal');
@@ -1170,6 +1195,8 @@ function _routeKapalTerbaik() {
   if (window.location.hash !== '#kapal-terbaik') {
     window.location.hash = 'kapal-terbaik';
   }
+  _closeMobileNav();
+  _updateMobileRouteLabel('kapal-terbaik');
   _updateActiveNav('overview');
   _renderPageHeader('kapal-terbaik');
   _renderViewContent('kapal-terbaik');
