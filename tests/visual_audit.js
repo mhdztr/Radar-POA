@@ -281,11 +281,19 @@ async function inspectPage(page, name) {
     const imgs = Array.from(document.querySelectorAll('img')).filter((i) => i.offsetParent !== null);
     const brokenImgs = imgs.filter((i) => !i.complete || i.naturalWidth === 0).map((i) => i.alt || i.src.slice(0, 40));
     const finding = document.getElementById('page-finding');
+    const brokenControlRows = [];
+    document.querySelectorAll('.page-header, .topbar-actions, .filter-box, .n-tabs, .hist-actions, .ctl-row').forEach((box) => {
+      if (box.offsetParent === null) return;
+      const ctls = Array.from(box.querySelectorAll('button, select, input')).filter((c) => c.offsetParent !== null);
+      const hs = [...new Set(ctls.map((c) => Math.round(c.getBoundingClientRect().height)))];
+      if (hs.length > 1) brokenControlRows.push({ box: (box.className || box.id || '').slice(0, 30), heights: hs });
+    });
     return {
       overflowX: docW - winW,
       docW,
       winW,
       brokenImgs,
+      brokenControlRows,
       findingVisible: finding ? !finding.classList.contains('n-hidden') : false,
       findingText: finding ? finding.textContent : '',
       uiAudit: audit ? { pass: audit.pass, checked: audit.containersChecked, violations: audit.violations } : null
@@ -346,7 +354,7 @@ async function inspectPage(page, name) {
     await inspectPage(mPage, 'login-mobile');
     await mPage.screenshot({ path: path.join(OUT_DIR, '02-login-mobile.png') });
 
-    // ── 3. Authenticated Desktop Overview (real login submit) ──
+    // ── 3. Authenticated Desktop Overview (1440x900) ──
     await page.fill('#login-email', 'direktur.poa@kkp.go.id');
     await page.fill('#login-password', 'RadarPOA2026!');
     await page.click('#btn-login');
@@ -357,7 +365,25 @@ async function inspectPage(page, name) {
     await page.screenshot({ path: path.join(OUT_DIR, '03-overview-viewport.png') });
     await page.screenshot({ path: path.join(OUT_DIR, '03-overview-full.png'), fullPage: true });
 
-    // ── 4. Authenticated Mobile Overview ──
+    // ── 3b. Sync Popover Check (opening popover must NOT trigger manual sync / toast) ──
+    await page.click('#sync-indicator');
+    await page.waitForSelector('#sync-popover:not(.n-hidden)', { timeout: 5000 });
+    await page.waitForTimeout(250);
+    const toastCountOnPopover = await page.evaluate(() => document.querySelectorAll('#n-toaster .sonner-toast').length);
+    console.log('[AUDIT] sync-popover-toasts:', toastCountOnPopover);
+    await page.screenshot({ path: path.join(OUT_DIR, '03b-sync-popover.png') });
+    await page.click('#sync-indicator');
+    await page.waitForTimeout(200);
+
+    // ── 3c. Laptop Viewport (1024x768) ──
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await page.waitForTimeout(450);
+    await inspectPage(page, 'overview-1024');
+    await page.screenshot({ path: path.join(OUT_DIR, '03c-overview-1024.png') });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.waitForTimeout(300);
+
+    // ── 4. Authenticated Mobile Overview + Dock Overflow Sheet ──
     await mPage.fill('#login-email', 'direktur.poa@kkp.go.id');
     await mPage.fill('#login-password', 'RadarPOA2026!');
     await mPage.click('#btn-login');
@@ -365,6 +391,12 @@ async function inspectPage(page, name) {
     await mPage.waitForTimeout(1500);
     await inspectPage(mPage, 'overview-mobile');
     await mPage.screenshot({ path: path.join(OUT_DIR, '04-overview-mobile.png'), fullPage: true });
+    await mPage.click('.dock-more-btn');
+    await mPage.waitForSelector('#dock-more-sheet:not(.n-hidden)', { timeout: 5000 });
+    await mPage.waitForTimeout(300);
+    await mPage.screenshot({ path: path.join(OUT_DIR, '04b-mobile-dock-sheet.png') });
+    await mPage.click('#dock-more-mask');
+    await mPage.waitForTimeout(200);
 
     // ── 5. Kapal Terbaik ──
     await page.evaluate(() => _routeTo('kapal-terbaik'));

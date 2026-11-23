@@ -19,7 +19,7 @@ ROADMAP PENGEMBANGAN RADAR POA v2.0
 ├── [Fase 4]  Selesai [x] — Dasbor Strategis Awal, Kalimat Temuan, Peta 34 Kapal, & Playwright Visual Audit
 │
 ├── [Fase R0] Selesai [x] — Penyelarasan Dokumentasi & Kontrak Redesign Ultra-Detail di Seluruh *.md
-├── [Fase R1] [ ]         — Shell Baru (Top Bar 56px + Floating Bottom Maritime Dock), Toolbar 32px, Sync Popover, & Login 50/50
+├── [Fase R1] Selesai [x] — Shell Baru (Top Bar 56px + Floating Bottom Maritime Dock), Toolbar 32px, Sync Popover, & Login 50/50
 ├── [Fase R2] [ ]         — Redesign Ikhtisar: Peta 68/32 Berikon Siluet Kapal Kelas I–V, Grafik Asimetris 65/35, & Tabel Eksekutif Lintas Satelit
 ├── [Fase R3] [ ]         — Redesign Kapal Terbaik (Non-Galangan Podium & Sync TW) & Profil Kapal (h1 Kapal + Enum Manusiawi)
 ├── [Fase R4] [ ]         — Standarisasi 5 Halaman Sekunder, Fix Error .map(), Jargon Clean-Up, Calendar Anti-Ketik, & 12-Screen Playwright Gate
@@ -52,7 +52,7 @@ ROADMAP PENGEMBANGAN RADAR POA v2.0
 ---
 
 ### Fase R1: Shell Baru (Top Institutional Bar `56px` + Floating Bottom Maritime Dock), Toolbar `32px`, Sync Popover, & Login 50/50
-- **Status:** **Siap Dikerjakan (`[ ]`)**
+- **Status:** **Selesai (`[x]`)**
 - **Tujuan Utama:** Mengganti navigasi sidebar rail kiri dengan **Floating Bottom Maritime Dock (`#0E1722`)** + **Top Institutional Bar (`56px`)**, merampingkan sticky header agar tidak pecah di lebar `1024px`, menseragamkan kontrol `32px`, dan menyempurnakan layar autentikasi 50/50.
 - **Komponen yang Harus Dikerjakan:**
   1. **Shell HTML & CSS Baru (`html/Index.html`, `html/Style.html`, `html/Script_Main.html`):**
@@ -70,8 +70,8 @@ ROADMAP PENGEMBANGAN RADAR POA v2.0
      - Sesuaikan `object-position` foto personel di desktop & mobile agar figur utama utuh tanpa wajah/dahi terpotong di tepi bingkai.
      - Ubah panel kanan ke `#FAFCFD` dengan tata flex vertikal berjangkar footer `Direktorat Jenderal PSDKP · Kementerian Kelautan dan Perikanan RI`, hapus `<hr>` kaku, perkuat border input (`#B5C4D1`), dan hapus ikon dekoratif dari tombol `Masuk`.
 - **Kriteria Verifikasi:**
-  - [ ] Screenshot Playwright `login-desktop` (`1440×900`), `login-mobile` (`390×844`), `overview-1440`, `overview-1024`, `overview-mobile`, sync popover, dan mobile overflow sheet ter-render rapi dan diperiksa via `read_file`.
-  - [ ] `overflowX === 0` dan `brokenControlRows === 0` di seluruh viewport uji.
+  - [x] Screenshot Playwright `login-desktop` (`1440×900`), `login-mobile` (`390×844`), `overview-1440`, `overview-1024`, `overview-mobile`, sync popover, dan mobile overflow sheet ter-render rapi dan diperiksa via `read_file`.
+  - [x] `overflowX === 0` dan `brokenControlRows === 0` di seluruh viewport uji.
 
 ---
 

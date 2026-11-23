@@ -142,7 +142,7 @@ function _updateTelemetryTimestampUI() {
   var syncEl = document.getElementById('sync-indicator');
   if (!syncEl) return;
   var txt = syncEl.querySelector('.sync-indicator-text');
-  var popStatus = syncEl.querySelector('.sync-pop-status');
+  var popStatus = document.getElementById('sync-pop-status');
   var popData = document.getElementById('sync-pop-data');
 
   var meta = APP_SYNC.lastTxMetadata;
@@ -174,14 +174,14 @@ function _updateTelemetryTimestampUI() {
     syncEl.classList.add('is-stale');
     if (txt) txt.textContent = 'Data Usang';
     if (popStatus) popStatus.textContent = 'Data Perlu Pembaruan';
-    syncEl.title = 'Peringatan: Data terakhir diperbarui ' + Math.floor(ageDays) + ' hari yang lalu (> 7 hari). Klik untuk memeriksa pembaruan.';
+    syncEl.title = 'Data terakhir diperbarui ' + Math.floor(ageDays) + ' hari lalu — buka untuk menyinkronkan';
   } else {
     syncEl.classList.remove('is-stale');
     if (txt && !syncEl.classList.contains('is-syncing') && !syncEl.classList.contains('is-deferred')) {
       txt.textContent = 'Tersinkron';
     }
     if (popStatus) popStatus.textContent = 'Sistem Tersinkron';
-    syncEl.title = 'Sistem Tersinkron \u00B7 Data per: ' + dateStr + '. Klik untuk memeriksa pembaruan.';
+    syncEl.title = 'Sistem Tersinkron \u00B7 Data per: ' + dateStr;
   }
 }
 
@@ -189,7 +189,7 @@ function _syncUpdateIndicator(state, detailText) {
   var el = document.getElementById('sync-indicator');
   if (!el) return;
   var txt = el.querySelector('.sync-indicator-text');
-  var popStatus = el.querySelector('.sync-pop-status');
+  var popStatus = document.getElementById('sync-pop-status');
 
   el.classList.remove('is-syncing', 'is-deferred');
 
@@ -197,16 +197,52 @@ function _syncUpdateIndicator(state, detailText) {
     el.classList.add('is-syncing');
     if (txt) txt.textContent = 'Menyinkronkan\u2026';
     if (popStatus) popStatus.textContent = 'Memeriksa data ke server\u2026';
-    el.title = 'Sedang memeriksa versi data ke server\u2026';
+    el.title = 'Sedang memeriksa versi data ke server';
   } else if (state === 'deferred') {
     el.classList.add('is-deferred');
     if (txt) txt.textContent = 'Ada Pembaruan';
     if (popStatus) popStatus.textContent = 'Data Baru Tersedia di Server';
-    el.title = 'Data baru tersedia di server. Ditunda selama formulir aktif.';
+    el.title = 'Data baru tersedia di server (ditunda selama formulir aktif)';
   } else {
-    // synced
     _updateTelemetryTimestampUI();
   }
+}
+
+function _toggleSyncPopover(e) {
+  if (e) e.stopPropagation();
+  var pop = document.getElementById('sync-popover');
+  var btn = document.getElementById('sync-indicator');
+  if (!pop || !btn) return;
+  _closeUserMenu();
+  var willOpen = pop.classList.contains('n-hidden');
+  if (willOpen) {
+    pop.classList.remove('n-hidden');
+    btn.setAttribute('aria-expanded', 'true');
+    setTimeout(function () {
+      document.addEventListener('click', _syncOutsideClickHandler);
+      document.addEventListener('keydown', _syncKeyHandler);
+    }, 0);
+  } else {
+    _closeSyncPopover();
+  }
+}
+
+function _closeSyncPopover() {
+  var pop = document.getElementById('sync-popover');
+  var btn = document.getElementById('sync-indicator');
+  if (pop) pop.classList.add('n-hidden');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+  document.removeEventListener('click', _syncOutsideClickHandler);
+  document.removeEventListener('keydown', _syncKeyHandler);
+}
+
+function _syncOutsideClickHandler(e) {
+  var wrap = document.getElementById('sync-wrap');
+  if (wrap && !wrap.contains(e.target)) _closeSyncPopover();
+}
+
+function _syncKeyHandler(e) {
+  if (e.key === 'Escape' || e.keyCode === 27) _closeSyncPopover();
 }
 
 function _setPageFinding(text) {
@@ -238,11 +274,16 @@ function _updateSyncSatellitesUI(satellites) {
   }).join('');
 }
 
-function _triggerManualSync() {
+function _triggerManualSync(e) {
+  if (e) e.stopPropagation();
   if (APP_SYNC.inFlight) return;
+  var syncBtn = document.getElementById('btn-sync-now');
+  if (syncBtn) syncBtn.disabled = true;
   var canForce = APP.user && ['SUPERADMIN', 'DIREKTUR', 'KADIV'].indexOf(APP.user.role) !== -1;
   if (!canForce) {
     _runSyncTick(true);
+    if (syncBtn) syncBtn.disabled = false;
+    _closeSyncPopover();
     return;
   }
   APP_SYNC.inFlight = true;
@@ -250,6 +291,7 @@ function _triggerManualSync() {
   google.script.run
     .withSuccessHandler(function (res) {
       APP_SYNC.inFlight = false;
+      if (syncBtn) syncBtn.disabled = false;
       if (res && res.success) {
         var payload = res.data || {};
         APP_SYNC.lastSyncTime = Date.now();
@@ -262,17 +304,19 @@ function _triggerManualSync() {
         APP_OV.key = null;
         _executeCurrentViewReloader();
         _syncUpdateIndicator('synced');
-        if (typeof toast !== 'undefined') toast.success('Data satelit berhasil disinkronkan.');
+        _closeSyncPopover();
+        if (typeof toast !== 'undefined') toast.success('Data satelit berhasil disinkronkan');
       } else {
         _syncUpdateIndicator(APP_SYNC.deferredReload ? 'deferred' : 'synced');
-        if (typeof toast !== 'undefined') toast.error((res && res.error) || 'Gagal menyinkronkan data.');
+        if (typeof toast !== 'undefined') toast.error((res && res.error) || 'Gagal menyinkronkan data');
       }
     })
     .withFailureHandler(function (err) {
       APP_SYNC.inFlight = false;
+      if (syncBtn) syncBtn.disabled = false;
       _failOrLogout(err);
       _syncUpdateIndicator(APP_SYNC.deferredReload ? 'deferred' : 'synced');
-      if (typeof toast !== 'undefined') toast.error((err && err.message) || 'Koneksi sinkronisasi gagal.');
+      if (typeof toast !== 'undefined') toast.error((err && err.message) || 'Koneksi sinkronisasi gagal');
     })
     .radar_triggerSyncNow(APP.token, APP.filter);
 }
@@ -332,27 +376,43 @@ function _syncCheckDeferred() {
   }, 120);
 }
 
-// ── NAVIGASI: section + items ─────────────────────────────
+// ── NAVIGASI: section + items (Floating Bottom Maritime Dock) ─
 // divisiId: null = semua role; string = DIV-* untuk Kadiv/Staf
 // minRoles: null = semua APPROVED; array = hanya role tsb
 var NAV_SECTIONS = [
   {
     label: 'Utama',
+    group: 'main',
     items: [
-      { id: 'overview',      label: 'Ikhtisar',            divisiId: null,         minRoles: null },
-      { id: 'kegiatan',      label: 'Kegiatan Direktorat', divisiId: null,         minRoles: ['SUPERADMIN','DIREKTUR','KADIV'] }
+      { id: 'overview',      label: 'Ikhtisar',            shortLabel: 'Ikhtisar', icon: 'layout',   divisiId: null, minRoles: null },
+      { id: 'kegiatan',      label: 'Kegiatan Direktorat', shortLabel: 'Kegiatan', icon: 'calendar', divisiId: null, minRoles: ['SUPERADMIN','DIREKTUR','KADIV'] },
+      { id: 'kapal-terbaik', label: 'Kapal Terbaik',       shortLabel: 'Kapal',    icon: 'award',    divisiId: null, minRoles: null },
+      { id: 'riwayat',       label: 'Riwayat Laporan',     shortLabel: 'Riwayat',  icon: 'history',  divisiId: null, minRoles: null }
     ]
   },
   {
     label: 'Sistem',
+    group: 'system',
     items: [
-      { id: 'notifikasi',  label: 'Notifikasi',       divisiId: null, minRoles: null },
-      { id: 'kelola-akun', label: 'Admin Panel',      divisiId: null, minRoles: ['SUPERADMIN','DIREKTUR'] },
-      { id: 'master-data', label: 'Master Data',      divisiId: null, minRoles: ['SUPERADMIN','DIREKTUR'] },
-      { id: 'riwayat',     label: 'Riwayat Laporan',  divisiId: null, minRoles: null }
+      { id: 'notifikasi',  label: 'Notifikasi',   shortLabel: 'Notifikasi',  icon: 'bell',     divisiId: null, minRoles: null },
+      { id: 'master-data', label: 'Master Data',  shortLabel: 'Master',      icon: 'database', divisiId: null, minRoles: ['SUPERADMIN','DIREKTUR'] },
+      { id: 'kelola-akun', label: 'Admin Panel',  shortLabel: 'Admin',       icon: 'shield',   divisiId: null, minRoles: ['SUPERADMIN','DIREKTUR'] }
     ]
   }
 ];
+
+function _dockIconSvg(name) {
+  var c = 'width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+  if (name === 'layout')   return '<svg ' + c + '><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>';
+  if (name === 'calendar') return '<svg ' + c + '><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+  if (name === 'award')    return '<svg ' + c + '><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>';
+  if (name === 'history')  return '<svg ' + c + '><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>';
+  if (name === 'bell')     return '<svg ' + c + '><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
+  if (name === 'database') return '<svg ' + c + '><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>';
+  if (name === 'shield')   return '<svg ' + c + '><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+  if (name === 'more')     return '<svg ' + c + '><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>';
+  return '';
+}
 
 // Apakah user bisa akses view ini?
 function _canAccess(item, user) {
@@ -377,7 +437,7 @@ function _navItem(id) {
 // Judul halaman dari view ID
 function _viewTitle(id) {
   if (id === 'profil-kapal') return 'Profil Kapal';
-  if (id === 'kapal-terbaik') return 'Kapal Terbaik (Ship of the Period)';
+  if (id === 'kapal-terbaik') return 'Kapal Terbaik';
   var item = _navItem(id);
   return item ? item.label : '—';
 }
@@ -1083,7 +1143,7 @@ function _asyncRenderFail(key, wrap, e) {
 function _initApp() {
   document.getElementById('auth-wrapper').classList.add('n-hidden');
   document.getElementById('app-wrapper').classList.remove('n-hidden');
-  _renderSidebar();
+  _renderDock();
   var hash = (window.location.hash || '').replace('#', '') || 'overview';
   _routeTo(hash);
   _applyShellStatus(); // badge notifikasi + strip "divisi belum melapor" (Fase 13)
@@ -1094,19 +1154,22 @@ function _initApp() {
   });
 }
 
-// ── SIDEBAR ───────────────────────────────────────────────
+// ── FLOATING BOTTOM MARITIME DOCK & TOPBAR ACCOUNT ────────
 function _renderSidebar() {
+  _renderDock();
+}
+
+function _renderDock() {
   var user = APP.user || {};
-  // Footer trigger card & popover menu
   var nameEl = document.getElementById('sb-user-name');
   if (nameEl) nameEl.textContent = user.nama || 'Pengguna';
   var roleEl = document.getElementById('sb-user-role');
-  if (roleEl) roleEl.textContent = ROLE_LABEL[user.role] || user.role || '—';
+  if (roleEl) roleEl.textContent = ROLE_LABEL[user.role] || user.role || '\u2014';
 
   var menuName = document.getElementById('sb-menu-name');
   if (menuName) menuName.textContent = user.nama || 'Pengguna';
   var menuEmail = document.getElementById('sb-menu-email');
-  if (menuEmail) menuEmail.textContent = user.email || '—';
+  if (menuEmail) menuEmail.textContent = user.email || '\u2014';
   var menuRole = document.getElementById('sb-menu-role');
   if (menuRole) menuRole.textContent = ROLE_LABEL[user.role] || user.role || 'Pengguna';
 
@@ -1119,55 +1182,115 @@ function _renderSidebar() {
     }
   }
 
-  // Nav
-  var nav = document.getElementById('sb-nav');
-  var html = '';
+  var mainItems = [];
+  var sysItems = [];
   NAV_SECTIONS.forEach(function (section) {
-    var visibleItems = section.items.filter(function (it) { return _canAccess(it, user); });
-    if (visibleItems.length === 0) return;
-    html += '<div class="sb-section-label">' + section.label + '</div>';
-    visibleItems.forEach(function (it) {
-      html += '<div class="nav-item" id="nav-' + it.id + '" onclick="_routeTo(\'' + it.id + '\')">' +
-        _esc(it.label);
-      // Badge jumlah notifikasi belum dibaca (Fase 13)
-      if (it.id === 'notifikasi') {
-        html += '<span class="nav-badge n-hidden" id="nav-notif-badge">0</span>';
-      }
-      html += '</div>';
-    });
+    var visible = section.items.filter(function (it) { return _canAccess(it, user); });
+    if (section.group === 'system') sysItems = sysItems.concat(visible);
+    else mainItems = mainItems.concat(visible);
   });
-  nav.innerHTML = html;
+
+  var dockEl = document.getElementById('app-dock');
+  if (dockEl) {
+    var html = mainItems.map(function (it) {
+      return '<button type="button" class="dock-item" id="nav-' + it.id + '" data-no-ico onclick="_routeTo(\'' + it.id + '\')" title="' + _esc(it.label) + '" aria-label="' + _esc(it.label) + '">' +
+        _dockIconSvg(it.icon) +
+        '<span class="dock-label">' + _esc(it.shortLabel || it.label) + '</span>' +
+      '</button>';
+    }).join('');
+
+    if (sysItems.length > 0) {
+      html += '<span class="dock-sep" aria-hidden="true"></span>';
+      html += sysItems.map(function (it) {
+        return '<button type="button" class="dock-item dock-sys-item" id="nav-' + it.id + '" data-no-ico onclick="_routeTo(\'' + it.id + '\')" title="' + _esc(it.label) + '" aria-label="' + _esc(it.label) + '">' +
+          _dockIconSvg(it.icon) +
+          '<span class="dock-label">' + _esc(it.shortLabel || it.label) + '</span>' +
+          (it.id === 'notifikasi' ? '<span class="dock-badge n-hidden" id="nav-notif-badge">0</span>' : '') +
+        '</button>';
+      }).join('');
+    }
+
+    html += '<button type="button" class="dock-item dock-more-btn" id="dock-more-btn" data-no-ico onclick="_toggleDockMore(event)" aria-expanded="false" aria-controls="dock-more-sheet" title="Menu Lainnya">' +
+      _dockIconSvg('more') +
+      '<span class="dock-label">Lainnya</span>' +
+    '</button>';
+    dockEl.innerHTML = html;
+  }
+
+  var sheetList = document.getElementById('dock-more-list');
+  if (sheetList) {
+    var sHtml = sysItems.map(function (it) {
+      return '<button type="button" class="dock-more-item" id="sheet-nav-' + it.id + '" data-no-ico onclick="_closeDockMore(); _routeTo(\'' + it.id + '\')">' +
+        _dockIconSvg(it.icon) +
+        '<span class="dock-more-text">' + _esc(it.label) + '</span>' +
+        (it.id === 'notifikasi' ? '<span class="dock-more-badge n-hidden" id="sheet-notif-badge">0</span>' : '') +
+      '</button>';
+    }).join('');
+    sHtml += '<div class="dock-more-divider"></div>' +
+      '<button type="button" class="dock-more-item danger" data-no-ico onclick="_closeDockMore(); handleLogout()">' +
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+          '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>' +
+        '</svg>' +
+        '<span class="dock-more-text">Keluar</span>' +
+      '</button>';
+    sheetList.innerHTML = sHtml;
+  }
+
+  if (APP.currentView) _updateActiveNav(APP.currentView);
 }
 
-function _toggleMobileNav() {
-  var sb = document.getElementById('app-sidebar');
-  var bd = document.getElementById('sidebar-backdrop');
-  if (!sb) return;
-  var willOpen = !sb.classList.contains('mobile-open');
-  sb.classList.toggle('mobile-open', willOpen);
-  if (bd) bd.classList.toggle('show', willOpen);
+function _toggleDockMore(e) {
+  if (e) e.stopPropagation();
+  var sheet = document.getElementById('dock-more-sheet');
+  var mask = document.getElementById('dock-more-mask');
+  var btn = document.getElementById('dock-more-btn');
+  if (!sheet || !mask) return;
+  var willOpen = sheet.classList.contains('n-hidden');
+  if (willOpen) {
+    _closeUserMenu();
+    _closeSyncPopover();
+    mask.classList.remove('n-hidden');
+    sheet.classList.remove('n-hidden');
+    if (btn) btn.setAttribute('aria-expanded', 'true');
+    document.addEventListener('keydown', _dockMoreKeyHandler);
+  } else {
+    _closeDockMore();
+  }
 }
 
-function _closeMobileNav() {
-  var sb = document.getElementById('app-sidebar');
-  var bd = document.getElementById('sidebar-backdrop');
-  if (sb) sb.classList.remove('mobile-open');
-  if (bd) bd.classList.remove('show');
+function _closeDockMore() {
+  var sheet = document.getElementById('dock-more-sheet');
+  var mask = document.getElementById('dock-more-mask');
+  var btn = document.getElementById('dock-more-btn');
+  if (sheet) sheet.classList.add('n-hidden');
+  if (mask) mask.classList.add('n-hidden');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+  document.removeEventListener('keydown', _dockMoreKeyHandler);
 }
 
-// ── USER ACCOUNT MENU (Drop-Up Popover) ───────────────────
+function _dockMoreKeyHandler(e) {
+  if (e.key === 'Escape' || e.keyCode === 27) _closeDockMore();
+}
+
+function _toggleMobileNav() { _toggleDockMore(); }
+function _closeMobileNav() { _closeDockMore(); }
+
+// ── USER ACCOUNT MENU (Topbar Dropdown) ───────────────────
 function _toggleUserMenu(e) {
   if (e) e.stopPropagation();
   var menu = document.getElementById('sb-user-menu');
-  var card = document.getElementById('sb-user-card');
-  if (!menu || !card) return;
+  var btn = document.getElementById('topbar-user-btn');
+  if (!menu || !btn) return;
 
   var isOpen = !menu.classList.contains('n-hidden');
   if (isOpen) {
     _closeUserMenu();
   } else {
+    _closeSyncPopover();
+    _closeDockMore();
     menu.classList.remove('n-hidden');
-    card.classList.add('is-active');
+    btn.classList.add('is-active');
+    btn.setAttribute('aria-expanded', 'true');
     setTimeout(function () {
       document.addEventListener('click', _userMenuOutsideClickHandler);
       document.addEventListener('keydown', _userMenuKeyHandler);
@@ -1177,16 +1300,19 @@ function _toggleUserMenu(e) {
 
 function _closeUserMenu() {
   var menu = document.getElementById('sb-user-menu');
-  var card = document.getElementById('sb-user-card');
+  var btn = document.getElementById('topbar-user-btn');
   if (menu) menu.classList.add('n-hidden');
-  if (card) card.classList.remove('is-active');
+  if (btn) {
+    btn.classList.remove('is-active');
+    btn.setAttribute('aria-expanded', 'false');
+  }
   document.removeEventListener('click', _userMenuOutsideClickHandler);
   document.removeEventListener('keydown', _userMenuKeyHandler);
 }
 
 function _userMenuOutsideClickHandler(e) {
-  var footer = document.getElementById('sb-footer');
-  if (footer && !footer.contains(e.target)) {
+  var wrap = document.getElementById('topbar-user-wrap');
+  if (wrap && !wrap.contains(e.target)) {
     _closeUserMenu();
   }
 }
@@ -1203,11 +1329,17 @@ function _handleMenuNav(viewId) {
 }
 
 function _updateActiveNav(viewId) {
-  document.querySelectorAll('.nav-item').forEach(function (el) {
+  document.querySelectorAll('.dock-item, .dock-more-item').forEach(function (el) {
     el.classList.remove('active');
   });
   var active = document.getElementById('nav-' + viewId);
   if (active) active.classList.add('active');
+  var sheetActive = document.getElementById('sheet-nav-' + viewId);
+  if (sheetActive) {
+    sheetActive.classList.add('active');
+    var moreBtn = document.getElementById('dock-more-btn');
+    if (moreBtn) moreBtn.classList.add('active');
+  }
 }
 
 function _updateMobileRouteLabel(viewId) {
@@ -1217,7 +1349,7 @@ function _updateMobileRouteLabel(viewId) {
 
 // ── ROUTING ───────────────────────────────────────────────
 function _routeTo(viewId) {
-  // Rute khusus — bukan nav sidebar (dibuka dari Master Data / kartu Ikhtisar)
+  // Rute khusus — bukan tab dock utama (dibuka dari Master Data / kartu Ikhtisar)
   if (viewId === 'profil-kapal') { _routeProfil(); return; }
   if (viewId === 'kapal-terbaik') { _routeKapalTerbaik(); return; }
 
@@ -1230,7 +1362,9 @@ function _routeTo(viewId) {
   if (window.location.hash !== '#' + viewId) {
     window.location.hash = viewId;
   }
-  _closeMobileNav();
+  _closeDockMore();
+  _closeUserMenu();
+  _closeSyncPopover();
   _updateMobileRouteLabel(viewId);
   _updateActiveNav(viewId);
   _renderPageHeader(viewId);
@@ -1243,7 +1377,9 @@ function _routeProfil() {
   if (window.location.hash !== '#profil-kapal') {
     window.location.hash = 'profil-kapal';
   }
-  _closeMobileNav();
+  _closeDockMore();
+  _closeUserMenu();
+  _closeSyncPopover();
   _updateMobileRouteLabel('profil-kapal');
   _updateActiveNav('profil-kapal');
   _renderPageHeader('profil-kapal');
@@ -1263,9 +1399,11 @@ function _routeKapalTerbaik() {
   if (window.location.hash !== '#kapal-terbaik') {
     window.location.hash = 'kapal-terbaik';
   }
-  _closeMobileNav();
+  _closeDockMore();
+  _closeUserMenu();
+  _closeSyncPopover();
   _updateMobileRouteLabel('kapal-terbaik');
-  _updateActiveNav('overview');
+  _updateActiveNav('kapal-terbaik');
   _renderPageHeader('kapal-terbaik');
   _renderViewContent('kapal-terbaik');
   _applyShellStatus();
@@ -1279,33 +1417,18 @@ function _renderPageHeader(viewId) {
                   viewId === 'kapal-terbaik');
   var filterHtml = noFilter ? '' : _buildFilterHtml();
 
+  _setPageFinding('');
   document.getElementById('page-header').innerHTML =
     '<div class="page-header-inner">' +
       '<div class="page-title-wrap">' +
         '<h1 class="page-title">' + _esc(_viewTitle(viewId)) + '</h1>' +
-        '<p id="page-finding" class="page-finding n-hidden"></p>' +
       '</div>' +
-      '<div class="filter-periode">' +
-        '<div id="sync-indicator" class="sync-indicator" onclick="_triggerManualSync()" title="Klik untuk sinkronkan ulang data lintas satelit.">' +
-          '<span class="sync-icon-wrap">' +
-            '<svg class="sync-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
-              '<path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-1.19"/>' +
-            '</svg>' +
-          '</span>' +
-          '<span class="sync-indicator-text">Tersinkron</span>' +
-          '<div class="sync-popover">' +
-            '<div class="sync-pop-head">' +
-              '<span class="sync-pop-dot"></span>' +
-              '<span class="sync-pop-status">Sistem Tersinkron</span>' +
-            '</div>' +
-            '<div class="sync-pop-data" id="sync-pop-data">Data per: &mdash;</div>' +
-            '<div class="sync-pop-sats" id="sync-pop-sats"></div>' +
-            '<div class="sync-pop-action">Klik untuk sinkronkan data satelit</div>' +
-          '</div>' +
-        '</div>' +
-        (filterHtml ? '<div class="filter-box">' + filterHtml + '</div>' : '') +
-        '<span id="filter-busy" class="filter-busy" title="Memuat data&hellip;"></span>' +
-      '</div>' +
+      (filterHtml
+        ? '<div class="filter-periode">' +
+            '<div class="filter-box">' + filterHtml + '</div>' +
+            '<span id="filter-busy" class="filter-busy" title="Memuat data&hellip;"></span>' +
+          '</div>'
+        : '<span id="filter-busy" class="filter-busy" title="Memuat data&hellip;"></span>') +
     '</div>';
   _syncBusy();
   _syncUpdateIndicator(APP_SYNC.deferredReload ? 'deferred' : 'synced');
@@ -4780,13 +4903,18 @@ function _applyShellStatus() {
 
 function _renderNotifBadge(n) {
   var badge = document.getElementById('nav-notif-badge');
-  if (!badge) return;
-  if (n > 0) {
-    badge.textContent = n > 99 ? '99+' : String(n);
-    badge.classList.remove('n-hidden');
-  } else {
-    badge.classList.add('n-hidden');
-  }
+  var topBadge = document.getElementById('topbar-notif-badge');
+  var sheetBadge = document.getElementById('sheet-notif-badge');
+  var label = n > 99 ? '99+' : String(n);
+  [badge, topBadge, sheetBadge].forEach(function (el) {
+    if (!el) return;
+    if (n > 0) {
+      el.textContent = label;
+      el.classList.remove('n-hidden');
+    } else {
+      el.classList.add('n-hidden');
+    }
+  });
 }
 
 function _renderReminderStrip(info) {
@@ -5298,7 +5426,7 @@ var _ICO_LABEL = {
   'Unggah File': 'upload', 'Salin dari Link': 'link',
   'Ulangi upload lampiran': 'refresh', 'Sinkronkan': 'refresh',
   // akun
-  'Profil': 'user', 'Keluar': 'logout', 'Masuk': 'login',
+  'Profil': 'user', 'Keluar': 'logout',
   'Ganti Email': 'mail', 'Verifikasi Email': 'mailCheck',
   'Verifikasi': 'mailCheck', 'Reset Password': 'key',
   'Tandai Dibaca': 'mailCheck', 'Tandai Semua Dibaca': 'mailCheck',
@@ -5330,6 +5458,7 @@ function _icoDecorate(root) {
   }
   for (var i = 0; i < list.length; i++) {
     var el = list[i];
+    if (el.hasAttribute && el.hasAttribute('data-no-ico')) continue;
     if (el.querySelector('svg.ico')) continue;
     var cls = ' ' + String(el.className || '') + ' ';
     if (cls.indexOf(' n-iconbtn ') !== -1 || cls.indexOf(' n-iconbtn-sm ') !== -1 ||
