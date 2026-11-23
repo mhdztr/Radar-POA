@@ -206,18 +206,14 @@ function getSpreadsheetIds() {
   var masterId = props.getProperty(PROP_KEY.MASTER_SS_ID);
   var pusatId  = props.getProperty(PROP_KEY.PUSAT_SS_ID);
   var logId    = props.getProperty(PROP_KEY.LOG_SS_ID);
-  var resolvedMaster = masterId || pusatId;
-  var resolvedPusat  = pusatId || masterId;
-
-  if (!resolvedMaster && !resolvedPusat) {
-    throw new Error('[Radar-POA] Spreadsheet ID belum tersimpan. Konfigurasikan MASTER_SS_ID / PUSAT_SS_ID di Script Properties.');
-  }
+  var resolvedMaster = masterId || pusatId || null;
+  var resolvedPusat  = pusatId || masterId || null;
 
   return {
     masterId:     resolvedMaster,
     pusatId:      resolvedPusat,
     transaksiId:  resolvedPusat,
-    logId:        logId || resolvedMaster,
+    logId:        logId || resolvedMaster || null,
     lookerMartId: props.getProperty(PROP_KEY.LOOKER_MART_SS_ID) || null,
     sikapId:      props.getProperty(PROP_KEY.SIKAP_SS_ID) || props.getProperty(PROP_KEY.TU_SS_ID) || null,
     nakhodaId:    props.getProperty(PROP_KEY.NAKHODA_SS_ID) || props.getProperty(PROP_KEY.AWAK_SS_ID) || null,

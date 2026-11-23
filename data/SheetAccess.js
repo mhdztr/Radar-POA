@@ -56,7 +56,9 @@ function hashPassword(plaintext) {
 // SHEET OPENERS — PUSAT, MASTER, LOG, & FEDERASI SATELIT
 // ===========================================================================
 
-var _EXEC_SS_CACHE = {};
+var _EXEC_SS_CACHE  = {};
+var _EXEC_PUSAT_ID  = null;
+var _SA_CHECKED_EXEC = false;
 
 function _openSsCached(ssId) {
   if (!ssId) return null;
@@ -66,16 +68,104 @@ function _openSsCached(ssId) {
   return ss;
 }
 
+/**
+ * Memastikan spreadsheet pusat Radar POA sudah ada dan tersimpan di Script Properties.
+ * Idempoten & self-healing: bila MASTER_SS_ID / PUSAT_SS_ID belum ada atau gagal dibuka,
+ * otomatis membuat spreadsheet `RadarPOA_Pusat_DB` beserta sheet master/pusat/log standar.
+ *
+ * @returns {string} ID spreadsheet pusat/master
+ */
+function ensurePusatSpreadsheet() {
+  if (_EXEC_PUSAT_ID && _EXEC_SS_CACHE[_EXEC_PUSAT_ID]) return _EXEC_PUSAT_ID;
+
+  var props = PropertiesService.getScriptProperties();
+  var candidateId = props.getProperty(PROP_KEY.PUSAT_SS_ID) || props.getProperty(PROP_KEY.MASTER_SS_ID);
+  if (candidateId) {
+    try {
+      var existingSs = _openSsCached(candidateId);
+      if (existingSs) {
+        _EXEC_PUSAT_ID = candidateId;
+        if (!props.getProperty(PROP_KEY.PUSAT_SS_ID))  props.setProperty(PROP_KEY.PUSAT_SS_ID, candidateId);
+        if (!props.getProperty(PROP_KEY.MASTER_SS_ID)) props.setProperty(PROP_KEY.MASTER_SS_ID, candidateId);
+        if (!props.getProperty(PROP_KEY.LOG_SS_ID))    props.setProperty(PROP_KEY.LOG_SS_ID, candidateId);
+        return candidateId;
+      }
+    } catch (eOpen) {
+      Logger.log('[ensurePusatSpreadsheet] Spreadsheet ID tersimpan tidak valid (' + candidateId + '): ' + eOpen.message);
+    }
+  }
+
+  var ss = SpreadsheetApp.create(SS_NAME.PUSAT);
+  var newId = ss.getId();
+  _EXEC_SS_CACHE[newId] = ss;
+  _EXEC_PUSAT_ID = newId;
+
+  props.setProperty(PROP_KEY.PUSAT_SS_ID, newId);
+  if (!props.getProperty(PROP_KEY.MASTER_SS_ID)) props.setProperty(PROP_KEY.MASTER_SS_ID, newId);
+  if (!props.getProperty(PROP_KEY.LOG_SS_ID))    props.setProperty(PROP_KEY.LOG_SS_ID, newId);
+
+  var usersSheet = _autoCreateMasterSheet(ss, SHEET_MASTER.USERS);
+  _autoCreateMasterSheet(ss, SHEET_MASTER.DIVISI);
+  _autoCreateMasterSheet(ss, SHEET_MASTER.KAPAL);
+  _autoCreateMasterSheet(ss, SHEET_MASTER.KAWASAN_KONSERVASI);
+  _autoCreateMasterSheet(ss, SHEET_MASTER.WPP);
+  _autoCreateMasterSheet(ss, SHEET_MASTER.OPSI);
+  _autoCreatePusatSheet(ss, SHEET_PUSAT.KEGIATAN_DIREKTORAT);
+  _autoCreatePusatSheet(ss, SHEET_PUSAT.EVIDENCE);
+  _autoCreateLogSheet(ss, SHEET_LOG.AUDIT_LOG);
+  _autoCreateLogSheet(ss, SHEET_LOG.APPROVAL_QUEUE);
+  _autoCreateLogSheet(ss, SHEET_LOG.NOTIFICATIONS);
+
+  var sheets = ss.getSheets();
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].getName() === 'Sheet1' && sheets.length > 1) {
+      try { ss.deleteSheet(sheets[i]); } catch (eDel) {}
+      break;
+    }
+  }
+
+  _ensureSuperadminSeeded(usersSheet);
+  Logger.log('[ensurePusatSpreadsheet] Spreadsheet ' + SS_NAME.PUSAT + ' dibuat otomatis dengan ID: ' + newId);
+  return newId;
+}
+
 function openMasterSheet(sheetName) {
   var ids = getSpreadsheetIds();
-  var ss = _openSsCached(ids.masterId);
+  var ss = null;
+  if (ids.masterId) {
+    try {
+      ss = _openSsCached(ids.masterId);
+    } catch (e) {
+      Logger.log('[openMasterSheet] masterId ' + ids.masterId + ' gagal dibuka: ' + e.message);
+    }
+  }
+  if (!ss) {
+    ss = _openSsCached(ensurePusatSpreadsheet());
+  }
   if (!ss) return null;
-  return ss.getSheetByName(sheetName);
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = _autoCreateMasterSheet(ss, sheetName);
+  }
+  if (sheetName === SHEET_MASTER.USERS) {
+    _ensureSuperadminSeeded(sheet);
+  }
+  return sheet;
 }
 
 function openTransaksiSheet(sheetName) {
   var ids = getSpreadsheetIds();
-  var ss = _openSsCached(ids.pusatId);
+  var ss = null;
+  if (ids.pusatId) {
+    try {
+      ss = _openSsCached(ids.pusatId);
+    } catch (e) {
+      Logger.log('[openTransaksiSheet] pusatId ' + ids.pusatId + ' gagal dibuka: ' + e.message);
+    }
+  }
+  if (!ss) {
+    ss = _openSsCached(ensurePusatSpreadsheet());
+  }
   if (!ss) return null;
   var sheet = ss.getSheetByName(sheetName);
   if (!sheet) {
@@ -86,13 +176,220 @@ function openTransaksiSheet(sheetName) {
 
 function openLogSheet(sheetName) {
   var ids = getSpreadsheetIds();
-  var ss = _openSsCached(ids.logId);
+  var ss = null;
+  if (ids.logId) {
+    try {
+      ss = _openSsCached(ids.logId);
+    } catch (e) {
+      Logger.log('[openLogSheet] logId ' + ids.logId + ' gagal dibuka: ' + e.message);
+    }
+  }
+  if (!ss) {
+    ss = _openSsCached(ensurePusatSpreadsheet());
+  }
   if (!ss) return null;
   var sheet = ss.getSheetByName(sheetName);
   if (!sheet) {
     sheet = _autoCreateLogSheet(ss, sheetName);
   }
   return sheet;
+}
+
+function _autoCreateMasterSheet(ss, sheetName) {
+  var existing = ss.getSheetByName(sheetName);
+  if (existing) return existing;
+
+  var headers = [];
+  var seedRows = [];
+
+  if (sheetName === SHEET_MASTER.USERS) {
+    headers = [
+      'UserID', 'Nama', 'Email', 'NIP', 'PasswordHash',
+      'DivisiID', 'Role', 'Status', 'ApprovedBy', 'RegisteredAt', 'ApprovedAt'
+    ];
+  } else if (sheetName === SHEET_MASTER.DIVISI) {
+    headers = ['DivisiID', 'NamaResmi', 'NamaDashboard', 'Kode'];
+    seedRows = [
+      ['DIV-TU',     'Subbagian Tata Usaha',                  'Tata Usaha (SIKAP)',                 'TU'],
+      ['DIV-AWAK',   'Tim Kerja Pengawakan Kapal Pengawas',     'Pengawakan (Nakhoda)',               'AWAK'],
+      ['DIV-LOG',    'Tim Kerja Logistik Armada',               'Logistik (Sistik)',                  'LOG'],
+      ['DIV-RAWAT',  'Tim Kerja Pemeliharaan dan Perawatan',    'Pemeliharaan & Perawatan (Siaga)',   'RAWAT'],
+      ['DIV-OPS',    'Tim Kerja Operasi Armada',                'Operasi Armada',                     'OPS'],
+      ['DIV-INTEL',  'Tim Kerja Intelijen Pengawasan',          'Intelijen',                          'INTEL'],
+      ['DIV-PANTAU', 'Tim Kerja Pemantauan Armada',             'Pemantauan',                         'PANTAU']
+    ];
+  } else if (sheetName === SHEET_MASTER.KAPAL) {
+    headers = [
+      'KapalID', 'Nama', 'Kelas', 'Homebase_UPT', 'StatusAktif',
+      'JenisKapal', 'KelasKapal', 'PanjangMeter', 'WPPDefault', 'PangkalanHomebase'
+    ];
+  } else if (sheetName === SHEET_MASTER.KAWASAN_KONSERVASI) {
+    headers = ['KawasanID', 'Nama', 'Provinsi', 'Latitude', 'Longitude'];
+  } else if (sheetName === SHEET_MASTER.WPP) {
+    headers = ['WPPCode', 'NamaWilayah'];
+    if (typeof WPP_NRI !== 'undefined' && Array.isArray(WPP_NRI)) {
+      seedRows = WPP_NRI.map(function (w) { return [w.WPPCode, w.NamaWilayah]; });
+    }
+  } else if (sheetName === SHEET_MASTER.OPSI) {
+    headers = ['Kode', 'Urutan', 'Label', 'LabelTampil', 'Aktif', 'DibuatOleh', 'DibuatAt'];
+  } else {
+    headers = ['ID', 'Nama', 'Keterangan'];
+  }
+
+  var created = ss.insertSheet(sheetName);
+  created.getRange(1, 1, 1, headers.length)
+    .setValues([headers])
+    .setFontWeight('bold')
+    .setBackground('#0E1722')
+    .setFontColor('#FFFFFF');
+  created.setFrozenRows(1);
+
+  if (seedRows.length > 0) {
+    created.getRange(2, 1, seedRows.length, seedRows[0].length).setValues(seedRows);
+  }
+  return created;
+}
+
+/**
+ * Memastikan akun default (Superadmin, Direktur, Kadiv, Staf) ter-seed idempoten.
+ *
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} usersSheet
+ * @param {boolean} [forceResetDefault=false]
+ */
+function _ensureSuperadminSeeded(usersSheet, forceResetDefault) {
+  try {
+    if (!usersSheet) return;
+    if (!forceResetDefault && _SA_CHECKED_EXEC) return;
+    _SA_CHECKED_EXEC = true;
+
+    var cache = (typeof CacheService !== 'undefined') ? CacheService.getScriptCache() : null;
+    if (!forceResetDefault && cache && cache.get('radarpoa_sa_ok_v1') === '1') return;
+
+    var expectedHeaders = [
+      'UserID', 'Nama', 'Email', 'NIP', 'PasswordHash',
+      'DivisiID', 'Role', 'Status', 'ApprovedBy', 'RegisteredAt', 'ApprovedAt'
+    ];
+    if (usersSheet.getLastRow() === 0) {
+      usersSheet.getRange(1, 1, 1, expectedHeaders.length)
+        .setValues([expectedHeaders])
+        .setFontWeight('bold')
+        .setBackground('#0E1722')
+        .setFontColor('#FFFFFF');
+      usersSheet.setFrozenRows(1);
+    }
+
+    var data = usersSheet.getDataRange().getValues();
+    var headers = data[0] || expectedHeaders;
+    if (headers.indexOf('NIP') === -1) {
+      var nipCol = headers.length + 1;
+      usersSheet.getRange(1, nipCol).setValue('NIP').setFontWeight('bold');
+      data = usersSheet.getDataRange().getValues();
+      headers = data[0];
+    }
+
+    var emailIdx  = headers.indexOf('Email');
+    var roleIdx   = headers.indexOf('Role');
+    var statusIdx = headers.indexOf('Status');
+    var pwdIdx    = headers.indexOf('PasswordHash');
+
+    var existingEmails = {};
+    var superadminRowIdx = -1;
+    for (var r = 1; r < data.length; r++) {
+      var rowEmail = emailIdx !== -1 ? String(data[r][emailIdx] || '').trim().toLowerCase() : '';
+      var rowRole  = roleIdx  !== -1 ? String(data[r][roleIdx]  || '').trim().toUpperCase() : '';
+      if (rowEmail) existingEmails[rowEmail] = r + 1;
+      if (superadminRowIdx === -1 && (rowRole === ROLE.SUPERADMIN || rowEmail === 'superadmin@radarpoa.go.id')) {
+        superadminRowIdx = r + 1;
+      }
+    }
+
+    if (superadminRowIdx > 0) {
+      var currStatus = statusIdx !== -1 ? String(data[superadminRowIdx - 1][statusIdx] || '').trim().toUpperCase() : '';
+      var currPwd    = pwdIdx    !== -1 ? String(data[superadminRowIdx - 1][pwdIdx] || '').trim() : '';
+      if (currStatus !== USER_STATUS.APPROVED && statusIdx !== -1) {
+        usersSheet.getRange(superadminRowIdx, statusIdx + 1).setValue(USER_STATUS.APPROVED);
+      }
+      if ((!currPwd || forceResetDefault) && pwdIdx !== -1) {
+        usersSheet.getRange(superadminRowIdx, pwdIdx + 1).setValue(hashPassword('SuperAdmin2026!'));
+      }
+    }
+
+    var now = new Date();
+    var defaults = [
+      {
+        'UserID': 'USR-SUPERADMIN-001',
+        'Nama': 'Super Administrator Radar POA',
+        'Email': 'superadmin@radarpoa.go.id',
+        'NIP': '198501012010011001',
+        'PasswordHash': hashPassword('SuperAdmin2026!'),
+        'DivisiID': '',
+        'Role': ROLE.SUPERADMIN,
+        'Status': USER_STATUS.APPROVED,
+        'ApprovedBy': 'SYSTEM',
+        'RegisteredAt': now,
+        'ApprovedAt': now
+      },
+      {
+        'UserID': 'USR-DIREKTUR-001',
+        'Nama': 'Direktur Pengendalian Operasi Armada',
+        'Email': 'direktur.poa@kkp.go.id',
+        'NIP': '197504102000031001',
+        'PasswordHash': hashPassword('DirekturPOA2026!'),
+        'DivisiID': '',
+        'Role': ROLE.DIREKTUR,
+        'Status': USER_STATUS.APPROVED,
+        'ApprovedBy': 'USR-SUPERADMIN-001',
+        'RegisteredAt': now,
+        'ApprovedAt': now
+      },
+      {
+        'UserID': 'USR-KADIV-POA-001',
+        'Nama': 'Kepala Divisi Operasi Armada',
+        'Email': 'kadiv.poa@kkp.go.id',
+        'NIP': '198005122005011002',
+        'PasswordHash': hashPassword('KadivPOA2026!'),
+        'DivisiID': 'DIV-OPS',
+        'Role': ROLE.KADIV,
+        'Status': USER_STATUS.APPROVED,
+        'ApprovedBy': 'USR-SUPERADMIN-001',
+        'RegisteredAt': now,
+        'ApprovedAt': now
+      },
+      {
+        'UserID': 'USR-STAF-POA-001',
+        'Nama': 'Staf Pelaksana POA',
+        'Email': 'staf.poa@kkp.go.id',
+        'NIP': '199203152018021003',
+        'PasswordHash': hashPassword('StafPOA2026!'),
+        'DivisiID': 'DIV-OPS',
+        'Role': ROLE.STAF,
+        'Status': USER_STATUS.APPROVED,
+        'ApprovedBy': 'USR-KADIV-POA-001',
+        'RegisteredAt': now,
+        'ApprovedAt': now
+      }
+    ];
+
+    var addedCount = 0;
+    defaults.forEach(function (acc) {
+      if (acc['Role'] === ROLE.SUPERADMIN && superadminRowIdx > 0) return;
+      if (existingEmails[acc['Email']]) return;
+      var row = headers.map(function (h) {
+        return acc[h] !== undefined && acc[h] !== null ? acc[h] : '';
+      });
+      usersSheet.appendRow(row);
+      existingEmails[acc['Email']] = usersSheet.getLastRow();
+      addedCount++;
+    });
+
+    if (addedCount > 0) {
+      SpreadsheetApp.flush();
+      Logger.log('[_ensureSuperadminSeeded] ' + addedCount + ' akun default berhasil di-seed.');
+    }
+    if (cache) { try { cache.put('radarpoa_sa_ok_v1', '1', 3600); } catch (eCache) {} }
+  } catch (err) {
+    Logger.log('[_ensureSuperadminSeeded] Error: ' + err.message);
+  }
 }
 
 function _autoCreatePusatSheet(ss, sheetName) {
@@ -218,7 +515,7 @@ function ensureKapalKelasColumn() {
 function ensureOpsiSheet() {
   var existing = openMasterSheet(SHEET_MASTER.OPSI);
   if (existing) { ensureOpsiColumns(existing); return existing; }
-  var ss = _openSsCached(getSpreadsheetIds().masterId);
+  var ss = _openSsCached(getSpreadsheetIds().masterId || ensurePusatSpreadsheet());
   var sheet = ss.insertSheet(SHEET_MASTER.OPSI);
   sheet.getRange(1, 1, 1, 7)
     .setValues([['Kode', 'Urutan', 'Label', 'LabelTampil', 'Aktif', 'DibuatOleh', 'DibuatAt']])

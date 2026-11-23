@@ -37,6 +37,10 @@ var _SESSION_TTL_SEC = 21600; // 6 jam
 var _REVOKED_PREFIX = 'revoked_';
 var _REVOKED_TTL_SEC = 43200; // 12 jam (> _SESSION_TTL_SEC)
 
+var _LOGIN_ATTEMPTS_PREFIX = 'login_fail_';
+var _LOGIN_MAX_ATTEMPTS    = 5;
+var _LOGIN_LOCKOUT_SEC     = 900; // 15 menit
+
 // ===========================================================================
 // FUNGSI PUBLIK
 // ===========================================================================
@@ -425,13 +429,13 @@ function auth_requestOtp(params) {
     CacheService.getScriptCache().put(_OTP_PREFIX + email, JSON.stringify(payload), _OTP_TTL_SEC);
     CacheService.getScriptCache().put(sendKey, String(Date.now()), _OTP_RESEND_TTL_SEC + _OTP_TTL_SEC);
 
-    var res = _ntfKirimEmail(email, 'Kode Verifikasi Registrasi Nautika',
+    var res = _ntfKirimEmail(email, 'Kode Verifikasi Registrasi Radar POA',
       'Halo ' + (nama || 'Calon Pengguna') + ',\n\n' +
-      'Kode verifikasi untuk pendaftaran akun Nautika:\n\n' +
+      'Kode verifikasi untuk pendaftaran akun Radar POA:\n\n' +
       '    ' + code + '\n\n' +
       'Kode berlaku ' + Math.round(_OTP_TTL_SEC / 60) + ' menit dan hanya dapat dipakai sekali.\n' +
       'Jika Anda tidak meminta kode ini, abaikan email ini.\n\n' +
-      '— Sistem Nautika, Direktorat Pengendalian Operasi Armada');
+      '— Sistem Radar POA, Direktorat Pengendalian Operasi Armada');
 
     if (!res.ok) {
       // Jangan simpan kode kalau email gagal terkirim — user tidak akan pernah
@@ -549,33 +553,108 @@ function _otpDropPending(pendingToken) {
 }
 
 /**
- * Login.
+ * Login via Email, NIP, atau alias peran baku.
+ * Dilengkapi proteksi brute-force 5x kegagalan (kunci sementara 15 menit).
  *
  * @param {Object} params
- * @param {string} params.email
+ * @param {string} [params.identifier]
+ * @param {string} [params.email]
+ * @param {string} [params.username]
+ * @param {string} [params.nip]
+ * @param {string} [params.ident]
  * @param {string} params.password  - plaintext
  */
 function auth_login(params) {
   try {
-    var email    = (params.email    || '').trim().toLowerCase();
-    var password = params.password  || '';
+    var rawIdent = String(
+      (params && (params.identifier || params.email || params.username || params.nip || params.ident)) || ''
+    ).trim();
+    var identLower = rawIdent.toLowerCase();
+    var password = String((params && params.password) || '');
 
-    if (!email || !password) {
-      return { success: false, error: 'Email dan password wajib diisi.' };
+    if (!rawIdent || !password) {
+      return { success: false, error: 'Email / NIP dan password wajib diisi.' };
     }
 
+    var cache = CacheService.getScriptCache();
+    var failKey = _LOGIN_ATTEMPTS_PREFIX + identLower;
+    var failCount = Number(cache.get(failKey) || 0);
+    if (failCount >= _LOGIN_MAX_ATTEMPTS) {
+      return {
+        success: false,
+        error: 'Terlalu banyak percobaan gagal. Akun dikunci sementara selama 15 menit demi keamanan.'
+      };
+    }
+
+    ensureUsersNipColumn();
     var usersSheet = openMasterSheet(SHEET_MASTER.USERS);
-    var found = findRowByField(usersSheet, 'Email', email);
+    _ensureSuperadminSeeded(usersSheet);
 
-    if (!found) {
-      return { success: false, error: 'Email atau password salah.' };
+    var allUsers = sheetToObjects(usersSheet);
+    var cleanDigits = _otpNormalizeNip(rawIdent);
+    var aliasRole = {
+      'superadmin': ROLE.SUPERADMIN,
+      'admin': ROLE.SUPERADMIN,
+      'superadmin@kkp.go.id': ROLE.SUPERADMIN,
+      'superadmin@radarpoa.go.id': ROLE.SUPERADMIN,
+      'superadmin@poa.go.id': ROLE.SUPERADMIN,
+      'direktur': ROLE.DIREKTUR,
+      'direktur.poa': ROLE.DIREKTUR,
+      'kadiv': ROLE.KADIV,
+      'kadiv.poa': ROLE.KADIV,
+      'staf': ROLE.STAF,
+      'staf.poa': ROLE.STAF
+    }[identLower] || '';
+
+    var user = null;
+    for (var i = 0; i < allUsers.length; i++) {
+      if (String(allUsers[i]['Email'] || '').trim().toLowerCase() === identLower) {
+        user = allUsers[i];
+        break;
+      }
+    }
+    if (!user && cleanDigits.length >= 8) {
+      for (var j = 0; j < allUsers.length; j++) {
+        if (_otpNormalizeNip(allUsers[j]['NIP']) === cleanDigits) {
+          user = allUsers[j];
+          break;
+        }
+      }
+    }
+    if (!user && aliasRole) {
+      var fallbackRoleMatch = null;
+      for (var k = 0; k < allUsers.length; k++) {
+        if (String(allUsers[k]['Role'] || '').trim().toUpperCase() === aliasRole) {
+          if (String(allUsers[k]['Status'] || '').trim().toUpperCase() === USER_STATUS.APPROVED) {
+            user = allUsers[k];
+            break;
+          }
+          if (!fallbackRoleMatch) fallbackRoleMatch = allUsers[k];
+        }
+      }
+      if (!user) user = fallbackRoleMatch;
     }
 
-    var user = found.obj;
+    function _recordFailure() {
+      failCount++;
+      cache.put(failKey, String(failCount), _LOGIN_LOCKOUT_SEC);
+      var sisa = _LOGIN_MAX_ATTEMPTS - failCount;
+      if (sisa <= 0) {
+        return 'Email / NIP atau password salah. Akun Anda dikunci sementara selama 15 menit.';
+      }
+      return 'Email / NIP atau password salah. Sisa kesempatan mencoba: ' + sisa + '.';
+    }
+
+    if (!user) {
+      return { success: false, error: _recordFailure() };
+    }
 
     if (user['PasswordHash'] !== hashPassword(password)) {
-      return { success: false, error: 'Email atau password salah.' };
+      return { success: false, error: _recordFailure() };
     }
+
+    cache.remove(failKey);
+
     if (user['Status'] === USER_STATUS.NONAKTIF) {
       return { success: false, error: 'Akun telah dinonaktifkan oleh Superadmin. Silakan hubungi pengelola.' };
     }

@@ -10,7 +10,7 @@
   - Chart.js v4.4.1, di-pin (tidak tag "latest").
   - Canvas tidak bisa membaca CSS custom properties, jadi warna chart
     di-mirror dari token Style.html lewat objek _CHART_COLORS (hex).
-  - Registry _NAUTIKA_CHARTS + _chartTeardownAll() supaya instance lama
+  - Registry _RADAR_CHARTS + _chartTeardownAll() supaya instance lama
     di-destroy saat SPA berpindah view/tab (mencegah chart bocor).
   - Label nilai langsung pada bar (nvVal) & ujung garis (nvEnd) lebih
     diutamakan daripada legenda (DESIGN.md §6). Legenda diganti chip
@@ -114,16 +114,16 @@ function _chartMonthLabel(mm) {
 // ============================================================
 // REGISTRY + TEARDOWN
 // ============================================================
-var _NAUTIKA_CHARTS = {};
+var _RADAR_CHARTS = {};
 
 function _chartDestroy(canvasId) {
-  var c = _NAUTIKA_CHARTS[canvasId];
-  if (c) { try { c.destroy(); } catch (e) {} delete _NAUTIKA_CHARTS[canvasId]; }
+  var c = _RADAR_CHARTS[canvasId];
+  if (c) { try { c.destroy(); } catch (e) {} delete _RADAR_CHARTS[canvasId]; }
 }
 
 function _chartTeardownAll() {
-  for (var k in _NAUTIKA_CHARTS) { try { _NAUTIKA_CHARTS[k].destroy(); } catch (e) {} }
-  _NAUTIKA_CHARTS = {};
+  for (var k in _RADAR_CHARTS) { try { _RADAR_CHARTS[k].destroy(); } catch (e) {} }
+  _RADAR_CHARTS = {};
 }
 
 // ============================================================
@@ -405,7 +405,7 @@ function _chartLine(canvasId, labels, datasets, opts) {
         }
       })
     });
-    _NAUTIKA_CHARTS[canvasId] = chart;
+    _RADAR_CHARTS[canvasId] = chart;
   });
 }
 
@@ -487,7 +487,7 @@ function _chartBar(canvasId, labels, datasets, opts) {
             }
       })
     });
-    _NAUTIKA_CHARTS[canvasId] = chart;
+    _RADAR_CHARTS[canvasId] = chart;
   });
 }
 // ============================================================
@@ -546,7 +546,7 @@ function _chartDonut(canvasId, labels, values, colors, opts) {
         }
       })
     });
-    _NAUTIKA_CHARTS[canvasId] = chart;
+    _RADAR_CHARTS[canvasId] = chart;
   });
 }
 </script>

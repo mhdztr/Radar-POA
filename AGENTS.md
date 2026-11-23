@@ -1,4 +1,4 @@
-zzzzzzzzzzzzzzzzzzzzzz# AGENTS.md — Panduan Kerja Agent: Radar POA
+# AGENTS.md — Panduan Kerja Agent: Radar POA
 
 ## 1. Urutan Baca Wajib
 1. `PRD.md` — Sumber kebenaran tertinggi mengenai kebutuhan agregasi dan kegiatan direktorat.
