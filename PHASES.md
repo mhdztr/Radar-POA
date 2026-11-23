@@ -20,7 +20,7 @@ ROADMAP PENGEMBANGAN RADAR POA v2.0
 │
 ├── [Fase R0] Selesai [x] — Penyelarasan Dokumentasi & Kontrak Redesign Ultra-Detail di Seluruh *.md
 ├── [Fase R1] Selesai [x] — Shell Baru (Top Bar 56px + Floating Bottom Maritime Dock), Toolbar 32px, Sync Popover, & Login 50/50
-├── [Fase R2] [ ]         — Redesign Ikhtisar: Peta 68/32 Berikon Siluet Kapal Kelas I–V, Grafik Asimetris 65/35, & Tabel Eksekutif Lintas Satelit
+├── [Fase R2] Selesai [x] — Redesign Ikhtisar: Peta 68/32 Berikon Siluet Kapal Kelas I–V, Grafik Asimetris 65/35, & Tabel Eksekutif Lintas Satelit
 ├── [Fase R3] [ ]         — Redesign Kapal Terbaik (Non-Galangan Podium & Sync TW) & Profil Kapal (h1 Kapal + Enum Manusiawi)
 ├── [Fase R4] [ ]         — Standarisasi 5 Halaman Sekunder, Fix Error .map(), Jargon Clean-Up, Calendar Anti-Ketik, & 12-Screen Playwright Gate
 │
@@ -76,7 +76,7 @@ ROADMAP PENGEMBANGAN RADAR POA v2.0
 ---
 
 ### Fase R2: Redesain Total `Ikhtisar` — Peta `68/32` Ikon Siluet Kapal Kelas I–V, Grafik Asimetris `65/35`, & Tabel Eksekutif Lintas Satelit
-- **Status:** **Siap Dikerjakan (`[ ]`)**
+- **Status:** **Selesai (`[x]`)**
 - **Tujuan Utama:** Mengganti marker pil bertumpuk di peta dengan ikon siluet kapal berdasarkan Kelas I–V PSDKP, menekan kebisingan warna (`distinctBg <= 16`) dan bobot font, serta meringkas `Ikhtisar` dari `3.086px` menjadi **`<= 2.000px`** (`<= 2` layar penuh).
 - **Komponen yang Harus Dikerjakan:**
   1. **Backend Klasifikasi Kelas I–V & `executiveGrid` (`services/DashboardService.js`):**
@@ -95,8 +95,8 @@ ROADMAP PENGEMBANGAN RADAR POA v2.0
      - Ganti **6 kartu divisi 50/50 duplikatif** dengan **1 Tabel Monitoring Eksekutif Lintas Satelit** full-width (menampilkan `SIKAP`, `Nakhoda`, `Pusat`, `Sistik`, `Siaga`, `Operasi & Pantau` dalam 1 struktur rapat).
      - Kunci ukuran huruf min `12px` (`tinyTextCount === 0`) dan dominasi bobot `400/500`.
 - **Kriteria Verifikasi:**
-  - [ ] Pada Playwright `1440×900`, `markerOverlaps === 0`, `distinctBg <= 16`, `tinyTextCount === 0`, `clippedCount === 0`, dan tinggi total halaman `<= 2.100px`.
-  - [ ] Seluruh ikon siluet Kelas I–V ter-render kontras dan dapat difilter per status maupun per kelas pada `read_file` screenshot.
+  - [x] Pada Playwright `1440×900`, `markerOverlaps === 0`, `distinctBg <= 16`, `tinyTextCount === 0`, `clippedCount === 0`, dan tinggi total halaman `<= 2.100px`.
+  - [x] Seluruh ikon siluet Kelas I–V ter-render kontras dan dapat difilter per status maupun per kelas pada `read_file` screenshot.
 
 ---
 

@@ -231,12 +231,93 @@ function dashboard_getOverview(token, filter) {
       return Number(((n.akn.byKategori && n.akn.byKategori[kat]) || {}).poa) || 0;
     });
 
+    var executiveGrid = [
+      {
+        unit: 'Tata Usaha \u2014 Anggaran',
+        satelit: 'SIKAP',
+        satTone: 'sikap',
+        connected: !!s.connected,
+        indikatorKunci: 'Serapan SP2D & Akrual YTD',
+        capaian: 'Rp ' + _dashCompact(ang.realisasiSP2D) + ' (' + _dashFmtDecId(ang.sp2dPct, 1) + '%)',
+        pembanding: 'Pagu Rp ' + _dashCompact(ang.paguTotal) + ' \u00B7 Akrual ' + _dashFmtDecId(ang.akrualPct, 1) + '%',
+        statusTeks: s.connected ? 'Tersinkron' : 'Belum Terhubung',
+        statusTone: s.connected ? 'ok' : 'warn'
+      },
+      {
+        unit: 'Tata Usaha \u2014 BMN & Pengadaan',
+        satelit: 'SIKAP',
+        satTone: 'sikap',
+        connected: !!s.connected,
+        indikatorKunci: 'Aset BMN & Paket Pengadaan',
+        capaian: _dashIntId(s.bmn.totalUnit) + ' unit \u00B7 ' + _dashIntId(s.paket.totalPaket) + ' paket',
+        pembanding: 'Rusak berat ' + s.bmn.kondisi.RUSAK_BERAT + ' \u00B7 Progres fisik ' + _dashFmtDecId(s.paket.avgProgresFisik, 1) + '%',
+        statusTeks: s.bmn.dalamPenghapusan > 0 ? (s.bmn.dalamPenghapusan + ' Penghapusan') : 'Terkendali',
+        statusTone: s.bmn.kondisi.RUSAK_BERAT > 0 ? 'warn' : 'ok'
+      },
+      {
+        unit: 'Pengawakan & Kompetensi',
+        satelit: 'Nakhoda',
+        satTone: 'nakhoda',
+        connected: !!n.connected,
+        indikatorKunci: 'Postur AKN POA & Sijil Kapal',
+        capaian: _dashIntId(n.akn.poa) + ' / ' + _dashIntId(n.akn.keseluruhan) + ' personel',
+        pembanding: n.sijil.laikAwak + '/' + (n.sijil.totalKapalEvaluasi || totalArmada) + ' laik sijil \u00B7 ' + n.kompetensi.kedaluwarsa + ' sert. kedaluwarsa',
+        statusTeks: s.kepegawaian.disparitasNakhoda > 0 ? (s.kepegawaian.disparitasNakhoda + ' Disparitas TU') : 'Sinkron',
+        statusTone: s.kepegawaian.disparitasNakhoda > 0 ? 'warn' : 'ok'
+      },
+      {
+        unit: 'Kegiatan Direktorat',
+        satelit: 'Pusat',
+        satTone: 'pusat',
+        connected: true,
+        indikatorKunci: 'Agenda Strategis Pimpinan (YTD)',
+        capaian: _dashIntId(p.kegiatanYtd) + ' kegiatan',
+        pembanding: 'Periode ini ' + _dashIntId(p.kegiatanPeriode) + ' \u00B7 Terakhir ' + (p.terakhirDicatat ? _dashFmtDateId(p.terakhirDicatat) : '\u2014'),
+        statusTeks: 'Aktif',
+        statusTone: 'ok'
+      },
+      {
+        unit: 'Logistik Armada',
+        satelit: 'Sistik',
+        satTone: 'neut',
+        connected: !!(agg.satellites.SISTIK && agg.satellites.SISTIK.connected),
+        indikatorKunci: 'BBM, Amunisi & Perbekalan',
+        capaian: (agg.satellites.SISTIK && agg.satellites.SISTIK.connected) ? 'Terhubung' : '\u2014',
+        pembanding: 'Integrasi konektor satelit terjadwal',
+        statusTeks: (agg.satellites.SISTIK && agg.satellites.SISTIK.connected) ? 'Tersinkron' : 'Menunggu Integrasi',
+        statusTone: (agg.satellites.SISTIK && agg.satellites.SISTIK.connected) ? 'ok' : 'neut'
+      },
+      {
+        unit: 'Pemeliharaan & Perawatan',
+        satelit: 'Siaga',
+        satTone: 'neut',
+        connected: !!(agg.satellites.SIAGA && agg.satellites.SIAGA.connected),
+        indikatorKunci: 'Status Docking & Harwat Kapal',
+        capaian: galanganCount + ' kapal galangan',
+        pembanding: 'Kesiapan dasar ' + siapCount + '/' + totalArmada + ' kapal besar',
+        statusTeks: (agg.satellites.SIAGA && agg.satellites.SIAGA.connected) ? 'Tersinkron' : 'Menunggu Integrasi',
+        statusTone: (agg.satellites.SIAGA && agg.satellites.SIAGA.connected) ? 'ok' : 'neut'
+      },
+      {
+        unit: 'Operasi & Pemantauan',
+        satelit: 'Operasi',
+        satTone: 'neut',
+        connected: !!(agg.satellites.OPERASI && agg.satellites.OPERASI.connected),
+        indikatorKunci: 'Hari Layar & Disposisi WPPNRI',
+        capaian: opCount + ' operasional \u00B7 ' + pangkalanCount + ' pangkalan',
+        pembanding: 'WPPNRI 571\u2013718 (' + totalArmada + ' kapal besar)',
+        statusTeks: (agg.satellites.OPERASI && agg.satellites.OPERASI.connected) ? 'Tersinkron' : 'Menunggu Integrasi',
+        statusTone: (agg.satellites.OPERASI && agg.satellites.OPERASI.connected) ? 'ok' : 'neut'
+      }
+    ];
+
     var data = {
       periode: agg.meta.periodeAktif,
       meta: agg.meta,
       satellites: agg.satellites,
       headline: headline,
       divisi: divisi,
+      executiveGrid: executiveGrid,
       paguTotal: ang.paguTotal,
       sikap: s,
       nakhoda: n,
@@ -299,6 +380,16 @@ function dashboard_profilKapal(token, params) {
     if (!kapalInfo) {
       return { success: false, error: 'Kapal dengan ID ' + kapalId + ' tidak ditemukan di master.' };
     }
+    var clsInfo = _dashResolveShipClass(
+      kapalInfo.kelasKapal || (fleetSeed && fleetSeed.kelasKapal),
+      kapalInfo.kelas || (fleetSeed && fleetSeed.kelas),
+      kapalInfo.panjangMeter || (fleetSeed && fleetSeed.panjangMeter)
+    );
+    kapalInfo.kelasKapal = clsInfo.kelasKapal;
+    kapalInfo.kelasRomawi = clsInfo.kelasRomawi;
+    kapalInfo.kelasLabel = clsInfo.kelasLabel;
+    kapalInfo.kelasRentang = clsInfo.kelasRentang;
+    kapalInfo.panjangMeter = clsInfo.panjangMeter;
     if (fleetSeed) {
       kapalInfo.wpp = fleetSeed.wpp;
       kapalInfo.statusTaktis = fleetSeed.status;
@@ -433,41 +524,116 @@ function app_getSyncState(token) {
 // 34 KAPAL PENGAWAS BESAR & SCORING ENGINE KAPAL TERBAIK
 // ===========================================================================
 
+var SHIP_CLASS_META = {
+  KELAS_I:   { kelasKapal: 'KELAS_I',   kelasRomawi: 'I',   kelasLabel: 'Kelas I',   kelasRentang: '> 60 m',  defaultPanjang: 60 },
+  KELAS_II:  { kelasKapal: 'KELAS_II',  kelasRomawi: 'II',  kelasLabel: 'Kelas II',  kelasRentang: '40\u201360 m', defaultPanjang: 42 },
+  KELAS_III: { kelasKapal: 'KELAS_III', kelasRomawi: 'III', kelasLabel: 'Kelas III', kelasRentang: '28\u201340 m', defaultPanjang: 32 },
+  KELAS_IV:  { kelasKapal: 'KELAS_IV',  kelasRomawi: 'IV',  kelasLabel: 'Kelas IV',  kelasRentang: '18\u201328 m', defaultPanjang: 22 },
+  KELAS_V:   { kelasKapal: 'KELAS_V',   kelasRomawi: 'V',   kelasLabel: 'Kelas V',   kelasRentang: '< 18 m',  defaultPanjang: 14 }
+};
+
+function _dashResolveShipClass(kelasToken, seriesName, panjangMeter) {
+  var tok = String(kelasToken || '').trim().toUpperCase();
+  var ser = String(seriesName || '').trim().toUpperCase();
+  var len = Number(panjangMeter) || 0;
+  var key = '';
+  if (SHIP_CLASS_META[tok]) {
+    key = tok;
+  } else if (ser.indexOf('ORCA') !== -1) {
+    key = 'KELAS_I';
+    if (!len) len = 60;
+  } else if (ser.indexOf('PAUS') !== -1 || ser.indexOf('BARAKUDA') !== -1) {
+    key = 'KELAS_II';
+    if (!len) len = 42;
+  } else if (ser.indexOf('TUTUL') !== -1) {
+    key = 'KELAS_II';
+    if (!len) len = 40;
+  } else if (ser.indexOf('MACAN') !== -1) {
+    key = 'KELAS_II';
+    if (!len) len = 36;
+  } else if (ser.indexOf('HIU') !== -1) {
+    key = 'KELAS_III';
+    if (!len) len = 32;
+  } else if (ser.indexOf('AKAR') !== -1) {
+    key = 'KELAS_IV';
+    if (!len) len = 22;
+  } else if (len > 60) {
+    key = 'KELAS_I';
+  } else if (len >= 40) {
+    key = 'KELAS_II';
+  } else if (len >= 28) {
+    key = 'KELAS_III';
+  } else if (len >= 18) {
+    key = 'KELAS_IV';
+  } else {
+    key = 'KELAS_V';
+    if (!len) len = 14;
+  }
+  var m = SHIP_CLASS_META[key] || SHIP_CLASS_META.KELAS_III;
+  return {
+    kelasKapal: m.kelasKapal,
+    kelasRomawi: m.kelasRomawi,
+    kelasLabel: m.kelasLabel,
+    kelasRentang: m.kelasRentang,
+    panjangMeter: len || m.defaultPanjang
+  };
+}
+
+function _dashIntId(v) {
+  var n = Math.round(Number(v) || 0);
+  var sign = n < 0 ? '-' : '';
+  var s = String(Math.abs(n));
+  return sign + s.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+function _dashFmtDecId(n, digits) {
+  var d = (digits !== undefined && digits !== null) ? digits : 1;
+  return Number(n || 0).toFixed(d).replace('.', ',');
+}
+
+function _dashFmtDateId(v) {
+  if (!v) return '\u2014';
+  var d = new Date(v);
+  if (isNaN(d)) return '\u2014';
+  var bln = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'];
+  return d.getDate() + ' ' + bln[d.getMonth()] + ' ' + d.getFullYear();
+}
+
 var FLEET_34_TACTICAL_SEED = [
-  { id: 'KP-ORCA-01', nama: 'KP. ORCA 01', wpp: '715', hari: 36, status: 'OPERASIONAL', kelas: 'ORCA', pangkalan: 'Pangkalan Tual/Ambon', komandan: 'Kapten Laut M. Ridwan', lat: 1.8, lng: 127.2 },
-  { id: 'KP-ORCA-02', nama: 'KP. ORCA 02', wpp: '571', hari: 60, status: 'OPERASIONAL', kelas: 'ORCA', pangkalan: 'Pangkalan Belawan', komandan: 'Kapten Laut B. Prasetyo', lat: 4.5, lng: 98.8 },
-  { id: 'KP-ORCA-03', nama: 'KP. ORCA 03', wpp: '711', hari: 44, status: 'OPERASIONAL', kelas: 'ORCA', pangkalan: 'Pangkalan Batam', komandan: 'Kapten Laut H. Sitorus', lat: 3.8, lng: 107.5 },
-  { id: 'KP-ORCA-04', nama: 'KP. ORCA 04', wpp: '712', hari: 44, status: 'OPERASIONAL', kelas: 'ORCA', pangkalan: 'Pangkalan Jakarta', komandan: 'Kapten Laut D. Kusuma', lat: -5.2, lng: 109.8 },
-  { id: 'KP-ORCA-05', nama: 'KP. ORCA 05', wpp: '715', hari: 69, status: 'OPERASIONAL', kelas: 'ORCA', pangkalan: 'Pangkalan Bitung', komandan: 'Kapten Laut Y. Manoppo', lat: 0.5, lng: 126.8 },
-  { id: 'KP-ORCA-06', nama: 'KP. ORCA 06', wpp: '713', hari: 41, status: 'OPERASIONAL', kelas: 'ORCA', pangkalan: 'Pangkalan Benoa', komandan: 'Kapten Laut W. Sudarma', lat: -1.5, lng: 118.0 },
-  { id: 'KP-BARAKUDA-01', nama: 'KP. BARAKUDA 01', wpp: '712', hari: 42, status: 'OPERASIONAL', kelas: 'BARAKUDA', pangkalan: 'Pangkalan Jakarta', komandan: 'Penata T. Gunawan', lat: -5.8, lng: 111.2 },
-  { id: 'KP-PAUS-01', nama: 'KP. PAUS 01', wpp: '715', hari: 37, status: 'OPERASIONAL', kelas: 'PAUS', pangkalan: 'Pangkalan Ambon', komandan: 'Penata A. Pattipeilohy', lat: -1.2, lng: 128.0 },
-  { id: 'KP-HM-TUTUL-01', nama: 'KP. H.M. TUTUL 01', wpp: '713', hari: 54, status: 'OPERASIONAL', kelas: 'TUTUL', pangkalan: 'Pangkalan Kupang', komandan: 'Penata F. Djami', lat: -3.2, lng: 119.2 },
-  { id: 'KP-HM-TUTUL-02', nama: 'KP. H.M. TUTUL 02', wpp: '713', hari: 63, status: 'OPERASIONAL', kelas: 'TUTUL', pangkalan: 'Pangkalan Tarakan', komandan: 'Penata R. Simbolon', lat: -4.8, lng: 119.8 },
-  { id: 'KP-HIU-MACAN-04', nama: 'KP. HIU MACAN 04', wpp: '713', hari: 46, status: 'OPERASIONAL', kelas: 'HIU_MACAN', pangkalan: 'Pangkalan Pontianak', komandan: 'Penata E. Subroto', lat: -5.5, lng: 120.5 },
-  { id: 'KP-HIU-MACAN-06', nama: 'KP. HIU MACAN 06', wpp: '718', hari: 17, status: 'OPERASIONAL', kelas: 'HIU_MACAN', pangkalan: 'Pangkalan Tual', komandan: 'Penata I. Wattimena', lat: -7.2, lng: 137.0 },
-  { id: 'KP-HIU-01', nama: 'KP. HIU 01', wpp: '571', hari: 46, status: 'OPERASIONAL', kelas: 'HIU', pangkalan: 'Pangkalan Belawan', komandan: 'Penata K. Siregar', lat: 3.8, lng: 99.8 },
-  { id: 'KP-HIU-02', nama: 'KP. HIU 02', wpp: '714', hari: 45, status: 'OPERASIONAL', kelas: 'HIU', pangkalan: 'Pangkalan Ambon', komandan: 'Penata J. Sahertian', lat: -4.8, lng: 128.5 },
-  { id: 'KP-HIU-04', nama: 'KP. HIU 04', wpp: '712', hari: 41, status: 'OPERASIONAL', kelas: 'HIU', pangkalan: 'Pangkalan Cilacap', komandan: 'Penata B. Suharsono', lat: -5.0, lng: 112.5 },
-  { id: 'KP-HIU-05', nama: 'KP. HIU 05', wpp: '715', hari: 45, status: 'OPERASIONAL', kelas: 'HIU', pangkalan: 'Pangkalan Bitung', komandan: 'Penata M. Runtunuwu', lat: 2.8, lng: 124.5 },
-  { id: 'KP-HIU-07', nama: 'KP. HIU 07', wpp: '713', hari: 33, status: 'OPERASIONAL', kelas: 'HIU', pangkalan: 'Pangkalan Makassar', komandan: 'Penata L. Daeng Masiri', lat: -6.8, lng: 119.0 },
-  { id: 'KP-HIU-08', nama: 'KP. HIU 08', wpp: '571', hari: 36, status: 'OPERASIONAL', kelas: 'HIU', pangkalan: 'Pangkalan Lampulo', komandan: 'Penata T. Iskandar', lat: 4.8, lng: 98.2 },
-  { id: 'KP-HIU-09', nama: 'KP. HIU 09', wpp: '712', hari: 28, status: 'OPERASIONAL', kelas: 'HIU', pangkalan: 'Pangkalan Cirebon', komandan: 'Penata S. Wibowo', lat: -5.6, lng: 108.5 },
-  { id: 'KP-HIU-10', nama: 'KP. HIU 10', wpp: '712', hari: 22, status: 'OPERASIONAL', kelas: 'HIU', pangkalan: 'Pangkalan Banyuwangi', komandan: 'Penata N. Hidayat', lat: -6.0, lng: 113.5 },
-  { id: 'KP-HIU-11', nama: 'KP. HIU 11', wpp: '711', hari: 53, status: 'OPERASIONAL', kelas: 'HIU', pangkalan: 'Pangkalan Batam', komandan: 'Penata A. Tanjung', lat: 4.2, lng: 108.5 },
-  { id: 'KP-HIU-12', nama: 'KP. HIU 12', wpp: '571', hari: 43, status: 'OPERASIONAL', kelas: 'HIU', pangkalan: 'Pangkalan Sibolga', komandan: 'Penata P. Lumban Gaol', lat: 3.5, lng: 100.4 },
-  { id: 'KP-HIU-13', nama: 'KP. HIU 13', wpp: '715', hari: 32, status: 'OPERASIONAL', kelas: 'HIU', pangkalan: 'Pangkalan Ternate', komandan: 'Penata O. Tomagola', lat: 1.2, lng: 128.5 },
-  { id: 'KP-HIU-14', nama: 'KP. HIU 14', wpp: '715', hari: 36, status: 'OPERASIONAL', kelas: 'HIU', pangkalan: 'Pangkalan Sorong', komandan: 'Penata Y. Rumbiak', lat: -0.5, lng: 129.5 },
-  { id: 'KP-HIU-15', nama: 'KP. HIU 15', wpp: '716', hari: 23, status: 'OPERASIONAL', kelas: 'HIU', pangkalan: 'Pangkalan Tahuna', komandan: 'Penata S. Makagiansar', lat: 3.8, lng: 122.5 },
-  { id: 'KP-HIU-16', nama: 'KP. HIU 16', wpp: '711', hari: 67, status: 'OPERASIONAL', kelas: 'HIU', pangkalan: 'Pangkalan Ranai', komandan: 'Penata D. Natuna', lat: 2.9, lng: 108.9 },
-  { id: 'KP-AKAR-BAHAR-01', nama: 'KP. AKAR BAHAR 01', wpp: 'Pangkalan', hari: 35, status: 'SIAP_PANGKALAN', kelas: 'AKAR_BAHAR', pangkalan: 'Pangkalan Jakarta', komandan: 'Penata K. Hartono', lat: -6.10, lng: 106.83 },
-  { id: 'KP-HIU-MACAN-01', nama: 'KP. HIU MACAN 01', wpp: 'Pangkalan', hari: 60, status: 'SIAP_PANGKALAN', kelas: 'HIU_MACAN', pangkalan: 'Pangkalan Batam', komandan: 'Penata M. Basri', lat: 1.17, lng: 104.02 },
-  { id: 'KP-HIU-MACAN-05', nama: 'KP. HIU MACAN 05', wpp: 'Pangkalan', hari: 42, status: 'SIAP_PANGKALAN', kelas: 'HIU_MACAN', pangkalan: 'Pangkalan Batam', komandan: 'Penata G. Rangkuti', lat: 1.13, lng: 104.08 },
-  { id: 'KP-HIU-03', nama: 'KP. HIU 03', wpp: 'Pangkalan', hari: 53, status: 'SIAP_PANGKALAN', kelas: 'HIU', pangkalan: 'Pangkalan Batam', komandan: 'Penata Z. Abidin', lat: 1.19, lng: 104.06 },
-  { id: 'KP-HIU-06', nama: 'KP. HIU 06', wpp: 'Pangkalan', hari: 38, status: 'SIAP_PANGKALAN', kelas: 'HIU', pangkalan: 'Pangkalan Jakarta', komandan: 'Penata E. Permana', lat: -6.12, lng: 106.87 },
-  { id: 'KP-HIU-17', nama: 'KP. HIU 17', wpp: 'Pangkalan', hari: 48, status: 'SIAP_PANGKALAN', kelas: 'HIU', pangkalan: 'Pangkalan Batam', komandan: 'Penata R. Lubis', lat: 1.11, lng: 104.03 },
-  { id: 'KP-BARAKUDA-02', nama: 'KP. BARAKUDA 02', wpp: 'Galangan', hari: 67, status: 'GALANGAN', kelas: 'BARAKUDA', pangkalan: 'Galangan Jakarta', komandan: 'Penata A. Wijaya', lat: -6.11, lng: 106.91 },
-  { id: 'KP-HIU-MACAN-03', nama: 'KP. HIU MACAN 03', wpp: 'Galangan', hari: 36, status: 'GALANGAN', kelas: 'HIU_MACAN', pangkalan: 'Galangan Lamongan', komandan: 'Penata H. Soebagio', lat: -6.89, lng: 112.35 }
+  { id: 'KP-ORCA-01',      nama: 'KP. ORCA 01',      wpp: '715', hari: 36, status: 'OPERASIONAL',    kelas: 'ORCA',       kelasKapal: 'KELAS_I',   panjangMeter: 60, pangkalan: 'Pangkalan Tual/Ambon', komandan: 'Kapten Laut M. Ridwan',   lat: 2.10,  lng: 127.30 },
+  { id: 'KP-ORCA-02',      nama: 'KP. ORCA 02',      wpp: '571', hari: 60, status: 'OPERASIONAL',    kelas: 'ORCA',       kelasKapal: 'KELAS_I',   panjangMeter: 60, pangkalan: 'Pangkalan Belawan',    komandan: 'Kapten Laut B. Prasetyo', lat: 4.10,  lng: 99.10 },
+  { id: 'KP-ORCA-03',      nama: 'KP. ORCA 03',      wpp: '711', hari: 44, status: 'OPERASIONAL',    kelas: 'ORCA',       kelasKapal: 'KELAS_I',   panjangMeter: 60, pangkalan: 'Pangkalan Batam',      komandan: 'Kapten Laut H. Sitorus',  lat: 4.35,  lng: 107.15 },
+  { id: 'KP-ORCA-04',      nama: 'KP. ORCA 04',      wpp: '712', hari: 44, status: 'OPERASIONAL',    kelas: 'ORCA',       kelasKapal: 'KELAS_I',   panjangMeter: 60, pangkalan: 'Pangkalan Jakarta',    komandan: 'Kapten Laut D. Kusuma',   lat: -4.40, lng: 109.85 },
+  { id: 'KP-ORCA-05',      nama: 'KP. ORCA 05',      wpp: '715', hari: 69, status: 'OPERASIONAL',    kelas: 'ORCA',       kelasKapal: 'KELAS_I',   panjangMeter: 60, pangkalan: 'Pangkalan Bitung',     komandan: 'Kapten Laut Y. Manoppo',  lat: 0.45,  lng: 126.45 },
+  { id: 'KP-ORCA-06',      nama: 'KP. ORCA 06',      wpp: '713', hari: 41, status: 'OPERASIONAL',    kelas: 'ORCA',       kelasKapal: 'KELAS_I',   panjangMeter: 60, pangkalan: 'Pangkalan Benoa',      komandan: 'Kapten Laut W. Sudarma',  lat: -1.35, lng: 117.75 },
+  { id: 'KP-BARAKUDA-01',  nama: 'KP. BARAKUDA 01',  wpp: '712', hari: 42, status: 'OPERASIONAL',    kelas: 'BARAKUDA',   kelasKapal: 'KELAS_II',  panjangMeter: 42, pangkalan: 'Pangkalan Jakarta',    komandan: 'Penata T. Gunawan',       lat: -5.55, lng: 110.95 },
+  { id: 'KP-PAUS-01',      nama: 'KP. PAUS 01',      wpp: '715', hari: 37, status: 'OPERASIONAL',    kelas: 'PAUS',       kelasKapal: 'KELAS_II',  panjangMeter: 42, pangkalan: 'Pangkalan Ambon',      komandan: 'Penata A. Pattipeilohy',  lat: -1.30, lng: 127.55 },
+  { id: 'KP-HM-TUTUL-01',  nama: 'KP. H.M. TUTUL 01',wpp: '713', hari: 54, status: 'OPERASIONAL',    kelas: 'TUTUL',      kelasKapal: 'KELAS_II',  panjangMeter: 40, pangkalan: 'Pangkalan Kupang',     komandan: 'Penata F. Djami',         lat: -3.20, lng: 118.45 },
+  { id: 'KP-HM-TUTUL-02',  nama: 'KP. H.M. TUTUL 02',wpp: '713', hari: 63, status: 'OPERASIONAL',    kelas: 'TUTUL',      kelasKapal: 'KELAS_II',  panjangMeter: 40, pangkalan: 'Pangkalan Tarakan',    komandan: 'Penata R. Simbolon',      lat: -4.65, lng: 119.05 },
+  { id: 'KP-HIU-MACAN-04', nama: 'KP. HIU MACAN 04', wpp: '713', hari: 46, status: 'OPERASIONAL',    kelas: 'HIU_MACAN',  kelasKapal: 'KELAS_II',  panjangMeter: 36, pangkalan: 'Pangkalan Pontianak',  komandan: 'Penata E. Subroto',       lat: -5.40, lng: 120.75 },
+  { id: 'KP-HIU-MACAN-06', nama: 'KP. HIU MACAN 06', wpp: '718', hari: 17, status: 'OPERASIONAL',    kelas: 'HIU_MACAN',  kelasKapal: 'KELAS_II',  panjangMeter: 36, pangkalan: 'Pangkalan Tual',       komandan: 'Penata I. Wattimena',     lat: -7.20, lng: 137.00 },
+  { id: 'KP-HIU-01',       nama: 'KP. HIU 01',       wpp: '571', hari: 46, status: 'OPERASIONAL',    kelas: 'HIU',        kelasKapal: 'KELAS_III', panjangMeter: 32, pangkalan: 'Pangkalan Belawan',    komandan: 'Penata K. Siregar',       lat: 2.85,  lng: 100.65 },
+  { id: 'KP-HIU-02',       nama: 'KP. HIU 02',       wpp: '714', hari: 45, status: 'OPERASIONAL',    kelas: 'HIU',        kelasKapal: 'KELAS_III', panjangMeter: 32, pangkalan: 'Pangkalan Ambon',      komandan: 'Penata J. Sahertian',     lat: -4.80, lng: 128.50 },
+  { id: 'KP-HIU-04',       nama: 'KP. HIU 04',       wpp: '712', hari: 41, status: 'OPERASIONAL',    kelas: 'HIU',        kelasKapal: 'KELAS_III', panjangMeter: 32, pangkalan: 'Pangkalan Cilacap',    komandan: 'Penata B. Suharsono',     lat: -4.35, lng: 112.40 },
+  { id: 'KP-HIU-05',       nama: 'KP. HIU 05',       wpp: '715', hari: 45, status: 'OPERASIONAL',    kelas: 'HIU',        kelasKapal: 'KELAS_III', panjangMeter: 32, pangkalan: 'Pangkalan Bitung',     komandan: 'Penata M. Runtunuwu',     lat: 2.55,  lng: 124.70 },
+  { id: 'KP-HIU-07',       nama: 'KP. HIU 07',       wpp: '713', hari: 33, status: 'OPERASIONAL',    kelas: 'HIU',        kelasKapal: 'KELAS_III', panjangMeter: 32, pangkalan: 'Pangkalan Makassar',   komandan: 'Penata L. Daeng Masiri',  lat: -6.95, lng: 119.00 },
+  { id: 'KP-HIU-08',       nama: 'KP. HIU 08',       wpp: '571', hari: 36, status: 'OPERASIONAL',    kelas: 'HIU',        kelasKapal: 'KELAS_III', panjangMeter: 32, pangkalan: 'Pangkalan Lampulo',    komandan: 'Penata T. Iskandar',      lat: 5.45,  lng: 96.45 },
+  { id: 'KP-HIU-09',       nama: 'KP. HIU 09',       wpp: '712', hari: 28, status: 'OPERASIONAL',    kelas: 'HIU',        kelasKapal: 'KELAS_III', panjangMeter: 32, pangkalan: 'Pangkalan Cirebon',    komandan: 'Penata S. Wibowo',        lat: -5.65, lng: 109.05 },
+  { id: 'KP-HIU-10',       nama: 'KP. HIU 10',       wpp: '712', hari: 22, status: 'OPERASIONAL',    kelas: 'HIU',        kelasKapal: 'KELAS_III', panjangMeter: 32, pangkalan: 'Pangkalan Banyuwangi', komandan: 'Penata N. Hidayat',       lat: -6.10, lng: 114.35 },
+  { id: 'KP-HIU-11',       nama: 'KP. HIU 11',       wpp: '711', hari: 53, status: 'OPERASIONAL',    kelas: 'HIU',        kelasKapal: 'KELAS_III', panjangMeter: 32, pangkalan: 'Pangkalan Batam',      komandan: 'Penata A. Tanjung',       lat: 4.15,  lng: 109.10 },
+  { id: 'KP-HIU-12',       nama: 'KP. HIU 12',       wpp: '571', hari: 43, status: 'OPERASIONAL',    kelas: 'HIU',        kelasKapal: 'KELAS_III', panjangMeter: 32, pangkalan: 'Pangkalan Sibolga',    komandan: 'Penata P. Lumban Gaol',   lat: 1.55,  lng: 98.10 },
+  { id: 'KP-HIU-13',       nama: 'KP. HIU 13',       wpp: '715', hari: 32, status: 'OPERASIONAL',    kelas: 'HIU',        kelasKapal: 'KELAS_III', panjangMeter: 32, pangkalan: 'Pangkalan Ternate',    komandan: 'Penata O. Tomagola',      lat: 0.95,  lng: 129.15 },
+  { id: 'KP-HIU-14',       nama: 'KP. HIU 14',       wpp: '715', hari: 36, status: 'OPERASIONAL',    kelas: 'HIU',        kelasKapal: 'KELAS_III', panjangMeter: 32, pangkalan: 'Pangkalan Sorong',     komandan: 'Penata Y. Rumbiak',       lat: -0.45, lng: 130.65 },
+  { id: 'KP-HIU-15',       nama: 'KP. HIU 15',       wpp: '716', hari: 23, status: 'OPERASIONAL',    kelas: 'HIU',        kelasKapal: 'KELAS_III', panjangMeter: 32, pangkalan: 'Pangkalan Tahuna',     komandan: 'Penata S. Makagiansar',   lat: 3.85,  lng: 122.40 },
+  { id: 'KP-HIU-16',       nama: 'KP. HIU 16',       wpp: '711', hari: 67, status: 'OPERASIONAL',    kelas: 'HIU',        kelasKapal: 'KELAS_III', panjangMeter: 32, pangkalan: 'Pangkalan Ranai',      komandan: 'Penata D. Natuna',        lat: 2.35,  lng: 108.55 },
+  { id: 'KP-AKAR-BAHAR-01',nama: 'KP. AKAR BAHAR 01',wpp: 'Pangkalan', hari: 35, status: 'SIAP_PANGKALAN', kelas: 'AKAR_BAHAR', kelasKapal: 'KELAS_IV',  panjangMeter: 22, pangkalan: 'Pangkalan Jakarta',    komandan: 'Penata K. Hartono',       lat: -5.90, lng: 105.85 },
+  { id: 'KP-HIU-MACAN-01', nama: 'KP. HIU MACAN 01', wpp: 'Pangkalan', hari: 60, status: 'SIAP_PANGKALAN', kelas: 'HIU_MACAN',  kelasKapal: 'KELAS_II',  panjangMeter: 36, pangkalan: 'Pangkalan Batam',      komandan: 'Penata M. Basri',         lat: 1.45,  lng: 103.35 },
+  { id: 'KP-HIU-MACAN-05', nama: 'KP. HIU MACAN 05', wpp: 'Pangkalan', hari: 42, status: 'SIAP_PANGKALAN', kelas: 'HIU_MACAN',  kelasKapal: 'KELAS_II',  panjangMeter: 36, pangkalan: 'Pangkalan Batam',      komandan: 'Penata G. Rangkuti',      lat: 0.15,  lng: 104.60 },
+  { id: 'KP-HIU-03',       nama: 'KP. HIU 03',       wpp: 'Pangkalan', hari: 53, status: 'SIAP_PANGKALAN', kelas: 'HIU',        kelasKapal: 'KELAS_III', panjangMeter: 32, pangkalan: 'Pangkalan Batam',      komandan: 'Penata Z. Abidin',        lat: 1.35,  lng: 105.05 },
+  { id: 'KP-HIU-06',       nama: 'KP. HIU 06',       wpp: 'Pangkalan', hari: 38, status: 'SIAP_PANGKALAN', kelas: 'HIU',        kelasKapal: 'KELAS_III', panjangMeter: 32, pangkalan: 'Pangkalan Jakarta',    komandan: 'Penata E. Permana',       lat: -5.45, lng: 107.30 },
+  { id: 'KP-HIU-17',       nama: 'KP. HIU 17',       wpp: 'Pangkalan', hari: 48, status: 'SIAP_PANGKALAN', kelas: 'HIU',        kelasKapal: 'KELAS_III', panjangMeter: 32, pangkalan: 'Pangkalan Batam',      komandan: 'Penata R. Lubis',         lat: -0.85, lng: 104.95 },
+  { id: 'KP-BARAKUDA-02',  nama: 'KP. BARAKUDA 02',  wpp: 'Galangan',  hari: 67, status: 'GALANGAN',       kelas: 'BARAKUDA',   kelasKapal: 'KELAS_II',  panjangMeter: 42, pangkalan: 'Galangan Jakarta',     komandan: 'Penata A. Wijaya',        lat: -6.40, lng: 107.60 },
+  { id: 'KP-HIU-MACAN-03', nama: 'KP. HIU MACAN 03', wpp: 'Galangan',  hari: 36, status: 'GALANGAN',       kelas: 'HIU_MACAN',  kelasKapal: 'KELAS_II',  panjangMeter: 36, pangkalan: 'Galangan Lamongan',    komandan: 'Penata H. Soebagio',      lat: -6.90, lng: 112.45 }
 ];
 
 function _dashGetTacticalFleet(lautYtd) {
@@ -480,10 +646,25 @@ function _dashGetTacticalFleet(lautYtd) {
     });
   }
 
+  var masterMap = {};
+  try {
+    var mRows = sheetToObjects(openMasterSheet(SHEET_MASTER.KAPAL));
+    (mRows || []).forEach(function (m) {
+      var id = String(m['KapalID'] || '').trim();
+      if (id) masterMap[id] = m;
+    });
+  } catch (eM) {}
+
   return FLEET_34_TACTICAL_SEED.map(function (k) {
+    var m = masterMap[k.id] || {};
+    var clsInfo = _dashResolveShipClass(
+      m['KelasKapal'] || k.kelasKapal,
+      m['Kelas'] || k.kelas,
+      m['PanjangMeter'] || k.panjangMeter
+    );
     var hari = txHari[k.id] ? txHari[k.id] : k.hari;
     var statusLbl = k.status === 'OPERASIONAL' ? 'Operasional di Laut'
-      : (k.status === 'SIAP_PANGKALAN' ? 'Siap Operasi di Pangkalan' : 'Pemeliharaan di Galangan');
+      : (k.status === 'SIAP_PANGKALAN' ? 'Siap di Pangkalan' : 'Pemeliharaan Galangan');
     return {
       id: k.id,
       nama: k.nama,
@@ -499,7 +680,12 @@ function _dashGetTacticalFleet(lautYtd) {
       pctPusat: Math.round(hari / 49 * 100),
       lat: k.lat,
       lng: k.lng,
-      kelas: k.kelas
+      kelas: k.kelas,
+      kelasKapal: clsInfo.kelasKapal,
+      kelasRomawi: clsInfo.kelasRomawi,
+      kelasLabel: clsInfo.kelasLabel,
+      kelasRentang: clsInfo.kelasRentang,
+      panjangMeter: clsInfo.panjangMeter
     };
   });
 }
@@ -538,6 +724,7 @@ function dashboard_getScoringKapalTerbaik(token, filter) {
     if (triwulan < 1 || triwulan > 4) triwulan = 1;
 
     var rawList = FLEET_34_TACTICAL_SEED.map(function (k, idx) {
+      var clsInfo = _dashResolveShipClass(k.kelasKapal, k.kelas, k.panjangMeter);
       var hari = Math.round(k.hari / 3.5);
       var kia = idx % 4 === 0 ? (idx % 8 === 0 ? 2 : 1) : 0;
       var kii = idx % 3 === 0 ? (idx % 6 === 0 ? 3 : 1) : 0;
@@ -546,8 +733,10 @@ function dashboard_getScoringKapalTerbaik(token, filter) {
       var valuasi = (kia * 12000000000) + (kii * 1500000000) + (rump * 45000000);
       var poinPenindakan = (15 * kia) + (5 * kii) + (3 * rump);
       return {
-        id: k.id, nama: k.nama, kelas: k.kelas, wpp: k.wpp,
-        pangkalan: k.pangkalan, komandan: k.komandan, status: k.status,
+        id: k.id, nama: k.nama, kelas: k.kelas,
+        kelasKapal: clsInfo.kelasKapal, kelasRomawi: clsInfo.kelasRomawi,
+        kelasLabel: clsInfo.kelasLabel, panjangMeter: clsInfo.panjangMeter,
+        wpp: k.wpp, pangkalan: k.pangkalan, komandan: k.komandan, status: k.status,
         hariLayar: hari, kia: kia, kii: kii, rumpon: rump,
         poinPenindakan: poinPenindakan, volumeRiksa: riksa, valuasi: valuasi
       };
@@ -641,8 +830,15 @@ function _dashBuildWppMap(fleet) {
   (WPP_NRI || []).forEach(function (w) {
     rows[w.WPPCode] = { kode: w.WPPCode, nama: w.NamaWilayah, kii: 0, kia: 0, rump: 0, cakupan: 0, laporan: 0, aktivitas: 0 };
   });
+  var byClass = { KELAS_I: 0, KELAS_II: 0, KELAS_III: 0, KELAS_IV: 0, KELAS_V: 0 };
+  var op = 0, siap = 0, gal = 0;
   (fleet || []).forEach(function (k) {
     if (rows[k.wpp]) rows[k.wpp].aktivitas += 1;
+    var ck = k.kelasKapal || 'KELAS_III';
+    byClass[ck] = (byClass[ck] || 0) + 1;
+    if (k.status === 'OPERASIONAL') op++;
+    else if (k.status === 'SIAP_PANGKALAN') siap++;
+    else if (k.status === 'GALANGAN') gal++;
   });
   return {
     metrics: [
@@ -650,7 +846,14 @@ function _dashBuildWppMap(fleet) {
     ],
     rows: rows,
     tanpaWpp: 0,
-    fleet: fleet
+    fleet: fleet,
+    fleetSummary: {
+      total: (fleet || []).length,
+      operasional: op,
+      siapPangkalan: siap,
+      galangan: gal,
+      byClass: byClass
+    }
   };
 }
 

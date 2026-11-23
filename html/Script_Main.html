@@ -1522,169 +1522,134 @@ function _renderOverview(el) {
   var isApprover = ['SUPERADMIN','DIREKTUR','KADIV'].indexOf(user.role) !== -1;
   var html = '';
 
-  // ── 1. Banner permintaan registrasi (KADIV/approver) ──
-  // Panel persetujuan penuh dipindah ke menu "Kelola Akun" (SUPERADMIN/DIREKTUR)
-  // sesuai keputusan user. KADIV tetap menyetujui staf divisinya lewat
-  // drawer kanan (RPAC server scoping tetap dipakai), bukan lewat menu.
+  // ── 1. Banner permintaan registrasi ramping (KADIV/approver) ──
   if (isApprover) {
     html +=
       '<div id="dr-banner" class="dr-banner n-hidden">' +
         '<div class="dr-banner-in">' +
           '<div class="dr-banner-ic" aria-hidden="true">!</div>' +
           '<div class="dr-banner-tx">' +
-            '<div class="dr-banner-t"><span id="dr-banner-count">0</span> permintaan registrasi menunggu persetujuan</div>' +
-            '<div class="dr-banner-s">Antrean terbatas pada kewenangan Anda</div>' +
+            '<span class="dr-banner-t"><span id="dr-banner-count">0</span> permintaan registrasi menunggu persetujuan</span>' +
+            '<span class="dr-banner-s">Antrean terbatas pada kewenangan Anda</span>' +
           '</div>' +
-          '<button class="btn-primary dr-banner-btn" onclick="openApprovalDrawer()">Lihat &amp; Putuskan</button>' +
+          '<button type="button" class="btn-primary dr-banner-btn" onclick="openApprovalDrawer()">Lihat &amp; Putuskan</button>' +
         '</div>' +
       '</div>';
   }
 
-  // ── 2. Headline KPI — 4 metrik terfederasi SiMata ─────
+  // ── 2. Strip 4 KPI Broadsheet Tenang ──
   html +=
     '<div class="content-section">' +
       '<div class="content-section-hd">KPI Strategis Nasional</div>' +
       '<div class="ov-kpi-row" id="ov-kpi-row">' +
         _kpiHeadline('Pagu & Serapan Anggaran (SP2D)', '\u2014', '%', 'YTD kumulatif', { source: 'SIKAP \u00B7 Anggaran', sourceTone: 'sikap' }) +
-        _kpiHeadline('Postur Awak Kapal (Nakhoda)', '\u2014', 'personel', 'AKN POA &amp; sertifikasi', { source: 'NAKHODA \u00B7 Postur AKN', sourceTone: 'nakhoda' }) +
-        _kpiHeadline('Kesiapan Armada Kapal Besar', '\u2014', '/ 34', 'Operasional &amp; pangkalan', { source: 'ARMADA \u00B7 34 Kapal', sourceTone: 'radar' }) +
+        _kpiHeadline('Postur Awak Kapal (Nakhoda)', '\u2014', 'personel', 'AKN POA & sertifikasi', { source: 'NAKHODA \u00B7 Postur AKN', sourceTone: 'nakhoda' }) +
+        _kpiHeadline('Kesiapan Armada Kapal Besar', '\u2014', '/ 34', 'Operasional & pangkalan', { source: 'ARMADA \u00B7 34 Kapal', sourceTone: 'radar' }) +
         _kpiHeadline('Kegiatan Direktorat (YTD)', '\u2014', 'kegiatan', 'Lintas unit kerja', { source: 'PUSAT \u00B7 Kegiatan Dit.', sourceTone: 'pusat' }) +
       '</div>' +
     '</div>';
 
-  // ── 2b. Peta choropleth WPPNRI 571–718 & 34 Kapal Besar ──
+  // ── 3. Momen 1: Peta Taktis 68/32 Berikon Siluet Kapal Kelas I–V ──
   html +=
     '<div class="content-section">' +
       '<div class="content-section-hd">Sebaran WPPNRI &amp; Peta Taktis Armada</div>' +
       '<div class="chart-cell ov-map-cell">' +
-        '<div class="chart-cell-hd">' +
+        '<div class="ov-map-top">' +
           '<div>' +
             '<div class="chart-cell-title" id="ov-map-title">Disposisi 34 Kapal Pengawas Besar</div>' +
-            '<div class="chart-cell-sub" id="ov-map-sub">WPPNRI 571 s.d. 718 &bull; Operasional di laut, siap pangkalan, &amp; galangan</div>' +
+            '<div class="chart-cell-sub" id="ov-map-sub">WPPNRI 571 s.d. 718 &middot; Siluet membedakan Kelas I&ndash;V, warna menandakan status taktis</div>' +
           '</div>' +
-          '<div class="chart-cell-chips ov-map-chips" id="ov-map-metrics" role="group" aria-label="Pilih metrik peta"></div>' +
+          '<div class="ov-fleet-filter-bar" id="ov-fleet-filter-bar" role="group" aria-label="Filter status armada kapal"></div>' +
         '</div>' +
-        '<div class="ov-fleet-filter-bar" id="ov-fleet-filter-bar" role="group" aria-label="Filter status armada kapal"></div>' +
-        '<div class="ov-map-wrap">' +
-          '<div id="ov-map" role="img" aria-label="Peta sebaran WPPNRI dan posisi 34 Kapal Pengawas">' +
-            '<div class="ops-map-status">' +
-              '<div class="ops-map-status-inner">' +
-                '<span class="n-spin"></span>' +
-                '<div>Memuat peta WPPNRI &amp; Armada\u2026</div>' +
+        '<div class="ov-map-class-row">' +
+          '<div class="ov-fleet-class-bar" id="ov-fleet-class-bar" role="group" aria-label="Filter kelas kapal"></div>' +
+          '<div class="ov-status-key" aria-label="Keterangan status taktis">' +
+            '<span class="ov-status-key-item"><i class="ov-status-dot is-op"></i>Operasional di Laut</span>' +
+            '<span class="ov-status-key-item"><i class="ov-status-dot is-siap"></i>Siap Pangkalan</span>' +
+            '<span class="ov-status-key-item"><i class="ov-status-dot is-gal"></i>Galangan</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="ov-map-split">' +
+          '<div class="ov-map-wrap">' +
+            '<div id="ov-map" role="img" aria-label="Peta sebaran WPPNRI dan posisi 34 Kapal Pengawas">' +
+              '<div class="ops-map-status">' +
+                '<div class="ops-map-status-inner">' +
+                  '<span class="n-spin"></span>' +
+                  '<div>Memuat peta WPPNRI &amp; Armada&hellip;</div>' +
+                '</div>' +
               '</div>' +
             '</div>' +
           '</div>' +
+          '<div class="ov-map-side">' +
+            '<div id="ov-armada-summary" class="ov-armada-summary"></div>' +
+            '<div class="ov-map-rank" id="ov-map-rank"></div>' +
+            '<button type="button" class="btn-outline ov-map-kt-btn" onclick="_routeTo(\'kapal-terbaik\')">Peringkat Kapal Terbaik &rarr;</button>' +
+          '</div>' +
         '</div>' +
-        '<div class="ov-map-rank" id="ov-map-rank"></div>' +
       '</div>' +
     '</div>';
 
-  // ── 3. Analitik SIKAP & Nakhoda ──
+  // ── 4. Momen 2: Analitik Asimetris 65/35 (SIKAP & Nakhoda) ──
   html +=
     '<div class="content-section">' +
       '<div class="content-section-hd">Analitik SIKAP &amp; Nakhoda</div>' +
-      '<div class="chart-grid-asym">' +
-        '<div class="chart-cell cs-7">' +
+      '<div class="chart-grid-65-35">' +
+        '<div class="chart-cell">' +
           '<div class="chart-cell-hd">' +
             '<div>' +
               '<div class="chart-cell-title">Realisasi Anggaran SIKAP (YTD)</div>' +
-              '<div class="chart-cell-sub">Januari s/d bulan terpilih pada filter (SP2D vs Akrual)</div>' +
+              '<div class="chart-cell-sub">Januari s.d. bulan terpilih pada filter (SP2D vs Akrual)</div>' +
             '</div>' +
             '<div class="chart-cell-chips">' +
               '<span class="chart-chip"><i style="background:var(--sat-sikap);"></i>SP2D</span>' +
-              '<span class="chart-chip"><i style="background:rgba(15,118,110,0.45);"></i>Akrual</span>' +
+              '<span class="chart-chip"><i class="is-dashed"></i>Akrual</span>' +
             '</div>' +
           '</div>' +
-          '<div class="chart-box"><canvas id="ov-chart-real"></canvas></div>' +
+          '<div class="chart-box ov-chart-real-box"><canvas id="ov-chart-real"></canvas></div>' +
         '</div>' +
-        '<div class="chart-cell cs-5">' +
+        '<div class="chart-cell">' +
           '<div class="chart-cell-hd">' +
             '<div>' +
               '<div class="chart-cell-title">Postur Awak Kapal AKN (Nakhoda)</div>' +
-              '<div class="chart-cell-sub">Keseluruhan vs POA per kategori kepegawaian</div>' +
-            '</div>' +
-            '<div class="chart-cell-chips">' +
-              '<span class="chart-chip"><i style="background:var(--sat-nakhoda);"></i>Keseluruhan</span>' +
-              '<span class="chart-chip"><i style="background:var(--action-primary);"></i>POA</span>' +
+              '<div class="chart-cell-sub">Proporsi awak POA terhadap keseluruhan personel</div>' +
             '</div>' +
           '</div>' +
-          '<div class="chart-box"><canvas id="ov-chart-op"></canvas></div>' +
+          '<div class="ov-akn-panel" id="ov-akn-panel"><div class="chart-empty">Memuat postur awak kapal&hellip;</div></div>' +
         '</div>' +
       '</div>' +
     '</div>';
 
-  // ── 3b. Disposisi Kesiapan & Peringkat Armada ──
+  // ── 5. Tabel Monitoring Eksekutif Lintas Satelit (Full-Width) ──
   html +=
     '<div class="content-section">' +
-      '<div class="content-section-hd">Disposisi &amp; Kinerja Armada</div>' +
-      '<div class="chart-grid-asym">' +
-        '<div class="chart-cell cs-5">' +
-          '<div class="chart-cell-hd">' +
-            '<div>' +
-              '<div class="chart-cell-title">Disposisi Kesiapan 34 Kapal Besar</div>' +
-              '<div class="chart-cell-sub">Operasional di laut, siap pangkalan, &amp; galangan</div>' +
-            '</div>' +
+      '<div class="n-card ov-exec-card">' +
+        '<div class="ov-exec-hd">' +
+          '<div>' +
+            '<div class="chart-cell-title">Monitoring Eksekutif Lintas Satelit</div>' +
+            '<div class="chart-cell-sub">Konsolidasi unit kerja Pusat, SIKAP, Nakhoda, dan satelit operasional</div>' +
           '</div>' +
-          '<div class="chart-box" id="ov-chart-penindakan"></div>' +
+          '<span class="badge badge-neutral" id="ov-exec-periode">&mdash;</span>' +
         '</div>' +
-        '<div class="chart-cell cs-7">' +
-          '<div class="chart-cell-hd">' +
-            '<div>' +
-              '<div class="chart-cell-title">Kapal Pengawas Teraktif &amp; Evaluasi Armada</div>' +
-              '<div class="chart-cell-sub">Top 5 hari operasi &bull; Evaluasi triwulanan armada</div>' +
-            '</div>' +
-            '<button type="button" class="btn-ghost" onclick="_routeTo(\'kapal-terbaik\')">' +
-              'Kapal Terbaik (TW) &rarr;' +
-            '</button>' +
-          '</div>' +
-          '<div class="chart-box" id="ov-chart-teraktif"></div>' +
+        '<div class="n-table-wrap">' +
+          '<table class="n-table ov-exec-table">' +
+            '<thead><tr>' +
+              '<th>Unit Kerja</th>' +
+              '<th>Satelit Sumber</th>' +
+              '<th>Indikator Utama</th>' +
+              '<th>Capaian / Postur</th>' +
+              '<th>Status &amp; Catatan</th>' +
+            '</tr></thead>' +
+            '<tbody id="ov-exec-body"><tr><td colspan="5" class="hist-empty">Memuat ringkasan terfederasi&hellip;</td></tr></tbody>' +
+          '</table>' +
         '</div>' +
-      '</div>' +
-    '</div>';
-
-  // ── 4. Ringkasan Terfederasi — 6 Kartu Satelit & Unit ──
-  html +=
-    '<div class="content-section">' +
-      '<div class="content-section-hd">Ringkasan Terfederasi Unit &amp; Satelit</div>' +
-      '<div class="div-grid" id="ov-div-grid">' +
-        _divCard('Tata Usaha (SIKAP)', [
-          { lbl: 'Realisasi SP2D (YTD)',    val: '\u2014', unit: '%',  prog: true },
-          { lbl: 'Realisasi Akrual (YTD)',  val: '\u2014', unit: '%',  prog: true },
-          { lbl: 'Sisa Pagu SP2D',          val: '\u2014', unit: 'Rp', prog: false }
-        ], null, null, { span: 6, loading: true }) +
-        _divCard('Cakupan Laporan &amp; Satelit', [
-          { lbl: 'Divisi Melapor Minggu Ini', val: '\u2014', unit: '/ 7',  prog: true },
-          { lbl: 'Disparitas SIKAP-Nakhoda',  val: '\u2014', unit: 'item', prog: false },
-          { lbl: 'Periode Laporan Aktif',     val: '\u2014', unit: '',     prog: false }
-        ], null, null, { span: 6, loading: true }) +
-        _divCard('Pengawakan (Nakhoda)', [
-          { lbl: 'Total Personel AKN', val: '\u2014', unit: 'orang', prog: false },
-          { lbl: 'Awak Kapal (POA)',   val: '\u2014', unit: 'orang', prog: false },
-          { lbl: 'Sertifikat Segera Habis / Kedaluwarsa', val: '\u2014', unit: 'sert.', prog: false }
-        ], null, null, { span: 6, loading: true }) +
-        _divCard('BMN &amp; Pengadaan (SIKAP)', [
-          { lbl: 'Total Unit BMN Aktif',   val: '\u2014', unit: 'unit', prog: false },
-          { lbl: 'BMN Rusak Berat',        val: '\u2014', unit: 'unit', prog: false },
-          { lbl: 'Progres Rata-rata Paket',val: '\u2014', unit: '%',    prog: true }
-        ], null, null, { span: 6, loading: true }) +
-        _divCard('Kegiatan Direktorat (Pusat)', [
-          { lbl: 'Kegiatan Terlaksana (YTD)', val: '\u2014', unit: 'kegiatan', prog: false },
-          { lbl: 'Kegiatan Periode Ini',      val: '\u2014', unit: 'kegiatan', prog: false },
-          { lbl: 'Pencatatan Terakhir',       val: '\u2014', unit: '',         prog: false }
-        ], null, null, { span: 6, loading: true }) +
-        _divCard('Satelit Dalam Integrasi (Sistik, Siaga, Operasi)', [
-          { lbl: 'Sistik (Logistik)', val: '\u2014', unit: '', prog: false },
-          { lbl: 'Siaga (Harwat)',    val: '\u2014', unit: '', prog: false },
-          { lbl: 'Operasi &amp; Pantau', val: '\u2014', unit: '', prog: false }
-        ], null, null, { span: 6, loading: true }) +
       '</div>' +
     '</div>';
 
   el.innerHTML = html;
   if (isApprover) _loadApprovals();
 
-  _loadLeaflet();    // preload pustaka Leaflet CSS & JS di awal agar siap saat data tiba
-  APP_OV.key = null; // selalu isi ulang (server-side cache 300s membuatnya murah)
+  _loadLeaflet();
+  APP_OV.key = null;
   _ovLoadData();
 }
 
@@ -1698,33 +1663,29 @@ function _ovFilterKey() {
 }
 
 function _ovLoadData(force) {
-  if (!force && APP_OV.key === _ovFilterKey()) return; // sudah dimuat untuk filter ini
+  if (!force && APP_OV.key === _ovFilterKey()) return;
 
   var kpiRow = document.getElementById('ov-kpi-row');
-  var grid = document.getElementById('ov-div-grid');
-  if (!kpiRow && !grid) return;
+  var execBody = document.getElementById('ov-exec-body');
+  if (!kpiRow && !execBody) return;
 
   _busyInc();
   google.script.run
     .withSuccessHandler(function (res) {
       try {
-        // Kunci cache hanya setelah server benar-benar menjawab sukses — kalau tidak,
-        // satu kegagalan sementara (sesi expired/timeout) akan membuat semua
-        // pemanggilan berikutnya dilewati sehingga Ikhtisar tidak pernah terisi.
         APP_OV.key = _ovFilterKey();
         if (res && res.success) {
           _ovRenderData(res.data);
         } else {
-          _ovLoadError((res && res.error) || 'Gagal memuat data Ikhtisar.');
+          _ovLoadError((res && res.error) || 'Gagal memuat data Ikhtisar');
         }
       } finally {
         _busyDec();
       }
     })
     .withFailureHandler(function (err) {
-      // Gagal keras (UNAUTHORIZED/timeout) — jangan kunci filter, agar bisa dicoba ulang.
       APP_OV.key = null;
-      _ovLoadError((err && err.message) || 'Gagal menghubungi server.');
+      _ovLoadError((err && err.message) || 'Gagal menghubungi server');
       _busyDec();
     })
     .dashboard_getOverview(APP.token, APP.filter);
@@ -1735,26 +1696,26 @@ function _ovLoadError(msg) {
   if (kpiRow) {
     kpiRow.innerHTML = '<div class="n-msg error show">Data Ikhtisar gagal dimuat: ' +
       _esc(msg) +
-      '. <button type="button" class="n-iconbtn-x" data-ico="refresh" ' +
+      ' <button type="button" class="n-iconbtn-x" data-ico="refresh" ' +
       'title="Coba lagi" aria-label="Coba lagi" onclick="_ovLoadData(true)"></button></div>';
   }
-  var grid = document.getElementById('ov-div-grid');
-  if (grid) grid.innerHTML = '';
+  var execBody = document.getElementById('ov-exec-body');
+  if (execBody) execBody.innerHTML = '';
 }
 
 function _ovRenderData(d) {
   if (!d) return;
 
-  // Kalimat temuan satu baris dari data terfederasi (SIKAP, Nakhoda, Armada)
   var ang = (d.sikap && d.sikap.anggaran) || {};
   var kes = (d.charts && d.charts.kesiapan) || {};
   var akn = (d.nakhoda && d.nakhoda.akn) || {};
   var disp = (d.sikap && d.sikap.kepegawaian) ? Number(d.sikap.kepegawaian.disparitasNakhoda || 0) : 0;
+  var pctStr = String(ang.sp2dPct !== undefined ? ang.sp2dPct : 0).replace('.', ',');
   _setPageFinding(
-    'Serapan SP2D ' + (ang.sp2dPct || 0) + '% \u00B7 ' +
+    'Serapan SP2D ' + pctStr + '% \u00B7 ' +
     (kes.siap || 0) + '/' + (kes.totalArmada || 34) + ' kapal besar siap operasi \u00B7 ' +
     _idNum(akn.poa || 0) + ' awak POA tercatat \u00B7 ' +
-    (disp === 0 ? 'kepegawaian SIKAP-Nakhoda sinkron.' : (disp + ' disparitas SIKAP-Nakhoda perlu verifikasi.'))
+    (disp === 0 ? 'kepegawaian SIKAP-Nakhoda sinkron' : (disp + ' disparitas SIKAP-Nakhoda perlu verifikasi'))
   );
 
   if (d.satellites) _updateSyncSatellitesUI(d.satellites);
@@ -1770,62 +1731,86 @@ function _ovRenderData(d) {
         return _kpiHeadline(h.label, _ovNum(h.value, h.unit), h.unit, h.sub, h);
       }).join('');
     } else {
-      kpiRow.innerHTML = '<div class="chart-empty">Belum ada data pada rentang terpilih.</div>';
+      kpiRow.innerHTML = '<div class="chart-empty">Belum ada data pada rentang terpilih</div>';
     }
   }
 
-  var grid = document.getElementById('ov-div-grid');
-  if (grid) {
-    if (d.divisi && d.divisi.length) {
-      grid.innerHTML = d.divisi.map(function (dv) {
-        var metrics = dv.metrics.map(function (m) { return _ovMetric(m); });
-        return _divCard(dv.title, metrics, dv.stack, dv.dots, { span: dv.span, viz: dv.viz });
-      }).join('');
-    } else {
-      grid.innerHTML = '<div class="chart-empty">Belum ada ringkasan satelit pada rentang terpilih.</div>';
-    }
-  }
-
-  // Peta WPP (Fase 14): dimuat setelah kartu agar tidak menahan render kartu.
   _ovMapLoad(d.wppMap);
 
-  if (d.charts) {
+  if (d.charts && d.charts.realisasi) {
     var labels = d.charts.trendMonths || [];
-    if (d.charts.realisasi) {
-      _chartLine('ov-chart-real', labels, [
-        { label: 'SP2D',   data: d.charts.realisasi.sp2d,   color: _CHART_COLORS.sikap },
-        { label: 'Akrual', data: d.charts.realisasi.akrual, color: _CHART_COLORS.sikapSoft, fill: true }
-      ], { noEndLabel: true, fmt: _chartCompact, emptyMsg: 'Belum ada data realisasi SIKAP pada rentang terpilih.' });
-    }
-    if (d.charts.aknPostur && (d.charts.aknPostur.labels || []).length) {
-      _chartBar('ov-chart-op', d.charts.aknPostur.labels, [
-        { label: 'Keseluruhan', data: d.charts.aknPostur.keseluruhan, color: _CHART_COLORS.nakhoda },
-        { label: 'POA',         data: d.charts.aknPostur.poa,         color: _CHART_COLORS.primary }
-      ], { emptyMsg: 'Data postur AKN Nakhoda belum terhubung.' });
-    } else if (d.charts.hariOperasi) {
-      _chartBar('ov-chart-op', labels, [
-        { label: 'Kapal',   data: d.charts.hariOperasi.kapal,   color: _CHART_COLORS.nakhoda },
-        { label: 'Pesawat', data: d.charts.hariOperasi.pesawat, color: _CHART_COLORS.primary }
-      ], { emptyMsg: 'Data postur AKN Nakhoda belum tersedia pada rentang terpilih.' });
-    }
+    _chartLine('ov-chart-real', labels, [
+      { label: 'SP2D',   data: d.charts.realisasi.sp2d,   color: _CHART_COLORS.sikap, fill: true, fillColor: 'rgba(15, 118, 110, 0.07)', borderWidth: 2.5 },
+      { label: 'Akrual', data: d.charts.realisasi.akrual, color: '#64748B', dashed: true, fill: false, borderWidth: 2 }
+    ], {
+      noEndLabel: true,
+      formatMonths: true,
+      fmt: _chartCompact,
+      yFmt: _chartYBillions,
+      emptyMsg: 'Belum ada data realisasi SIKAP pada rentang terpilih'
+    });
+  }
 
-    var penEl = document.getElementById('ov-chart-penindakan');
-    if (penEl) {
-      var armSegs = (d.charts.armadaStatus && d.charts.armadaStatus.length)
-        ? d.charts.armadaStatus : (d.charts.penindakan || []);
-      penEl.innerHTML = _ovSegTotal(armSegs) > 0 ? _ovPlotDonut(armSegs, 156, 'Kapal')
-        : '<div class="chart-empty">Belum ada data disposisi armada.</div>';
+  var aknPanel = document.getElementById('ov-akn-panel');
+  if (aknPanel) {
+    var ap = (d.charts && d.charts.aknPostur) || {};
+    var lbls = ap.labels || [];
+    var kesArr = ap.keseluruhan || [];
+    var poaArr = ap.poa || [];
+    var maxAll = 0;
+    for (var ai = 0; ai < kesArr.length; ai++) {
+      if ((Number(kesArr[ai]) || 0) > maxAll) maxAll = Number(kesArr[ai]) || 0;
     }
-    var topEl = document.getElementById('ov-chart-teraktif');
-    if (topEl) {
-      var teraktif = (d.charts.kapalTeraktif || []).filter(function (k) { return (Number(k.val) || 0) > 0; });
-      var tanpaKapal = Number(d.charts.hariTanpaKapal) || 0;
-      var catatan = tanpaKapal > 0
-        ? '<div class="n-form-hint">' + _idNum(tanpaKapal) + ' hari operasi belum tertaut kapal.</div>'
-        : '';
-      topEl.innerHTML = teraktif.length
-        ? '<div class="ov-plot-bars">' + _ovBars(teraktif, { ranked: true, unit: 'hari' }) + catatan + '</div>'
-        : '<div class="chart-empty">Belum ada data hari operasi kapal pada periode terpilih.' + catatan + '</div>';
+    if (!lbls.length || maxAll <= 0) {
+      aknPanel.innerHTML = '<div class="chart-empty">Data postur AKN Nakhoda belum terhubung</div>';
+    } else {
+      var sijil = (d.nakhoda && d.nakhoda.sijil) || {};
+      var komp = (d.nakhoda && d.nakhoda.kompetensi) || {};
+      var rowsHtml = lbls.map(function (lb, i) {
+        var totV = Number(kesArr[i]) || 0;
+        var poaV = Number(poaArr[i]) || 0;
+        var wAll = Math.round((totV / maxAll) * 100);
+        var wPoa = Math.round((poaV / maxAll) * 100);
+        return '<div class="ov-akn-item">' +
+          '<div class="ov-akn-top">' +
+            '<span class="ov-akn-lbl">' + _esc(lb) + '</span>' +
+            '<span class="ov-akn-num table-num"><strong>' + _idNum(poaV) + '</strong> <span class="ov-akn-all">/ ' + _idNum(totV) + '</span></span>' +
+          '</div>' +
+          '<div class="ov-akn-track">' +
+            '<div class="ov-akn-fill-all" style="width:' + wAll + '%;"></div>' +
+            '<div class="ov-akn-fill-poa" style="width:' + wPoa + '%;"></div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+      aknPanel.innerHTML =
+        '<div class="ov-akn-list">' + rowsHtml + '</div>' +
+        '<div class="ov-akn-foot">' +
+          '<span>Laik Sijil: <strong>' + _idNum(sijil.laikAwak || 0) + ' / ' + _idNum(sijil.totalKapalEvaluasi || 34) + '</strong> kapal</span>' +
+          '<span>Sertifikat kedaluwarsa: <strong>' + _idNum(komp.kedaluwarsa || 0) + '</strong></span>' +
+        '</div>';
+    }
+  }
+
+  var execPeriode = document.getElementById('ov-exec-periode');
+  if (execPeriode) execPeriode.textContent = d.periode || '\u2014';
+
+  var execBody = document.getElementById('ov-exec-body');
+  if (execBody) {
+    var gridRows = d.executiveGrid || [];
+    if (!gridRows.length) {
+      execBody.innerHTML = '<tr><td colspan="5" class="hist-empty">Belum ada ringkasan satelit pada rentang terpilih</td></tr>';
+    } else {
+      execBody.innerHTML = gridRows.map(function (r) {
+        var badgeCls = r.statusTone === 'ok' ? 'badge-ok' : (r.statusTone === 'warn' ? 'badge-warn' : 'badge-neutral');
+        var dotCls = r.satTone === 'sikap' ? 'dot-sikap' : (r.satTone === 'nakhoda' ? 'dot-nakhoda' : (r.satTone === 'pusat' ? 'dot-pusat' : 'dot-neut'));
+        return '<tr class="' + (r.connected ? '' : 'ov-exec-row-muted') + '">' +
+          '<td class="ov-exec-unit">' + _esc(r.unit) + '</td>' +
+          '<td><span class="ov-sat-cell"><i class="ov-sat-dot ' + dotCls + '"></i>' + _esc(r.satelit) + '</span></td>' +
+          '<td>' + _esc(r.indikatorKunci) + '</td>' +
+          '<td><div class="ov-exec-val">' + _esc(r.capaian) + '</div><div class="ov-exec-sub">' + _esc(r.pembanding) + '</div></td>' +
+          '<td><span class="badge ' + badgeCls + '">' + _esc(r.statusTeks) + '</span></td>' +
+        '</tr>';
+      }).join('');
     }
   }
 }
@@ -2263,7 +2248,6 @@ function _kpiHeadline(label, value, unit, sub, opt) {
   opt = opt || {};
   var hasData = value !== '\u2014';
 
-  // 1. Header baris atas: Judul Title Case + Trend Badge di sudut kanan atas (kompak & single-line)
   var trendHtml = '';
   if (opt.trend && opt.trend.delta && hasData) {
     var d = Number(opt.trend.delta) || 0;
@@ -2281,38 +2265,7 @@ function _kpiHeadline(label, value, unit, sub, opt) {
     }
   }
 
-  // 2. Indikator kemajuan kontekstual (sleek horizontal track 5px)
-  var trackHtml = '';
-  if (hasData) {
-    var pct = null;
-    var barClass = '';
-    if (opt.pct !== undefined && opt.pct !== null) {
-      pct = Math.max(0, Math.min(100, Number(opt.pct) || 0));
-    } else if (unit === '%') {
-      pct = Math.max(0, Math.min(100, parseFloat(String(value).replace(',', '.')) || 0));
-    } else if (unit === '/ 7') {
-      pct = Math.max(0, Math.min(100, (Number(value) || 0) / 7 * 100));
-    } else if (opt.pctKapal !== undefined) {
-      pct = Math.max(0, Math.min(100, Number(opt.pctKapal) || 0));
-    } else if (opt.donut && opt.donut.segs && opt.donut.center) {
-      var siapVal = 0;
-      (opt.donut.segs || []).forEach(function(s){ if (s.tone === 'ok') siapVal = Number(s.val) || 0; });
-      pct = opt.donut.center > 0 ? Math.max(0, Math.min(100, (siapVal / opt.donut.center) * 100)) : 0;
-    } else if (unit === 'kapal') {
-      var mTot = String(sub || '').match(/dari\s+(\d+)\s+armada/i);
-      var tot = mTot ? Number(mTot[1]) : 0;
-      if (tot > 0) pct = Math.max(0, Math.min(100, (Number(value) || 0) / tot * 100));
-    } else if (unit === 'hari') {
-      var mPct = String(sub || '').match(/\((\d+)%\)/);
-      if (mPct) pct = Number(mPct[1]) || 0;
-    }
-
-    if (pct !== null) {
-      trackHtml = '<div class="kpi-track"><div class="kpi-track-fill" style="width:' + pct.toFixed(1) + '%;"></div></div>';
-    }
-  }
-
-  // 3. Subtext bawah terstruktur (dua kolom key-value, anti-wrap, bukan teks slap acak)
+  // Subtext bawah terstruktur (dua kolom key-value)
   var footHtml = '';
   if (opt.foot && opt.foot.left && opt.foot.right) {
     footHtml = '<div class="kpi-foot">' +
@@ -2326,7 +2279,6 @@ function _kpiHeadline(label, value, unit, sub, opt) {
       '</div>' +
     '</div>';
   } else if (sub) {
-    // Parser fallback cerdas jika data lama/view lain mengirim string dengan pemisah "·"
     var parts = String(sub).split(/\s*[·\u00B7]\s*/);
     if (parts.length >= 2) {
       footHtml = '<div class="kpi-foot">' +
@@ -2341,7 +2293,7 @@ function _kpiHeadline(label, value, unit, sub, opt) {
   }
 
   var sourceHtml = opt.source
-    ? '<div class="kpi-source-row"><span class="sat-tag sat-tag-' + _esc(opt.sourceTone || 'radar') + '">' + _esc(opt.source) + '</span></div>'
+    ? '<div class="kpi-source-row"><span class="kpi-src"><i class="kpi-src-dot dot-' + _esc(opt.sourceTone || 'radar') + '"></i>' + _esc(opt.source) + '</span></div>'
     : '';
 
   return '<div class="kpi-card">' +
@@ -2353,7 +2305,6 @@ function _kpiHeadline(label, value, unit, sub, opt) {
     '<div class="kpi-value">' + value +
       (unit ? '<span class="kpi-unit">' + _esc(unit) + '</span>' : '') +
     '</div>' +
-    trackHtml +
     footHtml +
   '</div>';
 }
@@ -2371,7 +2322,7 @@ function _ovRing(pct, size) {
     '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="var(--n-surface-2)" stroke-width="8"/>' +
     '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="var(--n-primary)" stroke-width="8" stroke-linecap="round" ' +
       'stroke-dasharray="' + filled.toFixed(1) + ' ' + c.toFixed(1) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"/>' +
-    '<text x="' + cx + '" y="' + cy + '" text-anchor="middle" dominant-baseline="central" font-size="' + Math.round(size * 0.26) + '" font-weight="800" fill="var(--n-text-primary)">' + Math.round(pct) + '%</text>' +
+    '<text x="' + cx + '" y="' + cy + '" text-anchor="middle" dominant-baseline="central" font-size="' + Math.round(size * 0.26) + '" font-weight="600" fill="var(--n-text-primary)">' + Math.round(pct) + '%</text>' +
   '</svg>';
 }
 
@@ -2411,7 +2362,7 @@ function _ovMiniBars(values, color) {
   return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' + bars + '</svg>';
 }
 
-// Donut komposisi (≤4 irisan) + angka tengah; segmen 0 dilewati, total ≤ 0 → hidden.
+// Donut komposisi (<=4 irisan) + angka tengah; segmen 0 dilewati, total <= 0 -> hidden.
 function _ovDonut(segs, size, center, subLabel) {
   var total = _ovSegTotal(segs);
   if (total <= 0) return '';
@@ -2429,11 +2380,11 @@ function _ovDonut(segs, size, center, subLabel) {
     return el;
   }).join('');
   var subText = (subLabel && size > 100) ? (
-    '<text x="' + cx + '" y="' + (cy + 17) + '" text-anchor="middle" font-size="10" font-weight="600" letter-spacing="-0.01em" fill="var(--n-text-secondary)">' + _esc(subLabel) + '</text>'
+    '<text x="' + cx + '" y="' + (cy + 17) + '" text-anchor="middle" font-size="12" font-weight="500" letter-spacing="-0.01em" fill="var(--n-text-secondary)">' + _esc(subLabel) + '</text>'
   ) : '';
   var numY = (subLabel && size > 100) ? (cy - 7) : cy;
   return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">' + arcs +
-    '<text x="' + cx + '" y="' + numY + '" text-anchor="middle" dominant-baseline="central" font-size="' + Math.round(size * (subLabel ? 0.22 : 0.24)) + '" font-weight="800" fill="var(--n-text-primary)">' + _esc(String(center !== undefined ? center : '')) + '</text>' +
+    '<text x="' + cx + '" y="' + numY + '" text-anchor="middle" dominant-baseline="central" font-size="' + Math.round(size * (subLabel ? 0.22 : 0.24)) + '" font-weight="600" fill="var(--n-text-primary)">' + _esc(String(center !== undefined ? center : '')) + '</text>' +
     subText +
   '</svg>';
 }
@@ -2941,28 +2892,74 @@ function _opsGetGeoData(cb) {
 //
 // Peta ini READ-ONLY (PRD §5.1): klik WPP tidak memfilter tabel mana pun,
 // hanya menyorot + memfokuskan kamera.
+var _SHIP_CLASS_SPEC = {
+  KELAS_I:   { key: 'KELAS_I',   romawi: 'I',   label: 'Kelas I',   rentang: '> 60 m',       w: 34, h: 18, lw: 24, lh: 13 },
+  KELAS_II:  { key: 'KELAS_II',  romawi: 'II',  label: 'Kelas II',  rentang: '40\u201360 m', w: 28, h: 15, lw: 21, lh: 11 },
+  KELAS_III: { key: 'KELAS_III', romawi: 'III', label: 'Kelas III', rentang: '28\u201340 m', w: 23, h: 13, lw: 18, lh: 10 },
+  KELAS_IV:  { key: 'KELAS_IV',  romawi: 'IV',  label: 'Kelas IV',  rentang: '18\u201328 m', w: 19, h: 11, lw: 16, lh: 9 },
+  KELAS_V:   { key: 'KELAS_V',   romawi: 'V',   label: 'Kelas V',   rentang: '< 18 m',       w: 16, h: 10, lw: 14, lh: 8 }
+};
+
+function _shipClassMeta(kelasKapal) {
+  var tok = String(kelasKapal || 'KELAS_III').trim().toUpperCase();
+  return _SHIP_CLASS_SPEC[tok] || _SHIP_CLASS_SPEC.KELAS_III;
+}
+
+function _shipClassSvg(kelasKapal, fillHex, sizeMode) {
+  var m = _shipClassMeta(kelasKapal);
+  var isLegend = sizeMode === 'legend';
+  var w = isLegend ? m.lw : m.w;
+  var h = isLegend ? m.lh : m.h;
+  var fill = fillHex || '#0B4F6C';
+  var strokeAttr = isLegend ? 'none' : '#FFFFFF';
+  var swAttr = isLegend ? '0' : '2';
+
+  if (m.key === 'KELAS_I') {
+    return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 36 20" aria-hidden="true">' +
+      '<path class="ship-hull" d="M2.5 16.5 L30 16.5 L34.5 11.2 L23.5 11.2 L21.5 8 L17.3 8 L17.3 3.2 L15.8 3.2 L15.8 8 L13.5 8 L12.5 6.2 L11.8 6.2 L11.8 1.8 L10.4 1.8 L10.4 6.2 L9 6.2 L8 11.2 L2.5 11.2 Z" fill="' + fill + '" stroke="' + strokeAttr + '" stroke-width="' + swAttr + '" stroke-linejoin="round" paint-order="stroke fill"/>' +
+      (isLegend ? '' : '<line x1="5" y1="13" x2="29" y2="13" stroke="#F4CE88" stroke-width="1" stroke-linecap="round"/>') +
+    '</svg>';
+  }
+  if (m.key === 'KELAS_II') {
+    return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 30 16" aria-hidden="true">' +
+      '<path class="ship-hull" d="M2 13.5 L25 13.5 L28.8 9 L20 9 L18 6.4 L13.2 6.4 L13.2 2.2 L11.6 2.2 L11.6 6.4 L8.2 6.4 L7 9 L2 9 Z" fill="' + fill + '" stroke="' + strokeAttr + '" stroke-width="' + swAttr + '" stroke-linejoin="round" paint-order="stroke fill"/>' +
+    '</svg>';
+  }
+  if (m.key === 'KELAS_III') {
+    return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 26 15" aria-hidden="true">' +
+      '<path class="ship-hull" d="M2 12.5 L21.5 12.5 L24.5 8.5 L16 8.5 L13.8 5.2 L9.5 5.2 L9.5 2.5 L8.2 2.5 L8.2 5.5 L6.5 8.5 L2 8.5 Z" fill="' + fill + '" stroke="' + strokeAttr + '" stroke-width="' + swAttr + '" stroke-linejoin="round" paint-order="stroke fill"/>' +
+    '</svg>';
+  }
+  if (m.key === 'KELAS_IV') {
+    return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 22 13" aria-hidden="true">' +
+      '<path class="ship-hull" d="M1.8 11 L17.8 11 L20.8 7.4 L13.5 7.4 L11.5 4.8 L6.2 4.8 L5 7.4 L1.8 7.4 Z" fill="' + fill + '" stroke="' + strokeAttr + '" stroke-width="' + swAttr + '" stroke-linejoin="round" paint-order="stroke fill"/>' +
+    '</svg>';
+  }
+  return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 20 12" aria-hidden="true">' +
+    '<path class="ship-hull" d="M1.8 10 L16 10 L18.8 6.8 L11 6.8 L9.2 4.4 L5.2 4.4 L3.5 6.8 L1.8 6.8 Z" fill="' + fill + '" stroke="' + strokeAttr + '" stroke-width="' + swAttr + '" stroke-linejoin="round" paint-order="stroke fill"/>' +
+  '</svg>';
+}
+
 var _OV_MAP = {
   metric: 'aktivitas',
   fleetFilter: 'ALL',
-  data: null,      // payload wppMap dari server (termasuk .fleet)
+  classFilter: 'ALL',
+  data: null,      // payload wppMap dari server (termasuk .fleet & .fleetSummary)
   map: null,
   layer: null,
   fleetLayer: null
 };
 
-// Ramp 1 hue navy, sama dengan peta Operasi (§8.1: gradasi intensitas satu
-// warna, bukan traffic-light). Hex, bukan var(): Leaflet menulis fill sebagai
-// ATRIBUT SVG.
+// Ramp 1 hue navy, sama dengan peta Operasi (hex untuk atribut SVG Leaflet).
 var _OV_MAP_RAMP = ['#E3EEF4', '#9BC5D9', '#3E8BB0', '#0B4F6C'];
 var _OV_MAP_RAMP_LINE = 'rgba(11, 79, 108, 0.42)';
 
-// Deskripsi metrik di bawah judul (data provenance, bukan hiasan).
 var _OV_MAP_META = {
-  aktivitas: 'Disposisi WPPNRI 571 s.d. 718 \u00B7 34 Kapal Pengawas Ukuran Besar',
-  kii:        'Disposisi WPPNRI 571 s.d. 718 \u00B7 34 Kapal Pengawas Ukuran Besar',
-  kia:        'Disposisi WPPNRI 571 s.d. 718 \u00B7 34 Kapal Pengawas Ukuran Besar',
-  rump:       'Disposisi WPPNRI 571 s.d. 718 \u00B7 34 Kapal Pengawas Ukuran Besar',
-  cakupan:    'Disposisi WPPNRI 571 s.d. 718 \u00B7 34 Kapal Pengawas Ukuran Besar'
+  aktivitas: 'WPPNRI 571 s.d. 718 \u00B7 Siluet membedakan Kelas I\u2013V, warna menandakan status taktis',
+  kii:       'Disposisi WPPNRI 571 s.d. 718 \u00B7 34 Kapal Pengawas Ukuran Besar',
+  kia:       'Disposisi WPPNRI 571 s.d. 718 \u00B7 34 Kapal Pengawas Ukuran Besar',
+  rump:      'Disposisi WPPNRI 571 s.d. 718 \u00B7 34 Kapal Pengawas Ukuran Besar',
+  cakupan:   'Disposisi WPPNRI 571 s.d. 718 \u00B7 34 Kapal Pengawas Ukuran Besar'
 };
 
 function _ovMapMetricDef(key) {
@@ -2971,7 +2968,6 @@ function _ovMapMetricDef(key) {
   return null;
 }
 
-// Ambil nilai satu metrik untuk satu kode WPP (aman terhadap kode spasi).
 function _ovMapVal(kode) {
   var rows = _OV_MAP.data && _OV_MAP.data.rows;
   if (!rows) return 0;
@@ -2987,12 +2983,6 @@ function _ovMapName(kode) {
   return b && b.nama ? b.nama : ('WPP ' + kode);
 }
 
-// ── Skala 4 bucket adaptif per metrik ────────────────────
-// Bucket tetap milik peta Operasi (0 / 1-5 / 6-15 / >15) tidak bisa dipakai di
-// sini: Cakupan bisa ratusan, KII bisa satuan. Ambang dihitung dari nilai
-// tertinggi pada metrik aktif supaya gradasi tetap terbaca untuk semua metrik.
-// 3 ambang → 4 bucket: 0, 1–s0, s0+1–s1, ≥ s1+1. Bucket teratas terbuka
-// (label '≥') supaya tidak ada warna tanpa labelnya.
 function _ovMapScale() {
   var rows = _OV_MAP.data && _OV_MAP.data.rows;
   var max = 0;
@@ -3003,15 +2993,14 @@ function _ovMapScale() {
     });
   }
   var s = [1, 2, 3].map(function (i) { return Math.ceil(max * i / 4); });
-  // Buka bucket agar tidak ada dua anak tangga bernilai sama (mis. max=1).
   for (var i = 1; i < s.length; i++) if (s[i] <= s[i - 1]) s[i] = s[i - 1] + 1;
   var def = _ovMapMetricDef(_OV_MAP.metric);
   var unit = def && def.unit ? ' ' + def.unit : '';
   var labels = [
     '0',
-    '1–' + s[0] + unit,
-    (s[0] + 1) + '–' + s[1] + unit,
-    '≥ ' + (s[1] + 1) + unit
+    '1\u2013' + s[0] + unit,
+    (s[0] + 1) + '\u2013' + s[1] + unit,
+    '\u2265 ' + (s[1] + 1) + unit
   ];
   return { max: max, labels: labels, fill: function (v) {
     var n = Number(v) || 0;
@@ -3022,40 +3011,38 @@ function _ovMapScale() {
   } };
 }
 
-// ── Chip pengalih metrik ────────────────────────────────
 function _ovMapRenderChips() {
   var host = document.getElementById('ov-map-metrics');
-  if (!host) return;
-  var metrics = (_OV_MAP.data && _OV_MAP.data.metrics) || [];
-  if (metrics.length <= 1) {
-    host.innerHTML = '';
-  } else {
-    host.innerHTML = metrics.map(function (m) {
-      var on = m.key === _OV_MAP.metric;
-      return '<button type="button" class="ov-map-chip' + (on ? ' is-on' : '') + '"' +
-        ' data-ov-metric="' + m.key + '" aria-pressed="' + (on ? 'true' : 'false') + '">' +
-        m.label + '</button>';
-    }).join('');
-    host.querySelectorAll('[data-ov-metric]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        var k = b.getAttribute('data-ov-metric');
-        if (!k || k === _OV_MAP.metric) return;
-        _OV_MAP.metric = k;
-        _ovMapRenderChips();
-        _ovMapPaint();
-        _ovMapRenderRank();
+  if (host) {
+    var metrics = (_OV_MAP.data && _OV_MAP.data.metrics) || [];
+    if (metrics.length <= 1) {
+      host.innerHTML = '';
+    } else {
+      host.innerHTML = metrics.map(function (m) {
+        var on = m.key === _OV_MAP.metric;
+        return '<button type="button" class="ov-map-chip' + (on ? ' is-on' : '') + '"' +
+          ' data-ov-metric="' + m.key + '" aria-pressed="' + (on ? 'true' : 'false') + '">' +
+          m.label + '</button>';
+      }).join('');
+      host.querySelectorAll('[data-ov-metric]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var k = b.getAttribute('data-ov-metric');
+          if (!k || k === _OV_MAP.metric) return;
+          _OV_MAP.metric = k;
+          _ovMapRenderChips();
+          _ovMapPaint();
+          _ovMapRenderRank();
+        });
       });
-    });
+    }
   }
 
-  var def = _ovMapMetricDef(_OV_MAP.metric);
   var title = document.getElementById('ov-map-title');
   var sub = document.getElementById('ov-map-sub');
-  if (title && def) title.textContent = def.label + (def.unit ? ' (' + def.unit + ')' : '');
+  if (title) title.textContent = 'Disposisi 34 Kapal Pengawas Besar';
   if (sub) sub.textContent = _OV_MAP_META[_OV_MAP.metric] || '';
 }
 
-// ── Legenda skala (dibuat dari JS, polunya sama dengan peta Operasi) ──
 function _ovMapLegend(scale) {
   var host = document.getElementById('ov-map');
   if (!host) return;
@@ -3063,15 +3050,19 @@ function _ovMapLegend(scale) {
   if (old) old.remove();
   var el = document.createElement('div');
   el.className = 'ov-map-legend';
-  var html = '<div class="ov-map-legend-title">Skala intensitas</div>';
+  var html = '<div class="ov-map-legend-title">Kepadatan WPP</div>';
   scale.labels.forEach(function (lb, i) {
-    html += '<div class="ov-map-legend-row"><i style="background:' + _OV_MAP_RAMP[i] + '"></i>' + lb + '</div>';
+    html += '<div class="ov-map-legend-row">' +
+      '<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">' +
+        '<rect x="0.5" y="0.5" width="9" height="9" rx="2" fill="' + _OV_MAP_RAMP[i] + '" stroke="rgba(20,25,31,0.18)"/>' +
+      '</svg>' +
+      '<span>' + lb + '</span>' +
+    '</div>';
   });
   el.innerHTML = html;
   host.appendChild(el);
 }
 
-// ── Layer choropleth ────────────────────────────────────
 function _ovMapPaint() {
   var host = document.getElementById('ov-map');
   if (!host || !_OV_MAP.layer) return;
@@ -3079,9 +3070,6 @@ function _ovMapPaint() {
   _OV_MAP.layer.setStyle(function (f) {
     return { fillColor: scale.fill(_ovMapVal(f.properties.wppnri)) };
   });
-  // Label metrik datang dari server. Kalau kunci metrik lokal tidak ada di
-  // daftar itu (deploy versi berbeda), _ovMapMetricDef() null — tanpa guard di
-  // sini satu TypeError menggagalkan seluruh paint + legenda.
   var def = _ovMapMetricDef(_OV_MAP.metric);
   var defLabel = def && def.label ? def.label : '';
   _OV_MAP.layer.eachLayer(function (l) {
@@ -3092,26 +3080,52 @@ function _ovMapPaint() {
   _ovMapLegend(scale);
 }
 
-// Panel ranking: 5 WPP teratas untuk metrik aktif, tersinkron dengan hover peta.
+function _ovMapRenderSideSummary() {
+  var host = document.getElementById('ov-armada-summary');
+  if (!host) return;
+  var fleet = (_OV_MAP.data && _OV_MAP.data.fleet) || [];
+  var total = fleet.length || 1;
+  var op = 0, siap = 0, gal = 0;
+  fleet.forEach(function (k) {
+    if (k.status === 'OPERASIONAL') op++;
+    else if (k.status === 'SIAP_PANGKALAN') siap++;
+    else if (k.status === 'GALANGAN') gal++;
+  });
+  var pctOp = Math.round((op / total) * 100);
+  var pctSiap = Math.round((siap / total) * 100);
+  var pctGal = Math.max(0, 100 - pctOp - pctSiap);
+  host.innerHTML =
+    '<div class="ov-armada-hd">Disposisi Kesiapan Armada (' + fleet.length + ' Kapal)</div>' +
+    '<div class="ov-armada-bar">' +
+      '<div class="ov-armada-seg is-op" style="width:' + (op / total * 100).toFixed(1) + '%;"></div>' +
+      '<div class="ov-armada-seg is-siap" style="width:' + (siap / total * 100).toFixed(1) + '%;"></div>' +
+      '<div class="ov-armada-seg is-gal" style="width:' + (gal / total * 100).toFixed(1) + '%;"></div>' +
+    '</div>' +
+    '<div class="ov-armada-rows">' +
+      '<div class="ov-armada-row"><i class="ov-status-dot is-op"></i><span class="ov-armada-lbl">Operasional di Laut</span><span class="ov-armada-val">' + op + '</span><span class="ov-armada-pct">' + pctOp + '%</span></div>' +
+      '<div class="ov-armada-row"><i class="ov-status-dot is-siap"></i><span class="ov-armada-lbl">Siap di Pangkalan</span><span class="ov-armada-val">' + siap + '</span><span class="ov-armada-pct">' + pctSiap + '%</span></div>' +
+      '<div class="ov-armada-row"><i class="ov-status-dot is-gal"></i><span class="ov-armada-lbl">Pemeliharaan Galangan</span><span class="ov-armada-val">' + gal + '</span><span class="ov-armada-pct">' + pctGal + '%</span></div>' +
+    '</div>';
+}
+
 function _ovMapRenderRank() {
   var host = document.getElementById('ov-map-rank');
   if (!host) return;
   var rows = _OV_MAP.data && _OV_MAP.data.rows;
   if (!rows || !Object.keys(rows).length) {
-    host.innerHTML = '<div class="ov-map-rank-empty">Belum ada laporan pada periode ini.</div>';
+    host.innerHTML = '<div class="ov-map-rank-empty">Belum ada laporan pada periode ini</div>';
     return;
   }
-  var def = _ovMapMetricDef(_OV_MAP.metric);
   var list = Object.keys(rows).map(function (k) {
     return { kode: k, nama: rows[k].nama || ('WPP ' + k), val: Number(rows[k][_OV_MAP.metric]) || 0 };
   }).sort(function (a, b) { return b.val - a.val; }).slice(0, 5);
   var max = list.length ? list[0].val : 0;
 
-  var hd = '<div class="ov-map-rank-hd">5 WPP teratas · ' + (def ? def.label : '') + '</div>';
+  var hd = '<div class="ov-map-rank-hd">5 WPP Teratas</div>';
   hd += '<div class="ov-map-rank-list">' + list.map(function (r, i) {
-    var w = max > 0 ? Math.max(2, Math.round(r.val / max * 100)) : 0;
+    var w = max > 0 ? Math.max(4, Math.round(r.val / max * 100)) : 0;
     return '<div class="ov-map-rank-row" data-ov-kode="' + r.kode + '" tabindex="0" role="button" ' +
-      'aria-label="' + r.nama + ', ' + r.val + '">' +
+      'aria-label="' + r.nama + ', ' + r.val + ' kapal">' +
       '<span class="ov-map-rank-no">' + (i + 1) + '</span>' +
       '<span class="ov-map-rank-nm">' + r.nama + '</span>' +
       '<span class="ov-map-rank-bar"><i style="width:' + w + '%"></i></span>' +
@@ -3120,8 +3134,7 @@ function _ovMapRenderRank() {
 
   var tw = _OV_MAP.data.tanpaWpp;
   if (tw) {
-    hd += '<div class="ov-map-rank-note">' + tw + ' baris laporan tidak mencantumkan WPP ' +
-      'dan tidak dipetakan.</div>';
+    hd += '<div class="ov-map-rank-note">' + tw + ' kapal belum mencantumkan WPP</div>';
   }
   host.innerHTML = hd;
 
@@ -3162,10 +3175,9 @@ function _ovMapZoom(kode) {
   if (!l || !_OV_MAP.map) return;
   try {
     _OV_MAP.map.fitBounds(l.getBounds(), { padding: [28, 28], maxZoom: 7, animate: true });
-  } catch (e) { /* geometri tidak valid — biarkan tampilan apa adanya */ }
+  } catch (e) {}
 }
 
-// ── Inisialisasi map (lazy, sekali per masuk view) ───────
 function _ovMapInit() {
   var host = document.getElementById('ov-map');
   if (!host) return;
@@ -3183,15 +3195,12 @@ function _ovMapInit() {
 
     _OV_MAP.map = L.map('ov-map', {
       zoomControl: true,
-      scrollWheelZoom: false, center: [-2.5489, 118.0149], zoom: 5
+      scrollWheelZoom: false, center: [-2.3, 118.0], zoom: 5
     });
-    // Basemap memakai key CARTO_API_KEY yang sudah ada (Script Property,
-    // dibaca utils_getCartoKey) — sama persis dengan peta Operasi Laut/Udara.
-    // Tidak ada key atau variabel terpisah untuk Ikhtisar. `attributionControl`
-    // sengaja ON: OSM/CARTO mewajibkan atribusi tampil, dan legenda kita ada di
-    // pojok kiri sedangkan baris atribusi Leaflet di kanan, jadi tidak tumpang.
+    _OV_MAP.map.on('zoomend', _ovMapRenderFleetMarkers);
+
     _ensureCartoKey(function (key) {
-      if (!_OV_MAP.map) return;                 // pindah tab sebelum key tiba
+      if (!_OV_MAP.map) return;
       var tileOpts = {
         attribution: key ? '&copy; OpenStreetMap contributors &copy; CARTO' : '&copy; Esri, HERE, Garmin, OpenStreetMap',
         maxZoom: 20
@@ -3206,12 +3215,13 @@ function _ovMapInit() {
     setTimeout(function () {
       if (_OV_MAP.map) {
         try { _OV_MAP.map.invalidateSize(); } catch (e) {}
+        _ovMapRenderFleetMarkers();
       }
-    }, 200);
+    }, 220);
   });
 }
 
-// ── Chip Filter Status Armada Kapal (Fase 18) ─────────────
+// ── Chip Filter Status & Kelas Armada Kapal ───────────────
 function _ovMapRenderFleetChips() {
   var host = document.getElementById('ov-fleet-filter-bar');
   if (!host) return;
@@ -3225,10 +3235,10 @@ function _ovMapRenderFleetChips() {
   });
 
   var filters = [
-    { key: 'ALL', label: 'Semua Armada (' + total + ')' },
-    { key: 'OPERASIONAL', label: 'Operasional (' + opCount + ')' },
+    { key: 'ALL',            label: 'Semua (' + total + ')' },
+    { key: 'OPERASIONAL',    label: 'Operasional (' + opCount + ')' },
     { key: 'SIAP_PANGKALAN', label: 'Siap Pangkalan (' + siapCount + ')' },
-    { key: 'GALANGAN', label: 'Galangan (' + galCount + ')' }
+    { key: 'GALANGAN',       label: 'Galangan (' + galCount + ')' }
   ];
 
   host.innerHTML = filters.map(function (f) {
@@ -3249,7 +3259,45 @@ function _ovMapRenderFleetChips() {
   });
 }
 
-// ── Render Marker 34 Kapal Pengawas Ukuran Besar (Fase 18) ──
+function _ovMapRenderClassBar() {
+  var host = document.getElementById('ov-fleet-class-bar');
+  if (!host) return;
+  var fleet = (_OV_MAP.data && _OV_MAP.data.fleet) || [];
+  var counts = { KELAS_I: 0, KELAS_II: 0, KELAS_III: 0, KELAS_IV: 0, KELAS_V: 0 };
+  fleet.forEach(function (k) {
+    var ck = (k.kelasKapal || 'KELAS_III').toUpperCase();
+    counts[ck] = (counts[ck] || 0) + 1;
+  });
+
+  var defs = [
+    { key: 'ALL',       label: 'Semua Kelas', icon: false },
+    { key: 'KELAS_I',   label: 'Kelas I (' + counts.KELAS_I + ')',   icon: true, show: counts.KELAS_I > 0 },
+    { key: 'KELAS_II',  label: 'Kelas II (' + counts.KELAS_II + ')', icon: true, show: counts.KELAS_II > 0 },
+    { key: 'KELAS_III', label: 'Kelas III (' + counts.KELAS_III + ')', icon: true, show: counts.KELAS_III > 0 },
+    { key: 'KELAS_IV',  label: 'Kelas IV (' + counts.KELAS_IV + ')', icon: true, show: counts.KELAS_IV > 0 },
+    { key: 'KELAS_V',   label: 'Kelas V (' + counts.KELAS_V + ')',   icon: true, show: counts.KELAS_V > 0 }
+  ];
+
+  host.innerHTML = defs.filter(function (d) { return d.key === 'ALL' || d.show; }).map(function (d) {
+    var on = (_OV_MAP.classFilter || 'ALL') === d.key;
+    var svg = d.icon ? _shipClassSvg(d.key, '#0B4F6C', 'legend') : '';
+    return '<button type="button" class="ov-class-chip' + (on ? ' is-on' : '') + '" data-no-ico' +
+      ' data-class-filter="' + d.key + '" aria-pressed="' + (on ? 'true' : 'false') + '">' +
+      svg + '<span>' + _esc(d.label) + '</span></button>';
+  }).join('');
+
+  host.querySelectorAll('[data-class-filter]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var k = b.getAttribute('data-class-filter');
+      if (!k || k === _OV_MAP.classFilter) return;
+      _OV_MAP.classFilter = k;
+      _ovMapRenderClassBar();
+      _ovMapRenderFleetMarkers();
+    });
+  });
+}
+
+// ── Render 34 Marker Siluet Kapal Kelas I–V (Zero Overlap) ──
 function _ovMapRenderFleetMarkers() {
   if (!_OV_MAP.map) return;
   if (!_OV_MAP.fleetLayer) {
@@ -3260,33 +3308,106 @@ function _ovMapRenderFleetMarkers() {
 
   var fleet = (_OV_MAP.data && _OV_MAP.data.fleet) || [];
   var activeFilter = _OV_MAP.fleetFilter || 'ALL';
+  var activeClass = _OV_MAP.classFilter || 'ALL';
 
-  fleet.forEach(function (k) {
-    if (activeFilter !== 'ALL' && k.status !== activeFilter) return;
-    if (k.lat == null || k.lng == null) return;
+  var filtered = fleet.filter(function (k) {
+    if (activeFilter !== 'ALL' && k.status !== activeFilter) return false;
+    if (activeClass !== 'ALL' && (k.kelasKapal || 'KELAS_III') !== activeClass) return false;
+    return k.lat != null && k.lng != null;
+  });
 
+  var mapEl = document.getElementById('ov-map');
+  var mw = mapEl ? mapEl.clientWidth : 800;
+  var mh = mapEl ? mapEl.clientHeight : 400;
+
+  var pts = filtered.map(function (k) {
+    var meta = _shipClassMeta(k.kelasKapal);
+    var pt = _OV_MAP.map.latLngToContainerPoint([k.lat, k.lng]);
+    return {
+      k: k,
+      meta: meta,
+      x: pt.x,
+      y: pt.y,
+      inView: pt.x >= 0 && pt.x <= mw && pt.y >= 0 && pt.y <= mh,
+      hw: (meta.w / 2) + 3,
+      hh: (meta.h / 2) + 3
+    };
+  });
+
+  // Separatif piksel deterministik agar ikon kapal tidak menumpuk pada zoom level rendah
+  for (var pass = 0; pass < 28; pass++) {
+    var moved = false;
+    for (var i = 0; i < pts.length; i++) {
+      var a = pts[i];
+      if (a.inView && a.x - a.hw < 54 && a.y - a.hh < 88) {
+        a.x = 54 + a.hw + 4;
+      }
+      for (var j = i + 1; j < pts.length; j++) {
+        var b = pts[j];
+        var dx = b.x - a.x;
+        var dy = b.y - a.y;
+        var minX = a.hw + b.hw;
+        var minY = a.hh + b.hh;
+        var ox = minX - Math.abs(dx);
+        var oy = minY - Math.abs(dy);
+        if (ox > 0 && oy > 0) {
+          moved = true;
+          var ux, uy;
+          if (dx === 0 && dy === 0) {
+            var ang = ((i * 5 + j) % 8) * (Math.PI / 4);
+            ux = Math.cos(ang);
+            uy = Math.sin(ang);
+          } else {
+            var len = Math.sqrt(dx * dx + dy * dy);
+            ux = dx / len;
+            uy = dy / len;
+          }
+          var stepX = (ux * ox * 0.55) + (ox < oy ? (ux >= 0 ? 1 : -1) : 0);
+          var stepY = (uy * oy * 0.55) + (oy <= ox ? (uy >= 0 ? 1 : -1) : 0);
+          a.x -= stepX;
+          a.y -= stepY;
+          b.x += stepX;
+          b.y += stepY;
+        }
+      }
+    }
+    pts.forEach(function (p) {
+      if (!p.inView) return;
+      if (p.x < p.hw + 12) p.x = p.hw + 12;
+      if (p.x > mw - p.hw - 12) p.x = mw - p.hw - 12;
+      if (p.y < p.hh + 12) p.y = p.hh + 12;
+      if (p.y > mh - p.hh - 12) p.y = mh - p.hh - 12;
+    });
+    if (!moved) break;
+  }
+
+  pts.forEach(function (item) {
+    var k = item.k;
+    var meta = item.meta;
     var isOp = k.status === 'OPERASIONAL';
     var isSiap = k.status === 'SIAP_PANGKALAN';
-    var statusCls = isOp ? 'status-op' : (isSiap ? 'status-siap' : 'status-galangan');
-    var pulseHtml = isOp ? '<span class="ship-beacon-pulse"></span>' : '';
-
-    var iconHtml =
-      '<div class="ship-marker ' + statusCls + '">' +
-        pulseHtml +
-        '<span class="ship-marker-dot"></span>' +
-        '<span class="ship-marker-lbl">' + _esc(k.nama.replace('KP. ', '')) + '</span>' +
-      '</div>';
+    var statusColor = isOp ? '#0B4F6C' : (isSiap ? '#15803D' : '#B45309');
 
     var icon = L.divIcon({
-      className: 'ship-marker-wrap',
-      html: iconHtml,
-      iconSize: [84, 26],
-      iconAnchor: [42, 13]
+      className: 'ship-svg-wrap',
+      html: '<div class="ship-svg-marker" title="' + _esc(k.nama) + '">' +
+        _shipClassSvg(meta.key, statusColor, 'marker') +
+      '</div>',
+      iconSize: [meta.w, meta.h],
+      iconAnchor: [Math.round(meta.w / 2), Math.round(meta.h / 2)]
     });
 
-    var marker = L.marker([k.lat, k.lng], { icon: icon });
+    var pos = _OV_MAP.map.containerPointToLatLng([item.x, item.y]);
+    var marker = L.marker(pos, { icon: icon });
 
-    var badgeText = isOp ? 'Operasional di Laut' : (isSiap ? 'Siap di Pangkalan' : 'Pemeliharaan di Galangan');
+    var locLabel = (k.wpp === 'Pangkalan' || k.wpp === 'Galangan') ? (k.pangkalan || k.wpp) : ('WPP ' + k.wpp);
+    var classDesc = (k.kelasLabel || meta.label) + ' (' + (k.panjangMeter || '') + ' m)';
+    marker.bindTooltip(
+      _esc(k.nama) + ' \u00B7 ' + _esc(classDesc) + ' \u00B7 ' + _esc(locLabel),
+      { direction: 'top', offset: [0, -Math.round(meta.h / 2) - 2], className: 'ship-leaflet-tip' }
+    );
+
+    var badgeText = isOp ? 'Operasional di Laut' : (isSiap ? 'Siap di Pangkalan' : 'Pemeliharaan Galangan');
     var badgeStyle = isOp ? 'background:#E1EFF5;color:#07384D;' :
       (isSiap ? 'background:#DCFCE7;color:#052E16;' : 'background:#FEF3C7;color:#78350F;');
 
@@ -3298,12 +3419,12 @@ function _ovMapRenderFleetMarkers() {
         '<div class="ship-pop-hd">' +
           '<span class="ship-pop-badge" style="' + badgeStyle + '">' + badgeText + '</span>' +
           '<div class="ship-pop-name">' + _esc(k.nama) + '</div>' +
-          '<div class="ship-pop-sub">Kelas ' + _esc(k.kelas || '—') + ' &bull; WPP ' + _esc(k.wpp || '—') + '</div>' +
+          '<div class="ship-pop-sub">' + _esc(classDesc) + ' &bull; ' + _esc(locLabel) + '</div>' +
         '</div>' +
         '<div class="ship-pop-body">' +
-          '<div class="ship-pop-row"><span class="ship-pop-lbl">Posisi Koordinat</span><span class="ship-pop-val table-num">' + (k.lat != null ? k.lat.toFixed(4) : '—') + '&deg;, ' + (k.lng != null ? k.lng.toFixed(4) : '—') + '&deg;</span></div>' +
-          '<div class="ship-pop-row"><span class="ship-pop-lbl">Komandan</span><span class="ship-pop-val font-semibold">' + _esc(k.komandan || '—') + '</span></div>' +
-          '<div class="ship-pop-row"><span class="ship-pop-lbl">Pangkalan</span><span class="ship-pop-val">' + _esc(k.pangkalan || '—') + '</span></div>' +
+          '<div class="ship-pop-row"><span class="ship-pop-lbl">Posisi Koordinat</span><span class="ship-pop-val table-num">' + Number(k.lat).toFixed(4).replace('.', ',') + '&deg;, ' + Number(k.lng).toFixed(4).replace('.', ',') + '&deg;</span></div>' +
+          '<div class="ship-pop-row"><span class="ship-pop-lbl">Komandan</span><span class="ship-pop-val font-semibold">' + _esc(k.komandan || '\u2014') + '</span></div>' +
+          '<div class="ship-pop-row"><span class="ship-pop-lbl">Pangkalan</span><span class="ship-pop-val">' + _esc(k.pangkalan || '\u2014') + '</span></div>' +
           '<div class="ship-pop-row"><span class="ship-pop-lbl">Hari Layar Kumulatif</span><span class="ship-pop-val"><strong>' + k.hariOperasi + '</strong> hari</span></div>' +
           '<div class="ship-pop-benchmark">' +
             '<div class="ship-bm-row"><span>vs Rerata Nasional (44 hr)</span><span class="table-num">' + (k.pctNasional || Math.round((k.hariOperasi / 44) * 100)) + '%</span></div>' +
@@ -3322,12 +3443,8 @@ function _ovMapRenderFleetMarkers() {
   });
 }
 
-// Pemuatan geometri dipisah dari pembuatan map supaya tombol "coba lagi"
-// benar-benar mengulang fetch. Kalau retry diarahkan ke _ovMapInit(), map sudah
-// ada sehingga fungsi itu return di baris guard — retry jadi tidak melakukan
-// apa-apa tanpa pesan apa pun.
 function _ovMapLoadGeo() {
-  if (!_OV_MAP.map) return;                   // pindah tab saat unduhan berjalan
+  if (!_OV_MAP.map) return;
   _opsMapStatus('ov-map', 'loading');
   _opsGetGeoData(function (geoData, err) {
     if (!_OV_MAP.map) return;
@@ -3352,19 +3469,21 @@ function _ovMapLoadGeo() {
     setTimeout(function () {
       if (_OV_MAP.map) {
         try { _OV_MAP.map.invalidateSize(); } catch (e) {}
+        _ovMapRenderFleetMarkers();
       }
     }, 150);
   });
 }
 
-// Teardown saat pindah tab — map Leaflet yang menempel ke container yang sudah
-// dihapus akan tampil kosong.
 function _ovMapDestroy() {
   if (_OV_MAP.fleetLayer) {
     try { _OV_MAP.fleetLayer.clearLayers(); } catch (e) {}
     _OV_MAP.fleetLayer = null;
   }
-  if (_OV_MAP.map) { try { _OV_MAP.map.remove(); } catch (e) {} }
+  if (_OV_MAP.map) {
+    try { _OV_MAP.map.off('zoomend', _ovMapRenderFleetMarkers); } catch (e) {}
+    try { _OV_MAP.map.remove(); } catch (e) {}
+  }
   _OV_MAP.map = null;
   _OV_MAP.layer = null;
   var host = document.getElementById('ov-map');
@@ -3373,13 +3492,16 @@ function _ovMapDestroy() {
   }
 }
 
-// Dipanggil setelah payload overview tiba.
 function _ovMapLoad(payload) {
   _ovMapDestroy();
   if (!payload) return;
+  _OV_MAP.fleetFilter = 'ALL';
+  _OV_MAP.classFilter = 'ALL';
   _OV_MAP.data = payload;
   _ovMapRenderChips();
   _ovMapRenderFleetChips();
+  _ovMapRenderClassBar();
+  _ovMapRenderSideSummary();
   _ovMapRenderRank();
   _ovMapInit();
 }
@@ -5272,19 +5394,38 @@ function _opsMapStatus(mapId, state, msg, retryFn) {
   var host = document.getElementById(mapId);
   if (!host) return;
   var old = host.querySelector('.ops-map-status');
-  if (!state) {
-    if (old) old.remove();
+  var oldNotice = host.querySelector('.ops-map-notice');
+  if (old) old.remove();
+  if (oldNotice) oldNotice.remove();
+  if (!state) return;
+
+  if (mapId === 'ov-map') {
+    var notice = document.createElement('div');
+    notice.className = 'ops-map-notice';
+    if (state === 'loading') {
+      notice.innerHTML = '<span class="n-spin"></span><span>Memuat batas WPPNRI\u2026</span>';
+    } else if (state === 'error') {
+      var msgEl = document.createElement('span');
+      msgEl.textContent = 'Lapisan WPPNRI belum terhubung \u2014 posisi armada tetap aktif';
+      notice.appendChild(msgEl);
+      if (typeof retryFn === 'function') {
+        var rBtn = document.createElement('button');
+        rBtn.type = 'button';
+        rBtn.className = 'btn-mini';
+        rBtn.textContent = 'Muat Ulang';
+        rBtn.onclick = retryFn;
+        notice.appendChild(rBtn);
+      }
+    }
+    host.appendChild(notice);
     return;
   }
-  if (!old) {
-    old = document.createElement('div');
-    old.className = 'ops-map-status';
-    host.appendChild(old);
-  }
+
+  var ov = document.createElement('div');
+  ov.className = 'ops-map-status';
   if (state === 'loading') {
-    old.innerHTML = '<div class="ops-map-status-inner"><span class="n-spin"></span><div>Memuat batas WPPNRI &amp; Armada\u2026</div></div>';
+    ov.innerHTML = '<div class="ops-map-status-inner"><span class="n-spin"></span><div>Memuat batas WPPNRI &amp; Armada\u2026</div></div>';
   } else if (state === 'error') {
-    old.innerHTML = '';
     var inner = document.createElement('div');
     inner.className = 'ops-map-status-inner';
     var tx = document.createElement('div');
@@ -5298,8 +5439,9 @@ function _opsMapStatus(mapId, state, msg, retryFn) {
       btn.onclick = retryFn;
       inner.appendChild(btn);
     }
-    old.appendChild(inner);
+    ov.appendChild(inner);
   }
+  host.appendChild(ov);
 }
 
 // ── IKON UI ────────────────────────────────────────────────

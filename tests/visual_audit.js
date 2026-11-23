@@ -275,10 +275,12 @@ function buildMockInitScript(fixtures) {
 async function inspectPage(page, name) {
   await page.waitForTimeout(600);
   const report = await page.evaluate(() => {
-    const docW = document.documentElement.scrollWidth;
+    const docEl = document.documentElement;
+    const docW = docEl.scrollWidth;
+    const docHeight = docEl.scrollHeight;
     const winW = window.innerWidth;
     const audit = typeof window._uiAudit === 'function' ? window._uiAudit() : null;
-    const imgs = Array.from(document.querySelectorAll('img')).filter((i) => i.offsetParent !== null);
+    const imgs = Array.from(document.querySelectorAll('img')).filter((i) => i.offsetParent !== null && !i.classList.contains('leaflet-tile'));
     const brokenImgs = imgs.filter((i) => !i.complete || i.naturalWidth === 0).map((i) => i.alt || i.src.slice(0, 40));
     const finding = document.getElementById('page-finding');
     const brokenControlRows = [];
@@ -288,12 +290,85 @@ async function inspectPage(page, name) {
       const hs = [...new Set(ctls.map((c) => Math.round(c.getBoundingClientRect().height)))];
       if (hs.length > 1) brokenControlRows.push({ box: (box.className || box.id || '').slice(0, 30), heights: hs });
     });
+
+    // Ship marker count & pairwise bounding-box overlap check
+    const markers = Array.from(document.querySelectorAll('#ov-map .ship-svg-wrap')).filter((m) => {
+      const r = m.getBoundingClientRect();
+      return r.width > 0 && r.height > 0;
+    });
+    let markerOverlaps = 0;
+    const mRects = markers.map((m) => {
+      const r = m.getBoundingClientRect();
+      return { left: r.left + 1, right: r.right - 1, top: r.top + 1, bottom: r.bottom - 1 };
+    });
+    for (let i = 0; i < mRects.length; i++) {
+      for (let j = i + 1; j < mRects.length; j++) {
+        const a = mRects[i], b = mRects[j];
+        if (a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top) {
+          markerOverlaps++;
+        }
+      }
+    }
+
+    // Distinct background colors, tiny text (<12px), font-family compliance, clipped notices
+    const bgSet = new Set();
+    const tinyTextSamples = [];
+    const nonPublicSansSamples = [];
+    const clippedSamples = [];
+    const appVisible = document.getElementById('app-wrapper') && !document.getElementById('app-wrapper').classList.contains('n-hidden');
+    const scopeEls = appVisible
+      ? document.querySelectorAll('#app-wrapper *')
+      : document.querySelectorAll('#auth-wrapper *');
+
+    scopeEls.forEach((el) => {
+      if (!el.getClientRects || el.getClientRects().length === 0) return;
+      const cs = getComputedStyle(el);
+      if (cs.display === 'none' || cs.visibility === 'hidden' || Number(cs.opacity) === 0) return;
+      const r = el.getBoundingClientRect();
+      if (r.width <= 0 || r.height <= 0) return;
+
+      const bg = cs.backgroundColor;
+      if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
+        bgSet.add(bg);
+      }
+
+      const hasDirectText = Array.from(el.childNodes).some((n) => n.nodeType === 3 && n.textContent.trim().length > 0);
+      if (hasDirectText) {
+        const fs = parseFloat(cs.fontSize);
+        if (!isNaN(fs) && fs < 12) {
+          tinyTextSamples.push({ tag: el.tagName, cls: String(el.className || '').slice(0, 30), fs, txt: el.textContent.trim().slice(0, 30) });
+        }
+        const ff = (cs.fontFamily || '').toLowerCase();
+        if (ff && !ff.includes('public sans') && !ff.includes('monospace')) {
+          nonPublicSansSamples.push({ tag: el.tagName, cls: String(el.className || '').slice(0, 30), ff });
+        }
+      }
+    });
+
+    document.querySelectorAll('.ops-map-notice, .ops-map-status, .page-finding, .dr-banner-tx').forEach((el) => {
+      if (el.getClientRects().length === 0) return;
+      if (el.scrollWidth > el.clientWidth + 2) {
+        clippedSamples.push({ cls: String(el.className || '').slice(0, 30), sw: el.scrollWidth, cw: el.clientWidth });
+      }
+    });
+
     return {
       overflowX: docW - winW,
       docW,
+      docHeight,
       winW,
       brokenImgs,
       brokenControlRows,
+      markerCount: markers.length,
+      markerOverlaps,
+      distinctBg: bgSet.size,
+      distinctBgList: Array.from(bgSet),
+      tinyTextCount: tinyTextSamples.length,
+      tinyTextSamples: tinyTextSamples.slice(0, 5),
+      clippedCount: clippedSamples.length,
+      clippedSamples,
+      nonPublicSansCount: nonPublicSansSamples.length,
+      nonPublicSansSamples: nonPublicSansSamples.slice(0, 5),
       findingVisible: finding ? !finding.classList.contains('n-hidden') : false,
       findingText: finding ? finding.textContent : '',
       uiAudit: audit ? { pass: audit.pass, checked: audit.containersChecked, violations: audit.violations } : null
@@ -321,6 +396,7 @@ async function inspectPage(page, name) {
   const browser = await chromium.launch({ headless: true });
   const consoleErrors = [];
   const pageErrors = [];
+  const reports = {};
 
   try {
     // ── 1. Desktop Auth Login ──
@@ -341,7 +417,7 @@ async function inspectPage(page, name) {
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
     await page.waitForSelector('#v-login:not(.n-hidden)', { timeout: 10000 });
     await page.waitForTimeout(400);
-    await inspectPage(page, 'login-desktop');
+    reports['login-desktop'] = await inspectPage(page, 'login-desktop');
     await page.screenshot({ path: path.join(OUT_DIR, '01-login-desktop.png') });
 
     // ── 2. Mobile Auth Login ──
@@ -351,7 +427,7 @@ async function inspectPage(page, name) {
     await mPage.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
     await mPage.waitForSelector('#v-login:not(.n-hidden)', { timeout: 10000 });
     await mPage.waitForTimeout(400);
-    await inspectPage(mPage, 'login-mobile');
+    reports['login-mobile'] = await inspectPage(mPage, 'login-mobile');
     await mPage.screenshot({ path: path.join(OUT_DIR, '02-login-mobile.png') });
 
     // ── 3. Authenticated Desktop Overview (1440x900) ──
@@ -359,9 +435,11 @@ async function inspectPage(page, name) {
     await page.fill('#login-password', 'RadarPOA2026!');
     await page.click('#btn-login');
     await page.waitForSelector('#app-wrapper:not(.n-hidden)', { timeout: 10000 });
-    await page.waitForSelector('#ov-div-grid .div-card:not(.loading)', { timeout: 10000 }).catch(() => {});
-    await page.waitForTimeout(1800);
-    await inspectPage(page, 'overview-desktop');
+    await page.waitForSelector('#ov-exec-body tr', { timeout: 10000 }).catch(() => {});
+    await page.waitForSelector('#ov-map .ship-svg-wrap', { timeout: 10000 }).catch(() => {});
+    await page.waitForSelector('#ov-map .ov-map-legend', { timeout: 6000 }).catch(() => {});
+    await page.waitForTimeout(900);
+    reports['overview-desktop'] = await inspectPage(page, 'overview-desktop');
     await page.screenshot({ path: path.join(OUT_DIR, '03-overview-viewport.png') });
     await page.screenshot({ path: path.join(OUT_DIR, '03-overview-full.png'), fullPage: true });
 
@@ -377,10 +455,19 @@ async function inspectPage(page, name) {
 
     // ── 3c. Laptop Viewport (1024x768) ──
     await page.setViewportSize({ width: 1024, height: 768 });
-    await page.waitForTimeout(450);
-    await inspectPage(page, 'overview-1024');
+    await page.waitForTimeout(550);
+    reports['overview-1024'] = await inspectPage(page, 'overview-1024');
     await page.screenshot({ path: path.join(OUT_DIR, '03c-overview-1024.png') });
     await page.setViewportSize({ width: 1440, height: 900 });
+    await page.waitForTimeout(450);
+
+    // ── 3d. Ship Class Filter Interaction (Kelas I = 6 markers) ──
+    await page.click('[data-class-filter="KELAS_I"]');
+    await page.waitForTimeout(300);
+    const classOneCount = await page.evaluate(() => document.querySelectorAll('#ov-map .ship-svg-wrap').length);
+    console.log('[AUDIT] kelas-1-marker-count:', classOneCount);
+    await page.screenshot({ path: path.join(OUT_DIR, '03d-overview-class-filter.png') });
+    await page.click('[data-class-filter="ALL"]');
     await page.waitForTimeout(300);
 
     // ── 4. Authenticated Mobile Overview + Dock Overflow Sheet ──
@@ -388,8 +475,9 @@ async function inspectPage(page, name) {
     await mPage.fill('#login-password', 'RadarPOA2026!');
     await mPage.click('#btn-login');
     await mPage.waitForSelector('#app-wrapper:not(.n-hidden)', { timeout: 10000 });
+    await mPage.waitForSelector('#ov-exec-body tr', { timeout: 10000 }).catch(() => {});
     await mPage.waitForTimeout(1500);
-    await inspectPage(mPage, 'overview-mobile');
+    reports['overview-mobile'] = await inspectPage(mPage, 'overview-mobile');
     await mPage.screenshot({ path: path.join(OUT_DIR, '04-overview-mobile.png'), fullPage: true });
     await mPage.click('.dock-more-btn');
     await mPage.waitForSelector('#dock-more-sheet:not(.n-hidden)', { timeout: 5000 });
@@ -401,17 +489,45 @@ async function inspectPage(page, name) {
     // ── 5. Kapal Terbaik ──
     await page.evaluate(() => _routeTo('kapal-terbaik'));
     await page.waitForSelector('#kt-table-body tr .n-badge', { timeout: 10000 });
-    await inspectPage(page, 'kapal-terbaik-desktop');
+    reports['kapal-terbaik-desktop'] = await inspectPage(page, 'kapal-terbaik-desktop');
     await page.screenshot({ path: path.join(OUT_DIR, '05-kapal-terbaik-desktop.png'), fullPage: true });
 
     // ── 6. Profil Kapal ──
     await page.evaluate(() => _openProfilKapal('KP-ORCA-01'));
     await page.waitForSelector('#pk-tables .n-table', { timeout: 10000 });
-    await inspectPage(page, 'profil-kapal-desktop');
+    reports['profil-kapal-desktop'] = await inspectPage(page, 'profil-kapal-desktop');
     await page.screenshot({ path: path.join(OUT_DIR, '06-profil-kapal-desktop.png'), fullPage: true });
 
     console.log('[CONSOLE ERRORS]:', consoleErrors.length, consoleErrors);
     console.log('[PAGE ERRORS]:', pageErrors.length, pageErrors);
+
+    // Fase R2 automated quality gates
+    const ov = reports['overview-desktop'];
+    const failures = [];
+    if (pageErrors.length !== 0) failures.push('pageErrors=' + pageErrors.length);
+    if (toastCountOnPopover !== 0) failures.push('toastCountOnPopover=' + toastCountOnPopover);
+    if (classOneCount !== 6) failures.push('classOneCount=' + classOneCount);
+    ['login-desktop', 'login-mobile', 'overview-desktop', 'overview-1024', 'overview-mobile'].forEach((k) => {
+      const r = reports[k];
+      if (!r) return;
+      if (r.overflowX !== 0) failures.push(k + ':overflowX=' + r.overflowX);
+      if (r.brokenControlRows.length !== 0) failures.push(k + ':brokenControlRows=' + JSON.stringify(r.brokenControlRows));
+    });
+    if (ov) {
+      if (ov.markerCount !== 34) failures.push('ov.markerCount=' + ov.markerCount);
+      if (ov.markerOverlaps !== 0) failures.push('ov.markerOverlaps=' + ov.markerOverlaps);
+      if (ov.tinyTextCount !== 0) failures.push('ov.tinyTextCount=' + ov.tinyTextCount + ':' + JSON.stringify(ov.tinyTextSamples));
+      if (ov.clippedCount !== 0) failures.push('ov.clippedCount=' + ov.clippedCount + ':' + JSON.stringify(ov.clippedSamples));
+      if (ov.distinctBg > 16) failures.push('ov.distinctBg=' + ov.distinctBg + ':' + JSON.stringify(ov.distinctBgList));
+      if (ov.docHeight > 2100) failures.push('ov.docHeight=' + ov.docHeight);
+      if (ov.nonPublicSansCount !== 0) failures.push('ov.nonPublicSansCount=' + ov.nonPublicSansCount + ':' + JSON.stringify(ov.nonPublicSansSamples));
+    }
+    if (failures.length) {
+      console.error('[AUDIT GATES FAILED]:', failures.join(' | '));
+      process.exitCode = 1;
+    } else {
+      console.log('[AUDIT GATES PASSED]: ALL FASE R2 GATES GREEN');
+    }
   } finally {
     await browser.close();
     server.close();
