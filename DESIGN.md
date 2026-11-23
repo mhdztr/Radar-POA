@@ -43,16 +43,19 @@ Agar **Radar POA** langsung dikenali sebagai portal agregasi tingkat Direktorat 
 > [!IMPORTANT]
 > Audit visual membuktikan terlalu banyak pil warna pastel (`32` warna latar di `Ikhtisar`) merusak ketenangan dan fokus pimpinan. Dalam desain v2.0, **jumlah warna latar berbeda pada satu layar `Ikhtisar` wajib ditekan menjadi `<= 16`**.
 
-### 3.1 Floating Bottom Maritime Dock (`#app-dock`)
-- `--dock-bg`: `#0E1722` (*Prussian Maritime Ink*)
-- `--dock-hover`: `#172434`
-- `--dock-active`: `#1D2E42` (disertai garis indikator bawah `2px solid #C88A2E`)
-- `--dock-ink`: `#F5F2EB`
-- `--dock-ink-muted`: `#93A2B5`
-- `--dock-accent`: `#C88A2E` (*Maritime Brass*)
-- `--dock-border`: `rgba(255, 255, 255, 0.12)`
-- `--dock-highlight`: `inset 0 1px 0 rgba(255, 255, 255, 0.08)`
-- `--dock-shadow`: `0 12px 32px rgba(14, 23, 34, 0.24)`
+### 3.1 Floating Bottom Frosted Dock (`#app-dock`)
+- `--maritime-ink`: `#0E1722` (tinta gelap korporat untuk bingkai autentikasi, wordmark, dan tooltip peta)
+- `--maritime-ink-text`: `#F5F2EB`
+- `--dock-bg`: `rgba(255, 255, 255, 0.76)` (*Frosted White Glass* dengan `backdrop-filter: blur(22px) saturate(185%)`)
+- `--dock-hover`: `rgba(14, 23, 34, 0.06)`
+- `--dock-active`: `#0B4F6C` (*Deep Admiralty Blue* lewat pill meluncur `.dock-active-pill`, teks `#FFFFFF`)
+- `--dock-active-ink`: `#FFFFFF`
+- `--dock-ink`: `#14191F`
+- `--dock-ink-muted`: `#535D68`
+- `--dock-accent`: `#0B4F6C`
+- `--dock-border`: `rgba(14, 23, 34, 0.10)`
+- `--dock-highlight`: `inset 0 1px 0 rgba(255, 255, 255, 0.94), inset 0 0 0 1px rgba(255, 255, 255, 0.45)`
+- `--dock-shadow`: `0 14px 36px -6px rgba(14, 23, 34, 0.16), 0 4px 12px -2px rgba(14, 23, 34, 0.07), 0 1px 2px rgba(14, 23, 34, 0.04)`
 
 ### 3.2 Kanvas Hidrografis & Permukaan Kerja
 - `--bg-ground`: `#F4F7F9` (kanvas kerja utama aplikasi — sangat netral agar konten berbicara)
@@ -114,16 +117,16 @@ Agar **Radar POA** langsung dikenali sebagai portal agregasi tingkat Direktorat 
   2. **Pintasan Notifikasi (`#topbar-notif-btn`, `32px`):** Ikon bel garis `16px` + lencana angka unread tenang bila `> 0`.
   3. **Akun Pengguna (`#user-menu-btn`, `32px`):** Inisial/ikon user + nama singkat + chevron yang membuka dropdown menu akun (Identitas & Role, Admin Panel bila `SUPERADMIN`/`DIREKTUR`, dan tombol `Keluar`).
 
-### 5.2 Floating Bottom Maritime Dock (`#app-dock`)
+### 5.2 Floating Bottom Frosted Dock (`#app-dock`)
 - **Desktop (`> 768px`):**
-  - `position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 400;`
-  - Memuat grup terpisah garis vertikal `1px` (`rgba(255,255,255,0.14)`):
+  - `position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 130;` dengan kapsul kaca putih buram (`rgba(255, 255, 255, 0.76)`, `backdrop-filter: blur(22px) saturate(185%)`, `border-radius: 999px`, highlight atas `inset 0 1px 0 rgba(255, 255, 255, 0.94)`).
+  - Memuat grup terpisah garis vertikal `1px` (`rgba(14, 23, 34, 0.12)`):
     - **Utama:** `Ikhtisar` (`overview`), `Kegiatan` (`kegiatan` — hanya `SUPERADMIN`/`DIREKTUR`/`KADIV`), `Kapal Terbaik` (`kapal-terbaik`), `Riwayat` (`riwayat`).
     - **Sistem:** `Notifikasi` (`notifikasi` + badge angka), `Master Data` (`master-data` — hanya `SUPERADMIN`/`DIREKTUR`), `Admin` (`kelola-akun` — hanya `SUPERADMIN`/`DIREKTUR`).
-  - Setiap item bertinggi `38px`, padding horizontal `12px`, ikon garis SVG `16px` stroke `1.5`, jarak ikon–teks `8px`, sudut `10px`. Item aktif memakai latar `#1D2E42` dengan garis aksen kuningan `2px solid #C88A2E` di tepi bawah.
+  - Setiap item bertinggi `36px`, padding horizontal `13px`, ikon garis SVG `15px` stroke `1.5`, jarak ikon–teks `6px`, sudut `999px`. Tab aktif dilatarbelakangi **1 pill meluncur `#0B4F6C` (`.dock-active-pill`)** dengan teks & ikon `#FFFFFF` (tanpa garis bawah tambahan).
 - **Mobile (`<= 768px`):**
-  - Dock melebar penuh (`left: 12px; right: 12px; bottom: max(10px, env(safe-area-inset-bottom)); transform: none`) dengan 4 slot utama (`Ikhtisar`, `Kegiatan` atau `Kapal`, `Riwayat`, `Lainnya`).
-  - Tombol `Lainnya` membuka **Mobile Overflow Sheet** (`#dock-more-sheet`) berlatar `#FFFFFF` dengan sudut atas `14px` untuk mengakses `Kapal Terbaik`, `Notifikasi`, `Master Data`, `Admin`, dan `Keluar`.
+  - Dock melebar penuh (`left: 12px; right: 12px; bottom: max(10px, env(safe-area-inset-bottom)); transform: none; border-radius: 22px; background-color: rgba(255, 255, 255, 0.80)`) dengan 4 slot utama (`Ikhtisar`, `Kegiatan` atau `Kapal`, `Riwayat`, `Lainnya`) bersudut kapsul konsentris `17px`.
+  - Tombol `Lainnya` membuka **Mobile Overflow Sheet** (`#dock-more-sheet`) kaca putih buram (`rgba(255, 255, 255, 0.88)`, `backdrop-filter: blur(24px) saturate(185%)`, sudut `20px`) untuk mengakses `Notifikasi`, `Master Data`, `Admin`, dan `Keluar`.
 - **Padding Bawah Kanvas:** `.app-main` (`max-width: 1440px; margin: 0 auto; padding: 24px 28px 108px;` desktop; `16px 16px 96px;` mobile) menjamin tepi kiri-kanan seimbang dan tidak ada tabel atau kartu terbawah yang tertutup dock.
 
 ### 5.3 Pemisahan Header Layar & Kontrol Toolbar (`brokenControlRows === 0`)

@@ -440,6 +440,20 @@ async function inspectPage(page, name) {
     await page.waitForSelector('#ov-map .ov-map-legend', { timeout: 6000 }).catch(() => {});
     await page.waitForTimeout(900);
     reports['overview-desktop'] = await inspectPage(page, 'overview-desktop');
+    const overviewDockState = await page.evaluate(() => {
+      const dock = document.getElementById('app-dock');
+      const pill = document.getElementById('dock-active-pill');
+      const dockCs = dock ? getComputedStyle(dock) : null;
+      const pillCs = pill ? getComputedStyle(pill) : null;
+      const pillRect = pill ? pill.getBoundingClientRect() : null;
+      return {
+        backdropFilter: dockCs ? (dockCs.backdropFilter || dockCs.webkitBackdropFilter || '') : '',
+        pillWidth: pillRect ? pillRect.width : 0,
+        pillX: pillRect ? pillRect.left : 0,
+        pillOpacity: pillCs ? pillCs.opacity : '0'
+      };
+    });
+    console.log('[AUDIT] overview-dock:', JSON.stringify(overviewDockState));
     await page.screenshot({ path: path.join(OUT_DIR, '03-overview-viewport.png') });
     await page.screenshot({ path: path.join(OUT_DIR, '03-overview-full.png'), fullPage: true });
 
@@ -489,6 +503,16 @@ async function inspectPage(page, name) {
     // ── 5. Kapal Terbaik ──
     await page.evaluate(() => _routeTo('kapal-terbaik'));
     await page.waitForSelector('#kt-table-body tr .n-badge', { timeout: 10000 });
+    await page.waitForTimeout(320);
+    const ktDockState = await page.evaluate(() => {
+      const pill = document.getElementById('dock-active-pill');
+      const pillRect = pill ? pill.getBoundingClientRect() : null;
+      return {
+        pillX: pillRect ? pillRect.left : 0,
+        pillWidth: pillRect ? pillRect.width : 0
+      };
+    });
+    console.log('[AUDIT] kapal-terbaik-dock:', JSON.stringify(ktDockState));
     reports['kapal-terbaik-desktop'] = await inspectPage(page, 'kapal-terbaik-desktop');
     await page.screenshot({ path: path.join(OUT_DIR, '05-kapal-terbaik-desktop.png'), fullPage: true });
 
@@ -501,12 +525,15 @@ async function inspectPage(page, name) {
     console.log('[CONSOLE ERRORS]:', consoleErrors.length, consoleErrors);
     console.log('[PAGE ERRORS]:', pageErrors.length, pageErrors);
 
-    // Fase R2 automated quality gates
+    // Fase R2 automated quality gates + frosted pill dock checks
     const ov = reports['overview-desktop'];
     const failures = [];
     if (pageErrors.length !== 0) failures.push('pageErrors=' + pageErrors.length);
     if (toastCountOnPopover !== 0) failures.push('toastCountOnPopover=' + toastCountOnPopover);
     if (classOneCount !== 6) failures.push('classOneCount=' + classOneCount);
+    if (!String(overviewDockState.backdropFilter).includes('blur')) failures.push('dock.backdropFilter=' + overviewDockState.backdropFilter);
+    if (!(overviewDockState.pillWidth > 40) || overviewDockState.pillOpacity !== '1') failures.push('overviewDockState=' + JSON.stringify(overviewDockState));
+    if (!(ktDockState.pillX > overviewDockState.pillX)) failures.push('ktDockState.pillX=' + ktDockState.pillX + ' <= overview.pillX=' + overviewDockState.pillX);
     ['login-desktop', 'login-mobile', 'overview-desktop', 'overview-1024', 'overview-mobile'].forEach((k) => {
       const r = reports[k];
       if (!r) return;

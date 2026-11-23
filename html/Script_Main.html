@@ -1192,7 +1192,8 @@ function _renderDock() {
 
   var dockEl = document.getElementById('app-dock');
   if (dockEl) {
-    var html = mainItems.map(function (it) {
+    var html = '<span class="dock-active-pill" id="dock-active-pill" aria-hidden="true"></span>';
+    html += mainItems.map(function (it) {
       return '<button type="button" class="dock-item" id="nav-' + it.id + '" data-no-ico onclick="_routeTo(\'' + it.id + '\')" title="' + _esc(it.label) + '" aria-label="' + _esc(it.label) + '">' +
         _dockIconSvg(it.icon) +
         '<span class="dock-label">' + _esc(it.shortLabel || it.label) + '</span>' +
@@ -1236,7 +1237,19 @@ function _renderDock() {
     sheetList.innerHTML = sHtml;
   }
 
-  if (APP.currentView) _updateActiveNav(APP.currentView);
+  if (!window.__dockPillBound) {
+    window.__dockPillBound = true;
+    var _dockRaf = 0;
+    window.addEventListener('resize', function () {
+      if (_dockRaf) cancelAnimationFrame(_dockRaf);
+      _dockRaf = requestAnimationFrame(function () { _syncDockPill(true); });
+    });
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(function () { _syncDockPill(true); });
+    }
+  }
+
+  if (APP.currentView) _updateActiveNav(APP.currentView, true);
 }
 
 function _toggleDockMore(e) {
@@ -1328,7 +1341,7 @@ function _handleMenuNav(viewId) {
   _routeTo(viewId);
 }
 
-function _updateActiveNav(viewId) {
+function _updateActiveNav(viewId, immediate) {
   document.querySelectorAll('.dock-item, .dock-more-item').forEach(function (el) {
     el.classList.remove('active');
   });
@@ -1339,6 +1352,60 @@ function _updateActiveNav(viewId) {
     sheetActive.classList.add('active');
     var moreBtn = document.getElementById('dock-more-btn');
     if (moreBtn) moreBtn.classList.add('active');
+  }
+  _syncDockPill(!!immediate);
+}
+
+function _syncDockPill(immediate) {
+  var dock = document.getElementById('app-dock');
+  var pill = document.getElementById('dock-active-pill');
+  if (!dock || !pill) return;
+
+  var items = dock.querySelectorAll('.dock-item.active');
+  var target = null;
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].offsetWidth > 0 && items[i].offsetHeight > 0) {
+      target = items[i];
+      break;
+    }
+  }
+
+  if (!target) {
+    pill.style.opacity = '0';
+    dock.classList.remove('has-pill');
+    return;
+  }
+
+  var applyPos = function () {
+    pill.style.width = target.offsetWidth + 'px';
+    pill.style.height = target.offsetHeight + 'px';
+    pill.style.transform = 'translate3d(' + target.offsetLeft + 'px, ' + target.offsetTop + 'px, 0)';
+    pill.style.opacity = '1';
+    dock.classList.add('has-pill');
+  };
+
+  if (immediate || !dock.classList.contains('has-pill')) {
+    dock.classList.remove('pill-animated');
+    applyPos();
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        dock.classList.add('pill-animated');
+      });
+    });
+  } else {
+    dock.classList.add('pill-animated');
+    applyPos();
+  }
+}
+
+function _triggerViewFade(prevView, nextView) {
+  if (!prevView || prevView === nextView) return;
+  window.scrollTo(0, 0);
+  var pc = document.getElementById('page-content');
+  if (pc) {
+    pc.classList.remove('view-entering');
+    void pc.offsetWidth;
+    pc.classList.add('view-entering');
   }
 }
 
@@ -1358,6 +1425,7 @@ function _routeTo(viewId) {
   if (!item || !_canAccess(item, APP.user)) {
     viewId = 'overview';
   }
+  var prevView = APP.currentView;
   APP.currentView = viewId;
   if (window.location.hash !== '#' + viewId) {
     window.location.hash = viewId;
@@ -1367,8 +1435,10 @@ function _routeTo(viewId) {
   _closeSyncPopover();
   _updateMobileRouteLabel(viewId);
   _updateActiveNav(viewId);
+  if (prevView && prevView !== viewId) window.scrollTo(0, 0);
   _renderPageHeader(viewId);
   _renderViewContent(viewId);
+  _triggerViewFade(prevView, viewId);
   _applyShellStatus();
 }
 
@@ -1395,6 +1465,7 @@ function _openProfilKapal(kapalId) {
 }
 
 function _routeKapalTerbaik() {
+  var prevView = APP.currentView;
   APP.currentView = 'kapal-terbaik';
   if (window.location.hash !== '#kapal-terbaik') {
     window.location.hash = 'kapal-terbaik';
@@ -1404,8 +1475,10 @@ function _routeKapalTerbaik() {
   _closeSyncPopover();
   _updateMobileRouteLabel('kapal-terbaik');
   _updateActiveNav('kapal-terbaik');
+  if (prevView && prevView !== 'kapal-terbaik') window.scrollTo(0, 0);
   _renderPageHeader('kapal-terbaik');
   _renderViewContent('kapal-terbaik');
+  _triggerViewFade(prevView, 'kapal-terbaik');
   _applyShellStatus();
 }
 
@@ -5037,6 +5110,7 @@ function _renderNotifBadge(n) {
       el.classList.add('n-hidden');
     }
   });
+  _syncDockPill(true);
 }
 
 function _renderReminderStrip(info) {
