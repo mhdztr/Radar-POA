@@ -42,10 +42,10 @@ Radar-POA/
 │   └── NotifikasiService.js             # Pusat notifikasi in-app & pengingat mingguan otomatis
 ├── html/
 │   ├── AuthPhoto.html                   # Partial foto personel resmi Ditjen PSDKP (base64 inline untuk Split Auth 50/50)
-│   ├── Index.html                       # Shell SPA v2.0: 50/50 Split Auth, Top Institutional Bar (56px), & Floating Bottom Maritime Dock (#0E1722) dengan Logo PSDKP
+│   ├── Index.html                       # Shell SPA v2.0: 50/50 Split Auth, Two-Tier Top Header (52px + 44px), & Flush Mobile Bottom Bar dengan Logo PSDKP
 │   ├── Style.html                       # Design System v2.0 CSS (Public Sans 6 skala >= 12px, budget warna <= 16, kontrol 3-tier 40/32/26px, Leaflet override)
 │   ├── Script_Charts.html               # Engine visualisasi Chart.js (_RADAR_CHARTS) kurva garis ganda bersih & konteks terukur (0 gauge/3D)
-│   ├── Script_Main.html                 # SPA Controller, router hash, dock + mobile sheet, peta Leaflet 34 kapal berikon SVG Kelas I–V, & renderer seluruh halaman
+│   ├── Script_Main.html                 # SPA Controller, router hash, header navigasi desktop + flush mobile bottom bar, peta Leaflet 34 kapal berikon SVG Kelas I–V, & renderer seluruh halaman
 │   └── views/
 │       ├── Kegiatan.html                # Daftar Kegiatan Direktorat, pencarian/status filter, & Calendar Picker Anti-Ketik Manual
 │       ├── KapalTerbaik.html            # Podium Top 3 (non-Galangan) & leaderboard 34 Kapal Pengawas berklasifikasi Kelas I–V

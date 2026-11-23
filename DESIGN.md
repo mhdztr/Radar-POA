@@ -13,8 +13,8 @@ Agar **Radar POA** langsung dikenali sebagai portal agregasi tingkat Direktorat 
 
 | Dimensi Visual | **SIKAP** *(Subbag TU)* | **Nakhoda** *(Timja Pengawakan)* | **Radar POA v2.0** *(Pusat Agregasi Dit. POA)* |
 |---|---|---|---|
-| **Dunia Visual** | Portal Bendahara Frosted Mineral | Buku Besar Akromatik (*Achromatic Ledger*) | **Full-Width Hydrographic Briefing & Floating Maritime Dock** |
-| **Navigasi Utama** | Top-Bar putih bersekat + glassmorphic subnav | Sidebar kiri terang `#F2F4F7` | **Top Institutional Bar (`56px`, `#FFFFFF`) + Floating Bottom Maritime Dock (`#0E1722`)** berindikator `#C88A2E` |
+| **Dunia Visual** | Portal Bendahara Frosted Mineral | Buku Besar Akromatik (*Achromatic Ledger*) | **Full-Width Hydrographic Briefing & Two-Tier Institutional Header** |
+| **Navigasi Utama** | Top-Bar putih bersekat + glassmorphic subnav | Sidebar kiri terang `#F2F4F7` | **Two-Tier Top Header (`52px` Brand Bar + `44px` Nav Tab Bar bergaris bawah `#0B4F6C`)** di desktop; **Flush Mobile Bottom Tab Bar (`<= 768px`)** |
 | **Kanvas & Ruang Kerja** | Porcelain `#F8FAFC` + blur header | Cool slate `#F2F4F7` | **Kanvas Hidrografis Penuh (`#F4F7F9`, `max-width: 1440px`, margin kiri-kanan seimbang)** tanpa bilah samping permanen |
 | **Layar Autentikasi** | Kartu 2-ruang bergradasi hijau | Kartu form terpusat abu-abu dingin | **50/50 Photographic Split Screen** (#FAFCFD panel kanan berjangkar footer KKP/PSDKP + foto personel fokus tengah tanpa wajah terpotong) |
 | **Warna Aksi Primer** | Forest Jade `#064E3B` | Hitam Arang `#0F1720` | **Deep Admiralty Blue `#0B4F6C`** (`hover: #083B52`), hemat & fokus |
@@ -27,12 +27,12 @@ Agar **Radar POA** langsung dikenali sebagai portal agregasi tingkat Direktorat 
 
 1. **Product (Produk):** Portal rekapitulasi data strategis dan monitoring disposisi armada nasional bagi Direktur POA, Pejabat Eselon, dan Kepala Divisi untuk mengawasi konsolidasi dari **SIKAP**, **Nakhoda**, **Sistik**, **Siaga**, dan **Operasi**, serta mencatat **Kegiatan Direktorat**.
 2. **Character (Karakter):** *Berwibawa, tenang, ringkas, presisi — berformat briefing eksekutif negara, bukan tumpukan kartu SaaS.*
-3. **World (Dunia & Material):** **Peta Hidrografis Resmi & Briefing Maritim Negara** — kanvas biru-abu sejuk yang netral dan tenang (`#F4F7F9`), pelat tabel putih bertepi tajam (`#FFFFFF`), aksen primer biru maritim (`#0B4F6C`), serta Floating Dark-Ink Maritime Dock (`#0E1722`) beraksen kuningan kompas (`#C88A2E`).
+3. **World (Dunia & Material):** **Peta Hidrografis Resmi & Briefing Maritim Negara** — kanvas biru-abu sejuk yang netral dan tenang (`#F4F7F9`), header putih dua tingkat yang tegas & langsung terbaca (`52px` + `44px`), pelat tabel putih bertepi tajam (`#FFFFFF`), serta aksen primer biru maritim (`#0B4F6C`).
 4. **Moments (Hanya 2 Momen Visual Utama, Sisanya Tenang):**
    - **Momen 1 — Peta Taktis 34 Kapal Berikon Siluet Kelas I–V (`68% / 32%`):** Peta Indonesia berskala jelas dengan **5 bentuk/skala ikon kapal berbeda** berdasarkan Kelas I–V PSDKP, warna status taktis, 0 pil label bertumpuk (`markerOverlaps === 0`), berdampingan dengan panel ringkasan WPP & disposisi armada di kanan.
    - **Momen 2 — Analitik Asimetris (`65% / 35%`) & Tabel Monitoring Eksekutif Lintas Satelit:** Satu grafik kurva garis ganda SIKAP dominan (tanpa tumpukan area keruh) didampingi daftar postur AKN Nakhoda di sisi kanan, diikuti tepat **1 Tabel Terpadu Lintas Satelit** di bawah (menggantikan 6 kartu divisi duplikatif).
 5. **Signature (Detail Khas Konsisten):**
-   - **Floating Bottom Maritime Dock (`#0E1722` + `#C88A2E`)** di dasar layar utama.
+   - **Two-Tier Institutional Top Header** (desktop `52px` + tab horizontal `44px` berindikator `#0B4F6C`) & **Flush Mobile Bottom Tab Bar** (`<= 768px`) menempel rapi di dasar layar.
    - **Lambang Resmi Ditjen PSDKP (`#psdkp-crest-outline`)** pada panel masuk (`58×66px`), Top Bar (`28×32px`), dan Loading Splash (`48×54px`), tanpa lencana `[Dit. POA]` di sebelah merek.
    - **Garis Tajuk Publikasi (`2px solid #0E1722`)** khusus untuk **1 strip ringkasan utama** per halaman, dipadukan angka `tabular-nums` rata kanan dengan koma desimal Indonesia.
 
@@ -43,23 +43,23 @@ Agar **Radar POA** langsung dikenali sebagai portal agregasi tingkat Direktorat 
 > [!IMPORTANT]
 > Audit visual membuktikan terlalu banyak pil warna pastel (`32` warna latar di `Ikhtisar`) merusak ketenangan dan fokus pimpinan. Dalam desain v2.0, **jumlah warna latar berbeda pada satu layar `Ikhtisar` wajib ditekan menjadi `<= 16`**.
 
-### 3.1 Floating Bottom Frosted Dock (`#app-dock`)
+### 3.1 Tinta Korporat & Permukaan Navigasi Terang (`#app-topbar` & `#app-dock`)
 - `--maritime-ink`: `#0E1722` (tinta gelap korporat untuk bingkai autentikasi, wordmark, dan tooltip peta)
 - `--maritime-ink-text`: `#F5F2EB`
-- `--dock-bg`: `rgba(255, 255, 255, 0.76)` (*Frosted White Glass* dengan `backdrop-filter: blur(22px) saturate(185%)`)
-- `--dock-hover`: `rgba(14, 23, 34, 0.06)`
-- `--dock-active`: `#0B4F6C` (*Deep Admiralty Blue* lewat pill meluncur `.dock-active-pill`, teks `#FFFFFF`)
-- `--dock-active-ink`: `#FFFFFF`
+- `--dock-bg`: `rgba(255, 255, 255, 0.96)` (Flush Mobile Bottom Tab Bar `<= 768px` bergaris batas atas `--border-card`)
+- `--dock-hover`: `#F4F7F9`
+- `--dock-active`: `#E1EFF5` (latar lembut tab aktif mobile, ikon & teks `#0B4F6C`)
+- `--dock-active-ink`: `#0B4F6C`
 - `--dock-ink`: `#14191F`
 - `--dock-ink-muted`: `#535D68`
 - `--dock-accent`: `#0B4F6C`
-- `--dock-border`: `rgba(14, 23, 34, 0.10)`
-- `--dock-highlight`: `inset 0 1px 0 rgba(255, 255, 255, 0.94), inset 0 0 0 1px rgba(255, 255, 255, 0.45)`
-- `--dock-shadow`: `0 14px 36px -6px rgba(14, 23, 34, 0.16), 0 4px 12px -2px rgba(14, 23, 34, 0.07), 0 1px 2px rgba(14, 23, 34, 0.04)`
+- `--dock-border`: `#D1DCE5`
+- `--dock-highlight`: `inset 0 1px 0 rgba(255, 255, 255, 0.94)`
+- `--dock-shadow`: `0 -2px 10px rgba(14, 23, 34, 0.05)`
 
 ### 3.2 Kanvas Hidrografis & Permukaan Kerja
 - `--bg-ground`: `#F4F7F9` (kanvas kerja utama aplikasi — sangat netral agar konten berbicara)
-- `--bg-header`: `#FFFFFF` (Top Institutional Bar solid `56px`, hairline bawah `1px solid #D9E2EA`)
+- `--bg-header`: `#FFFFFF` (Two-Tier Top Header: Tier 1 `52px` + Tier 2 Nav Tab Bar `44px`, hairline `#D1DCE5`)
 - `--bg-surface`: `#FFFFFF` (pelat KPI, tabel, kontainer peta/grafik, modal, drawer)
 - `--bg-raised`: `#E6EDF2` (trek segmen pasif, baris selang-seling, header kontrol netral)
 - `--bg-active`: `#D9E4EC`
@@ -107,27 +107,27 @@ Agar **Radar POA** langsung dikenali sebagai portal agregasi tingkat Direktorat 
 
 ---
 
-## 5. Arsitektur Shell Baru (`#app-topbar` + `#app-dock` + Kontrol 3-Tier)
+## 5. Arsitektur Shell Baru (Two-Tier Top Header + Flush Mobile Bar + Kontrol 3-Tier)
 
-### 5.1 Top Institutional Bar (`#app-topbar`, sticky `56px`)
-- **Kontainer:** `position: sticky; top: 0; z-index: 300; height: 56px; background: #FFFFFF; border-bottom: 1px solid #D9E2EA;` dengan kontainer isi `max-width: 1440px; margin: 0 auto; padding: 0 28px; display: flex; align-items: center; justify-content: space-between;`.
-- **Kiri:** Crest resmi Ditjen PSDKP (`28×32px`, filter `#psdkp-crest-outline`) + lockup **`RADAR POA`** + `· Rekapitulasi Data Strategis`. **Dilarang memasang pil lencana `[Dit. POA]`**.
+### 5.1 Baris Atas Institusional (`#app-topbar`, Tier 1 `52px`)
+- **Kontainer:** Tier 1 bertinggi `52px` (`max-width: 1440px; margin: 0 auto; padding: 0 28px; display: flex; align-items: center; justify-content: space-between;`), terintegrasi di dalam `<header id="app-topbar" class="app-topbar">` (`position: sticky; top: 0; z-index: 120; background: #FFFFFF; border-bottom: 1px solid #D1DCE5;`).
+- **Kiri:** Crest resmi Ditjen PSDKP (`28×32px`, filter `#psdkp-crest-outline`) + lockup **`RADAR POA`** + `/ Rekapitulasi Data Strategis`. **Dilarang memasang pil lencana `[Dit. POA]`**.
 - **Kanan (`.ctl-row.ctl-md`, semua tombol tepat `32px`):**
   1. **`#sync-indicator` (`32px`):** Menampilkan dot status (`Tersinkron` / `Menyinkronkan` / `Tertunda`) + label ringkas. **Klik `#sync-indicator` HANYA membuka/menutup `#sync-popover`** (menampilkan cap waktu terakhir dan daftar status 6 satelit: `Pusat`, `SIKAP`, `Nakhoda`, `Sistik`, `Siaga`, `Operasi`). Di bagian bawah `#sync-popover` ditempatkan tombol eksplisit **`Sinkronkan Data Satelit`** (`_triggerManualSync()`) — mencegah sinkronisasi ganda & double-toast saat menutup popover.
-  2. **Pintasan Notifikasi (`#topbar-notif-btn`, `32px`):** Ikon bel garis `16px` + lencana angka unread tenang bila `> 0`.
-  3. **Akun Pengguna (`#user-menu-btn`, `32px`):** Inisial/ikon user + nama singkat + chevron yang membuka dropdown menu akun (Identitas & Role, Admin Panel bila `SUPERADMIN`/`DIREKTUR`, dan tombol `Keluar`).
+  2. **Pintasan Notifikasi (`#topbar-notif-btn`, `32px`):** Satu-satunya pintu masuk `Notifikasi` pada bilah utama (dengan badge angka unread bila `> 0` dan status `.active` biru maritim saat halaman Notifikasi terbuka).
+  3. **Akun Pengguna (`#topbar-user-btn`, `32px`):** Inisial/ikon user + nama singkat + chevron yang membuka dropdown menu akun (Identitas & Role, Admin Panel bila `SUPERADMIN`/`DIREKTUR`, dan tombol `Keluar`).
 
-### 5.2 Floating Bottom Frosted Dock (`#app-dock`)
-- **Desktop (`> 768px`):**
-  - `position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 130;` dengan kapsul kaca putih buram (`rgba(255, 255, 255, 0.76)`, `backdrop-filter: blur(22px) saturate(185%)`, `border-radius: 999px`, highlight atas `inset 0 1px 0 rgba(255, 255, 255, 0.94)`).
-  - Memuat grup terpisah garis vertikal `1px` (`rgba(14, 23, 34, 0.12)`):
+### 5.2 Navigasi Utama: Tier 2 Tab Bar (Desktop) & Flush Bottom Tab Bar (Mobile)
+- **Desktop (`> 768px`, `#app-nav-bar` bertinggi `44px` di bawah Tier 1):**
+  - Sejajar lurus pada grid `28px` dengan logo dan judul `h1`:
     - **Utama:** `Ikhtisar` (`overview`), `Kegiatan` (`kegiatan` — hanya `SUPERADMIN`/`DIREKTUR`/`KADIV`), `Kapal Terbaik` (`kapal-terbaik`), `Riwayat` (`riwayat`).
-    - **Sistem:** `Notifikasi` (`notifikasi` + badge angka), `Master Data` (`master-data` — hanya `SUPERADMIN`/`DIREKTUR`), `Admin` (`kelola-akun` — hanya `SUPERADMIN`/`DIREKTUR`).
-  - Setiap item bertinggi `36px`, padding horizontal `13px`, ikon garis SVG `15px` stroke `1.5`, jarak ikon–teks `6px`, sudut `999px`. Tab aktif dilatarbelakangi **1 pill meluncur `#0B4F6C` (`.dock-active-pill`)** dengan teks & ikon `#FFFFFF` (tanpa garis bawah tambahan).
-- **Mobile (`<= 768px`):**
-  - Dock melebar penuh (`left: 12px; right: 12px; bottom: max(10px, env(safe-area-inset-bottom)); transform: none; border-radius: 22px; background-color: rgba(255, 255, 255, 0.80)`) dengan 4 slot utama (`Ikhtisar`, `Kegiatan` atau `Kapal`, `Riwayat`, `Lainnya`) bersudut kapsul konsentris `17px`.
-  - Tombol `Lainnya` membuka **Mobile Overflow Sheet** (`#dock-more-sheet`) kaca putih buram (`rgba(255, 255, 255, 0.88)`, `backdrop-filter: blur(24px) saturate(185%)`, sudut `20px`) untuk mengakses `Notifikasi`, `Master Data`, `Admin`, dan `Keluar`.
-- **Padding Bawah Kanvas:** `.app-main` (`max-width: 1440px; margin: 0 auto; padding: 24px 28px 108px;` desktop; `16px 16px 96px;` mobile) menjamin tepi kiri-kanan seimbang dan tidak ada tabel atau kartu terbawah yang tertutup dock.
+    - **Sistem (dipisah garis vertikal `#D1DCE5`):** `Master Data` (`master-data` — hanya `SUPERADMIN`/`DIREKTUR`), `Admin` (`kelola-akun` — hanya `SUPERADMIN`/`DIREKTUR`). *`Notifikasi` tidak diduplikasi sebagai tab.*
+  - Tab aktif memakai teks `#0B4F6C` (`font-weight: 600`) dengan indikator garis bawah meluncur `2px solid #0B4F6C` (`.topnav-indicator`).
+  - `#app-dock` disembunyikan di desktop (`display: none`) agar 0% menutupi peta maupun tabel.
+- **Mobile (`<= 768px`, `#app-dock` Flush Bottom Tab Bar):**
+  - `#app-nav-bar` disembunyikan; `#app-dock` menempel penuh di tepi dasar layar (`left: 0; right: 0; bottom: 0; border-top: 1px solid #D1DCE5; border-radius: 0; background-color: rgba(255, 255, 255, 0.96); backdrop-filter: blur(16px)`) dengan 4 slot utama (`Ikhtisar`, `Kegiatan`, `Kapal`, `Riwayat`) + tombol `Lainnya`.
+  - Tombol `Lainnya` membuka **Mobile Overflow Sheet** (`#dock-more-sheet`) menempel bawah penuh (`left: 0; right: 0; bottom: 0; border-radius: 18px 18px 0 0`) untuk mengakses `Master Data`, `Admin Panel`, dan `Keluar`.
+- **Padding Bawah Kanvas:** `.app-main` (`max-width: 1440px; margin: 0 auto; padding: 20px 28px 40px;` desktop; `16px 16px 84px;` mobile) menjamin margin seimbang dan bebas tabrakan navigasi.
 
 ### 5.3 Pemisahan Header Layar & Kontrol Toolbar (`brokenControlRows === 0`)
 - **`#page-header` Diperamping (`0` selisih tinggi):** Baris judul hanya memuat `h1.page-title` di kiri dan kelompok kontrol `.page-controls.ctl-row.ctl-md` di kanan — seluruh elemen di dalamnya (`Bulanan | Rentang` wrapper `32px`, `select.filter-sel` `32px`, `input[type="date"]` `32px`, dan tombol aksi halaman `32px`) **wajib tepat `32px`** agar tidak ada lagi mismatch `26px` vs `32px`.

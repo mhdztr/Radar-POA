@@ -1190,26 +1190,42 @@ function _renderDock() {
     else mainItems = mainItems.concat(visible);
   });
 
+  var sysNavItems = sysItems.filter(function (it) { return it.id !== 'notifikasi'; });
+  var _deskLabel = function (it) {
+    if (it.id === 'kegiatan') return 'Kegiatan';
+    if (it.id === 'riwayat') return 'Riwayat';
+    if (it.id === 'kelola-akun') return 'Admin';
+    return it.label;
+  };
+
+  var navListEl = document.getElementById('app-nav-list');
+  if (navListEl) {
+    var navHtml = mainItems.map(function (it) {
+      return '<button type="button" class="topnav-item" id="nav-' + it.id + '" data-nav="' + it.id + '" data-no-ico onclick="_routeTo(\'' + it.id + '\')" title="' + _esc(it.label) + '" aria-label="' + _esc(it.label) + '">' +
+        _dockIconSvg(it.icon) +
+        '<span class="topnav-label">' + _esc(_deskLabel(it)) + '</span>' +
+      '</button>';
+    }).join('');
+    if (sysNavItems.length > 0) {
+      navHtml += '<span class="topnav-sep" aria-hidden="true"></span>';
+      navHtml += sysNavItems.map(function (it) {
+        return '<button type="button" class="topnav-item" id="nav-' + it.id + '" data-nav="' + it.id + '" data-no-ico onclick="_routeTo(\'' + it.id + '\')" title="' + _esc(it.label) + '" aria-label="' + _esc(it.label) + '">' +
+          _dockIconSvg(it.icon) +
+          '<span class="topnav-label">' + _esc(_deskLabel(it)) + '</span>' +
+        '</button>';
+      }).join('');
+    }
+    navListEl.innerHTML = navHtml;
+  }
+
   var dockEl = document.getElementById('app-dock');
   if (dockEl) {
-    var html = '<span class="dock-active-pill" id="dock-active-pill" aria-hidden="true"></span>';
-    html += mainItems.map(function (it) {
-      return '<button type="button" class="dock-item" id="nav-' + it.id + '" data-no-ico onclick="_routeTo(\'' + it.id + '\')" title="' + _esc(it.label) + '" aria-label="' + _esc(it.label) + '">' +
+    var html = mainItems.map(function (it) {
+      return '<button type="button" class="dock-item" id="mnav-' + it.id + '" data-nav="' + it.id + '" data-no-ico onclick="_routeTo(\'' + it.id + '\')" title="' + _esc(it.label) + '" aria-label="' + _esc(it.label) + '">' +
         _dockIconSvg(it.icon) +
         '<span class="dock-label">' + _esc(it.shortLabel || it.label) + '</span>' +
       '</button>';
     }).join('');
-
-    if (sysItems.length > 0) {
-      html += '<span class="dock-sep" aria-hidden="true"></span>';
-      html += sysItems.map(function (it) {
-        return '<button type="button" class="dock-item dock-sys-item" id="nav-' + it.id + '" data-no-ico onclick="_routeTo(\'' + it.id + '\')" title="' + _esc(it.label) + '" aria-label="' + _esc(it.label) + '">' +
-          _dockIconSvg(it.icon) +
-          '<span class="dock-label">' + _esc(it.shortLabel || it.label) + '</span>' +
-          (it.id === 'notifikasi' ? '<span class="dock-badge n-hidden" id="nav-notif-badge">0</span>' : '') +
-        '</button>';
-      }).join('');
-    }
 
     html += '<button type="button" class="dock-item dock-more-btn" id="dock-more-btn" data-no-ico onclick="_toggleDockMore(event)" aria-expanded="false" aria-controls="dock-more-sheet" title="Menu Lainnya">' +
       _dockIconSvg('more') +
@@ -1220,15 +1236,16 @@ function _renderDock() {
 
   var sheetList = document.getElementById('dock-more-list');
   if (sheetList) {
-    var sHtml = sysItems.map(function (it) {
-      return '<button type="button" class="dock-more-item" id="sheet-nav-' + it.id + '" data-no-ico onclick="_closeDockMore(); _routeTo(\'' + it.id + '\')">' +
+    var sHtml = sysNavItems.map(function (it) {
+      return '<button type="button" class="dock-more-item" id="sheet-nav-' + it.id + '" data-nav="' + it.id + '" data-no-ico onclick="_closeDockMore(); _routeTo(\'' + it.id + '\')">' +
         _dockIconSvg(it.icon) +
         '<span class="dock-more-text">' + _esc(it.label) + '</span>' +
-        (it.id === 'notifikasi' ? '<span class="dock-more-badge n-hidden" id="sheet-notif-badge">0</span>' : '') +
       '</button>';
     }).join('');
-    sHtml += '<div class="dock-more-divider"></div>' +
-      '<button type="button" class="dock-more-item danger" data-no-ico onclick="_closeDockMore(); handleLogout()">' +
+    if (sysNavItems.length > 0) {
+      sHtml += '<div class="dock-more-divider"></div>';
+    }
+    sHtml += '<button type="button" class="dock-more-item danger" data-no-ico onclick="_closeDockMore(); handleLogout()">' +
         '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
           '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>' +
         '</svg>' +
@@ -1342,58 +1359,58 @@ function _handleMenuNav(viewId) {
 }
 
 function _updateActiveNav(viewId, immediate) {
-  document.querySelectorAll('.dock-item, .dock-more-item').forEach(function (el) {
+  document.querySelectorAll('.topnav-item, .dock-item, .dock-more-item, #topbar-notif-btn').forEach(function (el) {
     el.classList.remove('active');
+    el.removeAttribute('aria-current');
   });
-  var active = document.getElementById('nav-' + viewId);
-  if (active) active.classList.add('active');
+  document.querySelectorAll('[data-nav="' + viewId + '"]').forEach(function (el) {
+    el.classList.add('active');
+    el.setAttribute('aria-current', 'page');
+  });
   var sheetActive = document.getElementById('sheet-nav-' + viewId);
   if (sheetActive) {
-    sheetActive.classList.add('active');
     var moreBtn = document.getElementById('dock-more-btn');
     if (moreBtn) moreBtn.classList.add('active');
+  }
+  if (viewId === 'notifikasi') {
+    var bellBtn = document.getElementById('topbar-notif-btn');
+    if (bellBtn) {
+      bellBtn.classList.add('active');
+      bellBtn.setAttribute('aria-current', 'page');
+    }
   }
   _syncDockPill(!!immediate);
 }
 
 function _syncDockPill(immediate) {
-  var dock = document.getElementById('app-dock');
-  var pill = document.getElementById('dock-active-pill');
-  if (!dock || !pill) return;
+  var navInner = document.getElementById('app-nav-inner');
+  var bar = document.getElementById('topnav-indicator');
+  if (!navInner || !bar) return;
 
-  var items = dock.querySelectorAll('.dock-item.active');
-  var target = null;
-  for (var i = 0; i < items.length; i++) {
-    if (items[i].offsetWidth > 0 && items[i].offsetHeight > 0) {
-      target = items[i];
-      break;
-    }
-  }
-
-  if (!target) {
-    pill.style.opacity = '0';
-    dock.classList.remove('has-pill');
+  var target = navInner.querySelector('.topnav-item.active');
+  if (!target || target.offsetWidth === 0 || target.offsetHeight === 0) {
+    bar.style.opacity = '0';
+    navInner.classList.remove('has-pill');
     return;
   }
 
   var applyPos = function () {
-    pill.style.width = target.offsetWidth + 'px';
-    pill.style.height = target.offsetHeight + 'px';
-    pill.style.transform = 'translate3d(' + target.offsetLeft + 'px, ' + target.offsetTop + 'px, 0)';
-    pill.style.opacity = '1';
-    dock.classList.add('has-pill');
+    bar.style.width = target.offsetWidth + 'px';
+    bar.style.transform = 'translate3d(' + target.offsetLeft + 'px, 0, 0)';
+    bar.style.opacity = '1';
+    navInner.classList.add('has-pill');
   };
 
-  if (immediate || !dock.classList.contains('has-pill')) {
-    dock.classList.remove('pill-animated');
+  if (immediate || !navInner.classList.contains('has-pill')) {
+    navInner.classList.remove('pill-animated');
     applyPos();
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
-        dock.classList.add('pill-animated');
+        navInner.classList.add('pill-animated');
       });
     });
   } else {
-    dock.classList.add('pill-animated');
+    navInner.classList.add('pill-animated');
     applyPos();
   }
 }

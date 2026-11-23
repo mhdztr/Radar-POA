@@ -440,20 +440,31 @@ async function inspectPage(page, name) {
     await page.waitForSelector('#ov-map .ov-map-legend', { timeout: 6000 }).catch(() => {});
     await page.waitForTimeout(900);
     reports['overview-desktop'] = await inspectPage(page, 'overview-desktop');
-    const overviewDockState = await page.evaluate(() => {
+    const overviewNavState = await page.evaluate(() => {
+      const navBar = document.getElementById('app-nav-bar');
       const dock = document.getElementById('app-dock');
-      const pill = document.getElementById('dock-active-pill');
-      const dockCs = dock ? getComputedStyle(dock) : null;
-      const pillCs = pill ? getComputedStyle(pill) : null;
-      const pillRect = pill ? pill.getBoundingClientRect() : null;
+      const bar = document.getElementById('topnav-indicator');
+      const items = [...document.querySelectorAll('#app-nav-list .topnav-item')];
+      const tops = [...new Set(items.map((el) => Math.round(el.getBoundingClientRect().top)))];
+      const kapalBtn = document.getElementById('nav-kapal-terbaik');
+      const barCs = bar ? getComputedStyle(bar) : null;
+      const barRect = bar ? bar.getBoundingClientRect() : null;
+      const topbarRect = document.getElementById('app-topbar') ? document.getElementById('app-topbar').getBoundingClientRect() : null;
+      const pageHeaderRect = document.getElementById('page-header') ? document.getElementById('page-header').getBoundingClientRect() : null;
       return {
-        backdropFilter: dockCs ? (dockCs.backdropFilter || dockCs.webkitBackdropFilter || '') : '',
-        pillWidth: pillRect ? pillRect.width : 0,
-        pillX: pillRect ? pillRect.left : 0,
-        pillOpacity: pillCs ? pillCs.opacity : '0'
+        navBarHeight: navBar ? Math.round(navBar.getBoundingClientRect().height) : 0,
+        dockDisplay: dock ? getComputedStyle(dock).display : '',
+        hasNotifTab: !!document.getElementById('nav-notifikasi'),
+        kapalLabel: kapalBtn ? kapalBtn.textContent.trim() : '',
+        singleRow: tops.length === 1,
+        topbarBottom: topbarRect ? Math.round(topbarRect.bottom) : 0,
+        headerTop: pageHeaderRect ? Math.round(pageHeaderRect.top) : 0,
+        indicatorWidth: barRect ? barRect.width : 0,
+        indicatorX: barRect ? barRect.left : 0,
+        indicatorOpacity: barCs ? barCs.opacity : '0'
       };
     });
-    console.log('[AUDIT] overview-dock:', JSON.stringify(overviewDockState));
+    console.log('[AUDIT] overview-nav:', JSON.stringify(overviewNavState));
     await page.screenshot({ path: path.join(OUT_DIR, '03-overview-viewport.png') });
     await page.screenshot({ path: path.join(OUT_DIR, '03-overview-full.png'), fullPage: true });
 
@@ -492,6 +503,20 @@ async function inspectPage(page, name) {
     await mPage.waitForSelector('#ov-exec-body tr', { timeout: 10000 }).catch(() => {});
     await mPage.waitForTimeout(1500);
     reports['overview-mobile'] = await inspectPage(mPage, 'overview-mobile');
+    const mobileDockState = await mPage.evaluate(() => {
+      const navBar = document.getElementById('app-nav-bar');
+      const dock = document.getElementById('app-dock');
+      const dockCs = dock ? getComputedStyle(dock) : null;
+      const dockRect = dock ? dock.getBoundingClientRect() : null;
+      return {
+        navBarDisplay: navBar ? getComputedStyle(navBar).display : '',
+        dockDisplay: dockCs ? dockCs.display : '',
+        dockLeft: dockRect ? Math.round(dockRect.left) : -1,
+        dockRight: dockRect ? Math.round(dockRect.right) : -1,
+        dockBorderRadius: dockCs ? dockCs.borderRadius : ''
+      };
+    });
+    console.log('[AUDIT] mobile-dock:', JSON.stringify(mobileDockState));
     await mPage.screenshot({ path: path.join(OUT_DIR, '04-overview-mobile.png'), fullPage: true });
     await mPage.click('.dock-more-btn');
     await mPage.waitForSelector('#dock-more-sheet:not(.n-hidden)', { timeout: 5000 });
@@ -503,16 +528,16 @@ async function inspectPage(page, name) {
     // ── 5. Kapal Terbaik ──
     await page.evaluate(() => _routeTo('kapal-terbaik'));
     await page.waitForSelector('#kt-table-body tr .n-badge', { timeout: 10000 });
-    await page.waitForTimeout(320);
-    const ktDockState = await page.evaluate(() => {
-      const pill = document.getElementById('dock-active-pill');
-      const pillRect = pill ? pill.getBoundingClientRect() : null;
+    await page.waitForTimeout(300);
+    const ktNavState = await page.evaluate(() => {
+      const bar = document.getElementById('topnav-indicator');
+      const barRect = bar ? bar.getBoundingClientRect() : null;
       return {
-        pillX: pillRect ? pillRect.left : 0,
-        pillWidth: pillRect ? pillRect.width : 0
+        indicatorX: barRect ? barRect.left : 0,
+        indicatorWidth: barRect ? barRect.width : 0
       };
     });
-    console.log('[AUDIT] kapal-terbaik-dock:', JSON.stringify(ktDockState));
+    console.log('[AUDIT] kapal-terbaik-nav:', JSON.stringify(ktNavState));
     reports['kapal-terbaik-desktop'] = await inspectPage(page, 'kapal-terbaik-desktop');
     await page.screenshot({ path: path.join(OUT_DIR, '05-kapal-terbaik-desktop.png'), fullPage: true });
 
@@ -525,15 +550,23 @@ async function inspectPage(page, name) {
     console.log('[CONSOLE ERRORS]:', consoleErrors.length, consoleErrors);
     console.log('[PAGE ERRORS]:', pageErrors.length, pageErrors);
 
-    // Fase R2 automated quality gates + frosted pill dock checks
+    // Fase R2 automated quality gates + Two-Tier Top Header & Flush Mobile Bar checks
     const ov = reports['overview-desktop'];
     const failures = [];
     if (pageErrors.length !== 0) failures.push('pageErrors=' + pageErrors.length);
     if (toastCountOnPopover !== 0) failures.push('toastCountOnPopover=' + toastCountOnPopover);
     if (classOneCount !== 6) failures.push('classOneCount=' + classOneCount);
-    if (!String(overviewDockState.backdropFilter).includes('blur')) failures.push('dock.backdropFilter=' + overviewDockState.backdropFilter);
-    if (!(overviewDockState.pillWidth > 40) || overviewDockState.pillOpacity !== '1') failures.push('overviewDockState=' + JSON.stringify(overviewDockState));
-    if (!(ktDockState.pillX > overviewDockState.pillX)) failures.push('ktDockState.pillX=' + ktDockState.pillX + ' <= overview.pillX=' + overviewDockState.pillX);
+    if (overviewNavState.navBarHeight < 40) failures.push('navBarHeight=' + overviewNavState.navBarHeight);
+    if (overviewNavState.dockDisplay !== 'none') failures.push('desktopDockDisplay=' + overviewNavState.dockDisplay);
+    if (overviewNavState.hasNotifTab) failures.push('duplicateNotifTab=true');
+    if (overviewNavState.kapalLabel !== 'Kapal Terbaik') failures.push('kapalLabel=' + overviewNavState.kapalLabel);
+    if (!overviewNavState.singleRow) failures.push('navWrapped');
+    if (overviewNavState.headerTop < overviewNavState.topbarBottom - 1) failures.push('headerOverlappedByTopbar=' + overviewNavState.headerTop + '<' + overviewNavState.topbarBottom);
+    if (!(overviewNavState.indicatorWidth > 40) || overviewNavState.indicatorOpacity !== '1') failures.push('overviewNavState=' + JSON.stringify(overviewNavState));
+    if (!(ktNavState.indicatorX > overviewNavState.indicatorX) || !(ktNavState.indicatorWidth > 80)) failures.push('ktNavState=' + JSON.stringify(ktNavState));
+    if (mobileDockState.navBarDisplay !== 'none' || mobileDockState.dockDisplay !== 'grid' || mobileDockState.dockLeft !== 0 || mobileDockState.dockRight !== 390 || mobileDockState.dockBorderRadius !== '0px') {
+      failures.push('mobileDockState=' + JSON.stringify(mobileDockState));
+    }
     ['login-desktop', 'login-mobile', 'overview-desktop', 'overview-1024', 'overview-mobile'].forEach((k) => {
       const r = reports[k];
       if (!r) return;

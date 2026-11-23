@@ -12,20 +12,20 @@
    ============================================================================ */
 
   :root {
-    /* ── 1. Corporate Maritime Ink & Frosted White Glass Dock ───────────────── */
+    /* ── 1. Corporate Maritime Ink & Light Institutional Nav Surfaces ────── */
     --maritime-ink: #0E1722;
     --maritime-ink-text: #F5F2EB;
 
-    --dock-bg: rgba(255, 255, 255, 0.76);
-    --dock-hover: rgba(14, 23, 34, 0.06);
-    --dock-active: var(--action-primary);
-    --dock-active-ink: #FFFFFF;
-    --dock-ink: #14191F;
-    --dock-ink-muted: #535D68;
+    --dock-bg: rgba(255, 255, 255, 0.96);
+    --dock-hover: var(--bg-ground);
+    --dock-active: var(--accent-radar-soft);
+    --dock-active-ink: var(--action-primary);
+    --dock-ink: var(--ink-primary);
+    --dock-ink-muted: var(--ink-muted);
     --dock-accent: var(--action-primary);
-    --dock-border: rgba(14, 23, 34, 0.10);
-    --dock-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.94), inset 0 0 0 1px rgba(255, 255, 255, 0.45);
-    --dock-shadow: 0 14px 36px -6px rgba(14, 23, 34, 0.16), 0 4px 12px -2px rgba(14, 23, 34, 0.07), 0 1px 2px rgba(14, 23, 34, 0.04);
+    --dock-border: var(--border-card);
+    --dock-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.94);
+    --dock-shadow: 0 -2px 10px rgba(14, 23, 34, 0.05);
 
     --rail-bg: var(--maritime-ink);
     --rail-hover: #172434;
@@ -124,7 +124,7 @@
     --r-pill: 999px;
 
     /* Shell Proportions (4px grid) */
-    --topbar-h: 56px;
+    --topbar-h: 52px;
     --canvas-max: 1440px;
     --edge-pad: 28px;
     --card-pad: 20px;
@@ -1070,15 +1070,20 @@
     background-color: var(--bg-ground);
   }
 
-  /* Sticky Top Institutional Bar (56px, Solid Ivory Surface, Zero Blur) */
+  /* Sticky Two-Tier Institutional Top Header (Tier 1: 52px + Tier 2 Nav: 44px) */
   .app-topbar {
     position: sticky;
     top: 0;
     z-index: 120;
-    height: var(--topbar-h);
     background-color: var(--bg-header);
     border-bottom: 1px solid var(--border-card);
     flex-shrink: 0;
+  }
+
+  .app-topbar-row {
+    position: relative;
+    z-index: 2;
+    height: var(--topbar-h);
   }
 
   .app-topbar-inner {
@@ -1091,6 +1096,128 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
+  }
+
+  .app-nav-bar {
+    position: relative;
+    z-index: 1;
+    height: 44px;
+    background-color: var(--bg-header);
+    border-top: 1px solid var(--border-rule);
+  }
+
+  .app-nav-inner {
+    position: relative;
+    max-width: var(--canvas-max);
+    width: 100%;
+    height: 100%;
+    margin: 0 auto;
+    padding: 0 calc(var(--edge-pad) - 10px);
+    display: flex;
+    align-items: stretch;
+  }
+
+  .app-nav-list {
+    display: flex;
+    align-items: stretch;
+    gap: 4px;
+    height: 100%;
+  }
+
+  .topnav-sep {
+    width: 0;
+    height: 18px;
+    align-self: center;
+    border-left: 1px solid var(--border-card);
+    margin: 0 6px;
+    flex-shrink: 0;
+  }
+
+  .topnav-item {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 100%;
+    padding: 0 10px;
+    font-size: var(--fs-body);
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    color: var(--ink-secondary);
+    white-space: nowrap;
+    transition: color 160ms var(--ease-out);
+  }
+
+  .topnav-item::before {
+    content: '';
+    position: absolute;
+    inset: 6px 0;
+    border-radius: 6px;
+    background-color: transparent;
+    transition: background-color 150ms var(--ease-out);
+    z-index: 0;
+  }
+
+  .topnav-item > * {
+    position: relative;
+    z-index: 1;
+    transition: transform 100ms var(--ease-out);
+  }
+
+  .topnav-item svg {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    color: var(--ink-muted);
+    transition: color 160ms var(--ease-out), transform 100ms var(--ease-out);
+  }
+
+  .topnav-item:active {
+    transform: none;
+  }
+
+  .topnav-item:active > * {
+    transform: scale(0.98);
+  }
+
+  .topnav-item.active {
+    color: var(--action-primary);
+    font-weight: 600;
+  }
+
+  .topnav-item.active svg {
+    color: var(--action-primary);
+  }
+
+  .app-nav-inner:not(.has-pill) .topnav-item.active::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+    background-color: var(--action-primary);
+  }
+
+  .topnav-indicator {
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 0;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+    background-color: var(--action-primary);
+    pointer-events: none;
+    opacity: 0;
+    transform: translate3d(0, 0, 0);
+    will-change: transform, width, opacity;
+  }
+
+  .app-nav-inner.pill-animated .topnav-indicator {
+    transition: transform 220ms var(--ease-out),
+      width 220ms var(--ease-out),
+      opacity 140ms var(--ease-out);
   }
 
   .topbar-brand {
@@ -1170,6 +1297,12 @@
 
   .topbar-icon-btn:active {
     transform: scale(0.97);
+  }
+
+  .topbar-icon-btn.active {
+    background-color: var(--accent-radar-soft);
+    border-color: var(--action-primary);
+    color: var(--action-primary);
   }
 
   .topbar-notif-badge {
@@ -1361,148 +1494,32 @@
     color: var(--sem-crit);
   }
 
-  /* Floating Bottom Frosted Dock (Apple Glass Capsule + Sliding #0B4F6C Pill) */
+  /* Mobile-Only Flush Bottom Tab Bar & Overflow Sheet (hidden > 768px) */
   .app-dock {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 130;
-    isolation: isolate;
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    padding: 5px;
-    border-radius: 999px;
-    background-color: var(--dock-bg);
-    color: var(--dock-ink);
-    border: 1px solid var(--dock-border);
-    box-shadow: var(--dock-highlight), var(--dock-shadow);
-    backdrop-filter: blur(22px) saturate(185%);
-    -webkit-backdrop-filter: blur(22px) saturate(185%);
-    max-width: calc(100vw - 24px);
-  }
-
-  .dock-active-pill {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 0;
-    height: 36px;
-    border-radius: 999px;
-    background-color: var(--dock-active);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 2px 8px rgba(11, 79, 108, 0.26);
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0;
-    transform: translate3d(0, 0, 0);
-    will-change: transform, width, opacity;
-  }
-
-  .app-dock.pill-animated .dock-active-pill {
-    transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
-      width 260ms cubic-bezier(0.22, 1, 0.36, 1),
-      height 260ms cubic-bezier(0.22, 1, 0.36, 1),
-      opacity 160ms var(--ease-out);
-  }
-
-  .dock-sep {
-    width: 0;
-    height: 18px;
-    border-left: 1px solid rgba(14, 23, 34, 0.12);
-    margin: 0 4px;
-    flex-shrink: 0;
-  }
-
-  .dock-item {
-    position: relative;
-    z-index: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    height: 36px;
-    padding: 0 13px;
-    border-radius: 999px;
-    font-size: var(--fs-md);
-    font-weight: 500;
-    letter-spacing: -0.005em;
-    color: var(--ink-secondary);
-    white-space: nowrap;
-    transition: color 180ms var(--ease-out),
-      background-color 160ms var(--ease-out),
-      transform 110ms var(--ease-out);
-  }
-
-  .dock-item svg {
-    width: 15px;
-    height: 15px;
-    flex-shrink: 0;
-    color: var(--dock-ink-muted);
-    transition: color 180ms var(--ease-out);
-  }
-
-  .dock-item.active {
-    background-color: var(--dock-active);
-    color: var(--dock-active-ink);
-    font-weight: 600;
-  }
-
-  .app-dock.has-pill .dock-item.active {
-    background-color: transparent;
-  }
-
-  .dock-item.active svg {
-    color: var(--dock-active-ink);
-  }
-
-  .dock-badge {
-    min-width: 18px;
-    height: 18px;
-    padding: 0 5px;
-    border-radius: var(--r-pill);
-    background-color: var(--sem-warn-bg);
-    color: var(--sem-warn-ink);
-    font-size: var(--fs-sm);
-    font-weight: 600;
-    line-height: 18px;
-    text-align: center;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .dock-item.active .dock-badge {
-    background-color: rgba(255, 255, 255, 0.22);
-    color: #FFFFFF;
-  }
-
-  .dock-more-btn {
     display: none;
   }
 
-  /* Mobile Overflow Sheet (<= 768px) */
   .dock-more-mask {
     position: fixed;
     inset: 0;
-    background-color: rgba(14, 23, 34, 0.28);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
+    background-color: rgba(14, 23, 34, 0.36);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
     z-index: 170;
   }
 
   .dock-more-sheet {
     position: fixed;
-    left: 12px;
-    right: 12px;
-    bottom: max(12px, env(safe-area-inset-bottom));
-    background-color: rgba(255, 255, 255, 0.88);
-    backdrop-filter: blur(24px) saturate(185%);
-    -webkit-backdrop-filter: blur(24px) saturate(185%);
-    border: 1px solid var(--dock-border);
-    border-radius: 20px;
-    box-shadow: var(--dock-highlight), 0 18px 42px -6px rgba(14, 23, 34, 0.20);
-    padding: 10px 12px 14px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--bg-surface);
+    border-top: 1px solid var(--border-card);
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -12px 32px rgba(14, 23, 34, 0.14);
+    padding: 10px 16px calc(18px + env(safe-area-inset-bottom));
     z-index: 175;
-    animation: _dockSheetIn 220ms cubic-bezier(0.32, 0.72, 0, 1);
+    animation: _dockSheetIn 220ms var(--ease-drawer);
   }
 
   @keyframes _dockSheetIn {
@@ -1613,7 +1630,7 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* Main Content Area (Equal Margins & Bottom Clear for Floating Dock) */
+  /* Main Content Area (Equal Margins & Clean Bottom Rhythm) */
   .app-main {
     flex: 1 1 auto;
     width: 100%;
@@ -1622,7 +1639,7 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
-    padding: 24px var(--edge-pad) 108px;
+    padding: 20px var(--edge-pad) 40px;
   }
 
   .reminder-strip {
@@ -4514,8 +4531,20 @@
       background-color: #FECACA;
     }
 
+    .topnav-item:hover:not(.active) {
+      color: var(--ink-primary);
+    }
+
+    .topnav-item:hover:not(.active) svg {
+      color: var(--ink-primary);
+    }
+
+    .topnav-item:hover:not(.active)::before {
+      background-color: var(--bg-ground);
+    }
+
     .dock-item:hover:not(.active) {
-      background-color: var(--dock-hover);
+      background-color: var(--bg-ground);
       color: var(--ink-primary);
     }
 
@@ -4736,46 +4765,70 @@
       padding: 0 16px;
     }
 
+    .app-nav-bar {
+      display: none;
+    }
+
     .app-main {
-      padding: 16px 16px 96px;
+      padding: 16px 16px 84px;
     }
 
     .app-dock {
-      left: 12px;
-      right: 12px;
-      bottom: max(10px, env(safe-area-inset-bottom));
-      transform: none;
-      max-width: none;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 130;
       display: grid;
       grid-auto-flow: column;
       grid-auto-columns: minmax(0, 1fr);
       gap: 2px;
-      padding: 5px;
-      border-radius: 22px;
-      background-color: rgba(255, 255, 255, 0.80);
-    }
-
-    .dock-sep,
-    .dock-sys-item {
-      display: none;
+      padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+      background-color: var(--dock-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border-card);
+      border-radius: 0;
+      box-shadow: var(--dock-shadow);
     }
 
     .dock-more-btn {
-      display: inline-flex;
-    }
-
-    .dock-active-pill {
-      border-radius: 17px;
+      display: flex;
     }
 
     .dock-item {
+      display: flex;
       flex-direction: column;
+      align-items: center;
       justify-content: center;
       gap: 3px;
       height: 48px;
       padding: 4px 2px;
-      border-radius: 17px;
+      border-radius: 10px;
       font-size: var(--fs-sm);
+      font-weight: 500;
+      color: var(--dock-ink-muted);
+      white-space: nowrap;
+      transition: background-color 140ms var(--ease-out),
+        color 140ms var(--ease-out),
+        transform 100ms var(--ease-out);
+    }
+
+    .dock-item svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      color: var(--dock-ink-muted);
+    }
+
+    .dock-item.active {
+      background-color: var(--dock-active);
+      color: var(--dock-active-ink);
+      font-weight: 600;
+    }
+
+    .dock-item.active svg {
+      color: var(--dock-active-ink);
     }
 
     .sync-indicator-text {

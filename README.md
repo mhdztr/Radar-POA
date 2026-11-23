@@ -74,8 +74,8 @@ Spreadsheet satelit  --->  AggregatorService.js
                                     |
                                     v
                             html/Index.html (SPA)
-                            Top Institutional Bar
-                            Floating Bottom Maritime Dock
+                            Two-Tier Institutional Top Header (Desktop)
+                            Flush Mobile Bottom Tab Bar (Mobile)
 ```
 
 - `services/AggregatorService.js` dan `services/DashboardService.js` adalah satu-satunya tempat kalkulasi metrik nasional.
@@ -180,7 +180,7 @@ node -c Code.js services/*.js utils/*.js data/*.js
 | [PRD.md](PRD.md) | Kebutuhan fungsional, RBAC, klasifikasi 34 kapal, aturan bisnis |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Aggregator engine, self-healing, `CacheService`, federasi |
 | [DATA_SCHEMA.md](DATA_SCHEMA.md) | Skema tabel transaksi, master kapal Kelas I–V, autentikasi |
-| [DESIGN.md](DESIGN.md) | Kontrak desain v2.0, *Floating Bottom Maritime Dock*, QA gates |
+| [DESIGN.md](DESIGN.md) | Kontrak desain v2.0, *Two-Tier Top Header & Flush Mobile Bottom Bar*, QA gates |
 | [PHASES.md](PHASES.md) | Roadmap dan fase aktif R1–R4 |
 | [CHANGELOG.md](CHANGELOG.md) | Riwayat pembaruan sistem |
 | [AGENTS.md](AGENTS.md) | Instruksi dan batasan kerja coding agent |
