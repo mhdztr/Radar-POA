@@ -1,135 +1,232 @@
-# DESIGN.md — Panduan Desain & Sistem Antarmuka: Radar POA
+# DESIGN.md — Kontrak Sistem Desain v2.0: Radar POA
 **Rekapitulasi Data Strategis POA — Pusat Agregasi & Dasbor Strategis Pimpinan**  
 *Direktorat Pengendalian Operasi Armada (Dit. POA) · Ditjen PSDKP · KKP RI*
 
-> Dokumen ini dibangun dari *ground-up* sebagai kontrak desain tunggal (**Single Source of Truth**) untuk **Radar POA**, berakar pada disiplin `.agents/skills/`:
-> `impeccable` · `unslop` · `color-expert` · `apple-hig` · `d3-visualization` · `emilkowalski-motion` · `mobile-native`.
+> Dokumen ini merupakan kontrak desain tunggal (**Single Source of Truth v2.0**) untuk **Radar POA**, diperbarui menyeluruh pasca-audit **Playwright Chromium** & kritik UI lintas disiplin `.agents/skills/`:
+> `unslop` · `frontend-design` · `design-taste-frontend` · `apple-design` · `apple-hig` · `emilkowalski-motion` · `impeccable` · `d3-visualization` · `color-expert` · `mobile-native`.
 
 ---
 
 ## 1. Diferensiasi Total Lintas Aplikasi Dit. POA
 
-Agar **Radar POA** langsung dikenali sebagai portal agregasi tingkat Direktorat dan **tidak pernah tertukar** dengan aplikasi satelit di bawahnya, seluruh arsitektur visualnya dipisahkan secara tegas dari **SIKAP** dan **Nakhoda**:
+Agar **Radar POA** langsung dikenali sebagai portal agregasi tingkat Direktorat dan **tidak pernah tertukar** dengan aplikasi satelit maupun template SaaS generik, arsitektur visualnya dipisahkan secara tegas:
 
-| Dimensi Visual | **SIKAP** *(Subbag TU)* | **Nakhoda** *(Timja Pengawakan)* | **Radar POA** *(Pusat Agregasi Dit. POA)* |
+| Dimensi Visual | **SIKAP** *(Subbag TU)* | **Nakhoda** *(Timja Pengawakan)* | **Radar POA v2.0** *(Pusat Agregasi Dit. POA)* |
 |---|---|---|---|
-| **Dunia Visual** | Portal Bendahara Frosted Mineral | Buku Besar Akromatik (*Achromatic Ledger*) | **Hydrographic Maritime Briefing & Dark-Ink Institutional Rail** |
-| **Navigasi Utama** | Top-Bar putih bersekat + glassmorphic subnav | Sidebar terang `#F2F4F7` | **Rail Kiri Gelap `#0E1722` (Prussian Maritime Ink)** dengan indikator kuningan maritim `#C88A2E` |
-| **Kanvas & Header** | Porcelain dingin `#F8FAFC` + header `backdrop-filter` blur | Cool slate `#F2F4F7` | **Kanvas Peta Hidrografis Sejuk `#EFF4F7`** + header solid **`#F7FAFC` tanpa blur** |
-| **Layar Autentikasi** | Kartu 2-ruang terpusat bergradasi hijau | Kartu form terpusat abu-abu dingin | **50/50 Photographic Split Screen**: Foto resmi penuh personel Ditjen PSDKP (kiri, tanpa tumpukan teks) + panel putih `#FFFFFF` ber-lockup **`RADAR POA`** (*Rekapitulasi Data Strategis*) berlogo PSDKP dan formulir ringkas terpusat optis (kanan) |
-| **Warna Aksi Primer** | Forest Jade `#064E3B` | Hitam Arang `#0F1720` | **Deep Admiralty Blue `#0B4F6C`** (`hover: #083B52`) |
-| **Keluarga Huruf** | `Plus Jakarta Sans` | `Geist` + `Geist Mono` | *Single-family institutional sans* **`Public Sans`** (`400/500/600/700`) dengan `tabular-nums`, **tanpa huruf gaya teknikal / berspasi tetap** |
-| **Geometri & Tajuk** | Sudut membulat `12px–24px` + *layered shadow* | Sudut `6px–8px` datar | **Sudut arsitektural tajam `6px / 4px / 3px`**, elevasi murni garis `1px` (**0 shadow kartu**), tajuk atas broadsheet `2px solid #0E1722` |
+| **Dunia Visual** | Portal Bendahara Frosted Mineral | Buku Besar Akromatik (*Achromatic Ledger*) | **Full-Width Hydrographic Briefing & Floating Maritime Dock** |
+| **Navigasi Utama** | Top-Bar putih bersekat + glassmorphic subnav | Sidebar kiri terang `#F2F4F7` | **Top Institutional Bar (`56px`, `#FFFFFF`) + Floating Bottom Maritime Dock (`#0E1722`)** berindikator `#C88A2E` |
+| **Kanvas & Ruang Kerja** | Porcelain `#F8FAFC` + blur header | Cool slate `#F2F4F7` | **Kanvas Hidrografis Penuh (`#F4F7F9`, `max-width: 1440px`, margin kiri-kanan seimbang)** tanpa bilah samping permanen |
+| **Layar Autentikasi** | Kartu 2-ruang bergradasi hijau | Kartu form terpusat abu-abu dingin | **50/50 Photographic Split Screen** (#FAFCFD panel kanan berjangkar footer KKP/PSDKP + foto personel fokus tengah tanpa wajah terpotong) |
+| **Warna Aksi Primer** | Forest Jade `#064E3B` | Hitam Arang `#0F1720` | **Deep Admiralty Blue `#0B4F6C`** (`hover: #083B52`), hemat & fokus |
+| **Keluarga Huruf** | `Plus Jakarta Sans` | `Geist` + `Geist Mono` | **`Public Sans` tunggal** (`400 / 500 / 600`), **`<= 6` skala ukuran (`>= 12px`)**, wajib `tabular-nums`, format koma Indonesia |
+| **Kepadatan Halaman** | Multi-kartu tabular | Tabel penuh layar | **Executive Briefing terkompresi (`<= 2.000px` pada `Ikhtisar 1440px`)**: Peta `68/32` berikon siluet kapal Kelas I–V, Analitik `65/35`, & 1 Tabel Lintas Satelit |
 
 ---
 
-## 2. Kontrak Arah Produk (*Direction Contract*)
+## 2. Kontrak Arah Produk (*5-Line Direction Contract*)
 
-1. **Product (Produk):** Pusat agregasi nasional (**Rekapitulasi Data Strategis POA**) bagi Direktur Pengendalian Operasi Armada, Pejabat Eselon, dan Kepala Divisi untuk membaca laporan konsolidasi dari **SIKAP**, **Nakhoda**, **Sistik**, **Siaga**, dan **Operasi**, serta mencatat **Kegiatan Direktorat**.
-2. **Character (Karakter):** *Berwibawa, terukur, berformat dokumen briefing resmi negara.*
-3. **World (Dunia & Material):** **Briefing Maritim Resmi & Peta Hidrografis Negara** — sisi kiri gelap tinta laut dalam (`#0E1722`) dengan penanda kuningan kompas (`#C88A2E`), berpadu kanvas biru-abu hidrografis sejuk (`#EFF4F7`) dan pelat tabel putih bertepi tajam.
-4. **Moments (Momen Visual Utama):**
-   - **Momen 1:** *Strip Broadsheet 4 KPI Utama* yang dinaungi garis tajuk tinta `2px solid #0E1722` beserta bar progres presisi dan tag asal basis data satelit.
-   - **Momen 2:** *Peta Sebaran WPPNRI 571–718 & Disposisi 34 Kapal Pengawas Ukuran Besar* dengan marker suar kode status (`Operasional`, `Siap Pangkalan`, `Galangan`).
-5. **Signature (Detail Khas):**
-   - **Lambang Resmi Ditjen PSDKP (`#psdkp-crest-outline`):** Tampil berwibawa pada lockup hero `.auth-brand` di panel kanan autentikasi (`58×66px`), Puncak Rail Gelap Sidebar (`34×39px`), Bilah Topbar Mobile (`22×25px`), dan Loading Splash (`48×54px`), tanpa kotak latar buatan.
-   - **Kepanjangan & Penonjolan Merek (`RADAR POA`):** Seluruh titik identitas menampilkan judul **`RADAR POA`** disertai kepanjangan eksplisit **`Rekapitulasi Data Strategis`** serta nama **Direktorat Pengendalian Operasi Armada**.
-   - **Kuningan Maritim (`#C88A2E`) & Garis Tajuk Publikasi (`2px solid #0E1722`):** Digunakan konsisten sebagai bar indikator aktif rail gelap dan tajuk strip KPI.
+1. **Product (Produk):** Portal rekapitulasi data strategis dan monitoring disposisi armada nasional bagi Direktur POA, Pejabat Eselon, dan Kepala Divisi untuk mengawasi konsolidasi dari **SIKAP**, **Nakhoda**, **Sistik**, **Siaga**, dan **Operasi**, serta mencatat **Kegiatan Direktorat**.
+2. **Character (Karakter):** *Berwibawa, tenang, ringkas, presisi — berformat briefing eksekutif negara, bukan tumpukan kartu SaaS.*
+3. **World (Dunia & Material):** **Peta Hidrografis Resmi & Briefing Maritim Negara** — kanvas biru-abu sejuk yang netral dan tenang (`#F4F7F9`), pelat tabel putih bertepi tajam (`#FFFFFF`), aksen primer biru maritim (`#0B4F6C`), serta Floating Dark-Ink Maritime Dock (`#0E1722`) beraksen kuningan kompas (`#C88A2E`).
+4. **Moments (Hanya 2 Momen Visual Utama, Sisanya Tenang):**
+   - **Momen 1 — Peta Taktis 34 Kapal Berikon Siluet Kelas I–V (`68% / 32%`):** Peta Indonesia berskala jelas dengan **5 bentuk/skala ikon kapal berbeda** berdasarkan Kelas I–V PSDKP, warna status taktis, 0 pil label bertumpuk (`markerOverlaps === 0`), berdampingan dengan panel ringkasan WPP & disposisi armada di kanan.
+   - **Momen 2 — Analitik Asimetris (`65% / 35%`) & Tabel Monitoring Eksekutif Lintas Satelit:** Satu grafik kurva garis ganda SIKAP dominan (tanpa tumpukan area keruh) didampingi daftar postur AKN Nakhoda di sisi kanan, diikuti tepat **1 Tabel Terpadu Lintas Satelit** di bawah (menggantikan 6 kartu divisi duplikatif).
+5. **Signature (Detail Khas Konsisten):**
+   - **Floating Bottom Maritime Dock (`#0E1722` + `#C88A2E`)** di dasar layar utama.
+   - **Lambang Resmi Ditjen PSDKP (`#psdkp-crest-outline`)** pada panel masuk (`58×66px`), Top Bar (`28×32px`), dan Loading Splash (`48×54px`), tanpa lencana `[Dit. POA]` di sebelah merek.
+   - **Garis Tajuk Publikasi (`2px solid #0E1722`)** khusus untuk **1 strip ringkasan utama** per halaman, dipadukan angka `tabular-nums` rata kanan dengan koma desimal Indonesia.
 
 ---
 
-## 3. Sistem Warna Strategis (*Committed Dark Rail + Cool Hydrographic Briefing*)
+## 3. Sistem Warna & Anggaran Warna Ketat (`distinctBg <= 16`)
 
-### 3.1 Rail Kiri Gelap (*Dark-Ink Institutional Rail — `256px`*)
-- `--rail-bg`: `#0E1722` (*Prussian Maritime Ink*)
-- `--rail-hover`: `#172434`
-- `--rail-active`: `#1D2E42` (baris aktif disertai penanda vertikal kiri `2px` `--rail-accent`)
-- `--rail-rule`: `rgba(245, 242, 235, 0.12)`
-- `--rail-ink`: `#F5F2EB` (putih gading lembut untuk keterbacaan jangka panjang)
-- `--rail-ink-muted`: `#93A2B5`
-- `--rail-accent`: `#C88A2E` (*Maritime Brass*)
+> [!IMPORTANT]
+> Audit visual membuktikan terlalu banyak pil warna pastel (`32` warna latar di `Ikhtisar`) merusak ketenangan dan fokus pimpinan. Dalam desain v2.0, **jumlah warna latar berbeda pada satu layar `Ikhtisar` wajib ditekan menjadi `<= 16`**.
 
-### 3.2 Kanvas Peta Hidrografis Sejuk (*Cool Hydrographic Workspace*)
-- `--bg-ground`: `#EFF4F7` (kanvas utama aplikasi & panel formulir kanan split auth)
-- `--bg-header`: `#F7FAFC` (header halaman *sticky* solid — **bebas blur / kaca buram**)
-- `--bg-surface`: `#FFFFFF` (pelat KPI, tabel, kontainer peta/grafik, dialog)
-- `--bg-raised`: `#E4ECF1` (trek bar, chip netral)
+### 3.1 Floating Bottom Maritime Dock (`#app-dock`)
+- `--dock-bg`: `#0E1722` (*Prussian Maritime Ink*)
+- `--dock-hover`: `#172434`
+- `--dock-active`: `#1D2E42` (disertai garis indikator bawah `2px solid #C88A2E`)
+- `--dock-ink`: `#F5F2EB`
+- `--dock-ink-muted`: `#93A2B5`
+- `--dock-accent`: `#C88A2E` (*Maritime Brass*)
+- `--dock-border`: `rgba(255, 255, 255, 0.12)`
+- `--dock-highlight`: `inset 0 1px 0 rgba(255, 255, 255, 0.08)`
+- `--dock-shadow`: `0 12px 32px rgba(14, 23, 34, 0.24)`
+
+### 3.2 Kanvas Hidrografis & Permukaan Kerja
+- `--bg-ground`: `#F4F7F9` (kanvas kerja utama aplikasi — sangat netral agar konten berbicara)
+- `--bg-header`: `#FFFFFF` (Top Institutional Bar solid `56px`, hairline bawah `1px solid #D9E2EA`)
+- `--bg-surface`: `#FFFFFF` (pelat KPI, tabel, kontainer peta/grafik, modal, drawer)
+- `--bg-raised`: `#E6EDF2` (trek segmen pasif, baris selang-seling, header kontrol netral)
 - `--bg-active`: `#D9E4EC`
-- `--border-card`: `#D1DCE5` (garis tepi tunggal pelat `1px` — tanpa *box-shadow* statis)
-- `--border-rule`: `#E2EAF0` (garis pemisah antarbaris `1px`)
-- `--border-ctl`: `#B9C7D4` (garis tepi input/select/tombol sekunder)
-- `--ink-primary`: `#14191F` (kontras `17.6:1` AAA pada `#FFFFFF`)
-- `--ink-secondary`: `#3E4752` (`9.4:1` AAA)
-- `--ink-muted`: `#535D68` (`6.7:1` AA+)
-- `--ink-faint`: `#5D656F` (`5.8:1` AA pada `#FFFFFF` & `>= 5.1:1` pada `#EFF4F7`)
+- `--bg-auth-panel`: `#FAFCFD` (latar panel form autentikasi kanan — tidak menyilaukan)
+- `--border-card`: `#D1DCE5` (tepi pelat tunggal `1px`, **tanpa `box-shadow` pada kartu statis**)
+- `--border-rule`: `#E2EAF0` (pemisah baris tabel & antarsel KPI)
+- `--border-ctl`: `#B5C4D1` (tepi jelas input, select, dan tombol sekunder — kontras lebih tegas pada Login & Filter)
+- `--ink-primary`: `#14191F` (kontras AAA pada `#FFFFFF`)
+- `--ink-secondary`: `#3E4752`
+- `--ink-muted`: `#535D68`
+- `--ink-faint`: `#5D656F` (`>= 4,5:1` di atas `#FFFFFF` & `#F4F7F9`)
 
-### 3.3 Warna Aksi, Satelit, & Semantik Data
-- **Aksi Primer Radar POA:** `--action-primary: #0B4F6C` (*Deep Admiralty Blue*, teks `#FFFFFF` kontras `8.9:1` AAA, hover `#083B52`), `--accent-radar-soft: #E1EFF5`, `--accent-radar-ink: #07384D`.
-- **Aksen Brass Institusional:** `--accent-brass: #B4761F`, `--accent-brass-soft: #FBF1DF`, `--accent-brass-ink: #6D450B`.
-- **Kode Sumber Data Satelit:**
-  - **SIKAP (Anggaran & BMN):** `--sat-sikap: #0F766E`, soft `--sat-sikap-soft: #D9F2EE`
-  - **Nakhoda (Awak Kapal & AKN):** `--sat-nakhoda: #C2410C`, soft `--sat-nakhoda-soft: #FDE8DC`
-  - **Pusat Dit. POA (Kegiatan Direktorat):** `--sat-pusat: #0B4F6C`, soft `--sat-pusat-soft: #E1EFF5`
-- **Semantik Status:** Positif `--sem-pos: #15803D` (`#DCFCE7` / `#052E16`), Peringatan `--sem-warn: #B45309` (`#FEF3C7` / `#78350F`), Kritis `--sem-crit: #B91C1C` (`#FEE2E2` / `#7F1D1D`), Netral `--sem-neut: #475569` (`#E4ECF1` / `#1E293B`).
-
-> [!CAUTION]
-> - Dilarang menggunakan warna spektrum ungu/violet (`#2B3674`, `#7C3AED`, `#6366F1`), efek kaca blur (`backdrop-filter`), atau kotak bayangan tebal (*ghost card*).
-> - Dilarang menaruh garis warna kiri/kanan (`border-left` / `border-right` > `1px`) pada kartu maupun banner peringatan; gunakan `border-top: 2px solid ...` bila diperlukan hierarki tajuk.
+### 3.3 Warna Aksi, Kode Satelit, & Semantik (Penggunaan Hemat)
+- **Aksi Primer:** `--action-primary: #0B4F6C` (*Deep Admiralty Blue*, teks `#FFFFFF`, hover `#083B52`), `--accent-radar-soft: #E1EFF5`, `--accent-radar-ink: #07384D`.
+- **Kuningan Institusional:** `--accent-brass: #B4761F` (khusus indikator aktif dock & tanda eksklusif **Juara 1** podium; tidak dipakai bertabrakan sebagai border atas banner notifikasi).
+- **Kode Sumber Satelit (Titik `6px` + teks netral, bukan pil latar penuh warna di KPI):**
+  - `SIKAP`: `--sat-sikap: #0F766E`
+  - `NAKHODA`: `--sat-nakhoda: #C2410C`
+  - `PUSAT`: `--sat-pusat: #0B4F6C`
+- **Semantik Status:** Positif `--sem-pos: #15803D` (`#DCFCE7` / `#052E16`), Peringatan `--sem-warn: #B45309` (`#FEF3C7` / `#78350F`), Kritis `--sem-crit: #B91C1C` (`#FEE2E2` / `#7F1D1D`), Netral `--sem-neut: #475569` (`#E6EDF2` / `#1E293B`).
 
 ---
 
-## 4. Tipografi Publikasi & Disiplin Numerik
+## 4. Disiplin Tipografi (`Public Sans` Tunggal, 6 Skala, `>= 12px`)
 
-- **Huruf Tunggal Antarmuka:** `'Public Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif` (`400, 500, 600, 700`). Seluruh elemen—termasuk `RowID`, `NIP`, `WPP`, koordinat, tag satelit, dan cap waktu—tetap memakai `Public Sans` yang rapi (**bebas huruf gaya teknikal / berspasi tetap**).
-- **Skala Tipografi (Rasio kontras jelas $\ge 1,25\times$):**
-  - `h1.auth-brand-name`: `30px` (`700`, `line-height: 1.08`, `letter-spacing: -0.025em`, dual-tone `RADAR` `#0E1722` + `POA` `#0B4F6C`)
-  - `h1 / .page-title`: `26px` (`700`, `line-height: 1.2`, `letter-spacing: -0.02em`)
-  - Hero KPI: `32px` (`700`, `tabular-nums`)
-  - KPI Strip Utama: `28px` (`600`, `tabular-nums`)
-  - `h2 / .auth-title / .n-modal h2 / .n-drawer-hd h2`: `18px` (`600`, `line-height: 1.3`)
-  - Judul Seksi / Kartu (`.content-section-hd`, `.div-card-title`, `.chart-cell-title`): `15px` (`600`)
-  - Isi Utama (`body` / `.auth-brand-exp`): `14px` (`400` isi, `600` kepanjangan `Rekapitulasi Data Strategis`)
-  - Kontrol MD / Tabel: `13px` (`400 / 500`)
-  - Sub-organisasi (`.auth-brand-org`), Label, Pill, Kontrol SM: `12px–12.5px` (batas bawah baca `12px`)
-- **Tabular Numerals Wajib:** `font-variant-numeric: tabular-nums lining-nums; font-feature-settings: "tnum" 1, "lnum" 1;` aktif di seluruh KPI, tabel (`.n-table`, `.kt-table td`), koordinat, cap waktu, dan angka pembanding.
+1. **Huruf Tunggal Di Mana Saja (Termasuk Peta Leaflet):**
+   - `'Public Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif`.
+   - Wajib memaksa `.leaflet-container`, `.leaflet-tooltip`, `.leaflet-popup-content-wrapper`, dan `.leaflet-control-attribution` mewarisi `'Public Sans'` (**`0` kebocoran font `Helvetica Neue` atau `Lucida Console`**).
+2. **Enam Langkah Skala Ketat (`0` teks `< 12px`):**
+   - `28px–30px` (`h1.auth-brand-name`, `.kpi-val`): `weight: 600`, `line-height: 1.1`, `letter-spacing: -0.02em`
+   - `24px–26px` (`h1 / .page-title`): `weight: 600`, `line-height: 1.2`, `letter-spacing: -0.015em`
+   - `16px` (`h2 / .brand-name / judul seksi utama`): `weight: 600`, `line-height: 1.3`
+   - `14px` (`body`, `.auth-brand-exp`, label utama, input dialog): `weight: 400 / 500`
+   - `13px` (tabel `.n-table td`, kontrol `MD`, deskripsi kartu, tombol dock desktop): `weight: 400 / 500`
+   - `12px` (meta, tag sumber KPI, sumbu grafik, header tabel, kontrol `SM`, keterangan tooltip): `weight: 400 / 500` — **batas bawah absolut (`tinyTextCount === 0`)**! Label tengah donut SVG wajib `>= 12px` (tidak boleh `10px`).
+3. **Pengendalian Bobot Huruf (Anti "Everything Is Bold"):**
+   - Isi, deskripsi, navigasi non-aktif, dan sel tabel menggunakan **`400`**.
+   - Subjudul kelompok, header kolom tabel, label kontrol, dan item dock aktif menggunakan **`500`**.
+   - **`600` hanya untuk `h1`, judul seksi, dan angka utama KPI**. **Dilarang bobot `700`/`800`/`900` di dalam ruang kerja** (pengecualian opsional hanya untuk wordmark logo `RADAR POA` pada layar masuk jika masih dalam rentang `600`).
+4. **Format Angka, Tanggal, & Copy Baku Bahasa Indonesia:**
+   - **Tabular Numerals:** `font-variant-numeric: tabular-nums lining-nums; font-feature-settings: "tnum" 1, "lnum" 1;` aktif di semua angka KPI, kolom tabel angka rata kanan, sumbu grafik, dan koordinat.
+   - **Desimal & Mata Uang Seragam:** Selalu gunakan pemisah desimal **koma Indonesia** dengan presisi konsisten dalam satu kelompok (contoh: `64,8%`, `79,8`, `66,0`, `43,2`; `Rp 83,2 M`, `Rp 45.200.000.000`). Dilarang mencampur `79.8`, `66`, dan `64,8%`.
+   - **Tanggal Tunggal Konsisten:** Gunakan format `14 Jun 2026` (`DD MMM YYYY` Indonesia) di semua tabel dan ringkasan, hindari mencampur `14 Jun 2026` dengan `14/6/2026`. Kolom `Periode` dan `Tanggal` di tabel wajib `white-space: nowrap` agar tidak patah dua baris (`2026-\nW24`).
+   - **Anti Titik Ekor & Anti Jargon Developer:** Hapus titik di akhir label pendek, toast (`Data satelit berhasil disinkronkan`), dan kalimat temuan `#page-finding`. Dilarang keras menampilkan istilah database atau ID teknis mentah ke pengguna (`PRD §6`, `SUPERSEDED & VOID`, `USR-DIR-01`, `RUSAK_RINGAN`, `715 (OPERASIONAL)`).
 
 ---
 
-## 5. Geometri Tajam, Kontrol 3-Tier, & Aturan Tata Letak
+## 5. Arsitektur Shell Baru (`#app-topbar` + `#app-dock` + Kontrol 3-Tier)
 
-### 5.1 Sudut Arsitektural Tajam & Elevasi Tunggal
-- `--r-card: 6px` · `--r-lg: 4px` · `--r-md: 4px` · `--r-sm: 3px` · `--r-pill: 999px` (khusus pill status).
-- **Elevasi Tunggal:** Kartu, pelat KPI, dan tabel hanya memakai `1px solid var(--border-card)` (tanpa *box-shadow*). Bayangan lembut (`var(--shadow-popover)` / `var(--shadow-modal)`) hanya dipakai elemen mengambang (dropdown akun, popover sinkronisasi, dialog modal, drawer, dan Sonner toast).
-- **Underline Tabs Rata (`.n-tabs`):** Tidak menggunakan pill abu-abu bergaya SaaS; tab menempel rata dengan garis bawah `1px solid var(--border-card)` dan penanda aktif `2px solid var(--action-primary)`.
+### 5.1 Top Institutional Bar (`#app-topbar`, sticky `56px`)
+- **Kontainer:** `position: sticky; top: 0; z-index: 300; height: 56px; background: #FFFFFF; border-bottom: 1px solid #D9E2EA;` dengan kontainer isi `max-width: 1440px; margin: 0 auto; padding: 0 28px; display: flex; align-items: center; justify-content: space-between;`.
+- **Kiri:** Crest resmi Ditjen PSDKP (`28×32px`, filter `#psdkp-crest-outline`) + lockup **`RADAR POA`** + `· Rekapitulasi Data Strategis`. **Dilarang memasang pil lencana `[Dit. POA]`**.
+- **Kanan (`.ctl-row.ctl-md`, semua tombol tepat `32px`):**
+  1. **`#sync-indicator` (`32px`):** Menampilkan dot status (`Tersinkron` / `Menyinkronkan` / `Tertunda`) + label ringkas. **Klik `#sync-indicator` HANYA membuka/menutup `#sync-popover`** (menampilkan cap waktu terakhir dan daftar status 6 satelit: `Pusat`, `SIKAP`, `Nakhoda`, `Sistik`, `Siaga`, `Operasi`). Di bagian bawah `#sync-popover` ditempatkan tombol eksplisit **`Sinkronkan Data Satelit`** (`_triggerManualSync()`) — mencegah sinkronisasi ganda & double-toast saat menutup popover.
+  2. **Pintasan Notifikasi (`#topbar-notif-btn`, `32px`):** Ikon bel garis `16px` + lencana angka unread tenang bila `> 0`.
+  3. **Akun Pengguna (`#user-menu-btn`, `32px`):** Inisial/ikon user + nama singkat + chevron yang membuka dropdown menu akun (Identitas & Role, Admin Panel bila `SUPERADMIN`/`DIREKTUR`, dan tombol `Keluar`).
 
-### 5.2 Skala Geometri Kontrol 3-Tier (`_uiAudit()`)
-```css
---ctl-h-lg: 40px; --ctl-px-lg: 14px; --ctl-fs-lg: 14px; --ctl-r-lg: 4px; /* Form dialog, login/register, modal submit */
---ctl-h-md: 32px; --ctl-px-md: 12px; --ctl-fs-md: 13px; --ctl-r-md: 4px; /* Toolbar header, filter periode, tombol utama halaman */
---ctl-h-sm: 26px; --ctl-px-sm: 10px; --ctl-fs-sm: 12px; --ctl-r-sm: 3px; /* Aksi baris tabel (Lihat, Revisi, Anulir) */
-```
-- Seluruh tombol sebaris dalam `.ctl-row`, `.ctl-stack`, `.hist-actions`, dan toolbar memiliki tinggi seragam persis.
-- Area sentuh diperluas minimal `44px` secara tak kasatmata di `@media (pointer: coarse)` dengan input `font-size: 16px` agar tidak memicu zoom iOS.
+### 5.2 Floating Bottom Maritime Dock (`#app-dock`)
+- **Desktop (`> 768px`):**
+  - `position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 400;`
+  - Memuat grup terpisah garis vertikal `1px` (`rgba(255,255,255,0.14)`):
+    - **Utama:** `Ikhtisar` (`overview`), `Kegiatan` (`kegiatan` — hanya `SUPERADMIN`/`DIREKTUR`/`KADIV`), `Kapal Terbaik` (`kapal-terbaik`), `Riwayat` (`riwayat`).
+    - **Sistem:** `Notifikasi` (`notifikasi` + badge angka), `Master Data` (`master-data` — hanya `SUPERADMIN`/`DIREKTUR`), `Admin` (`kelola-akun` — hanya `SUPERADMIN`/`DIREKTUR`).
+  - Setiap item bertinggi `38px`, padding horizontal `12px`, ikon garis SVG `16px` stroke `1.5`, jarak ikon–teks `8px`, sudut `10px`. Item aktif memakai latar `#1D2E42` dengan garis aksen kuningan `2px solid #C88A2E` di tepi bawah.
+- **Mobile (`<= 768px`):**
+  - Dock melebar penuh (`left: 12px; right: 12px; bottom: max(10px, env(safe-area-inset-bottom)); transform: none`) dengan 4 slot utama (`Ikhtisar`, `Kegiatan` atau `Kapal`, `Riwayat`, `Lainnya`).
+  - Tombol `Lainnya` membuka **Mobile Overflow Sheet** (`#dock-more-sheet`) berlatar `#FFFFFF` dengan sudut atas `14px` untuk mengakses `Kapal Terbaik`, `Notifikasi`, `Master Data`, `Admin`, dan `Keluar`.
+- **Padding Bawah Kanvas:** `.app-main` (`max-width: 1440px; margin: 0 auto; padding: 24px 28px 108px;` desktop; `16px 16px 96px;` mobile) menjamin tepi kiri-kanan seimbang dan tidak ada tabel atau kartu terbawah yang tertutup dock.
 
-### 5.3 Fisika Gerak & Aksesibilitas
-- Kurva tunggal `--ease-out: cubic-bezier(0.22, 1, 0.36, 1)`; tekan tombol `:active` `scale(0.98)` (`90ms`), transisi status `150ms`, modal masuk `200ms` (`scale(0.97) translateY(6px)` -> `1`), drawer kanan `240ms`.
-- Hover selalu di dalam `@media (hover: hover) and (pointer: fine)`; mendukung penuh `@media (prefers-reduced-motion: reduce)` dan `@media (prefers-reduced-transparency: reduce)`.
+### 5.3 Pemisahan Header Layar & Kontrol Toolbar (`brokenControlRows === 0`)
+- **`#page-header` Diperamping (`0` selisih tinggi):** Baris judul hanya memuat `h1.page-title` di kiri dan kelompok kontrol `.page-controls.ctl-row.ctl-md` di kanan — seluruh elemen di dalamnya (`Bulanan | Rentang` wrapper `32px`, `select.filter-sel` `32px`, `input[type="date"]` `32px`, dan tombol aksi halaman `32px`) **wajib tepat `32px`** agar tidak ada lagi mismatch `26px` vs `32px`.
+- **`#page-finding` dipisah ke bawah judul:** Kalimat temuan satu baris diletakkan di bawah baris header utama dengan max-width nyaman (`~78ch`) sehingga pada `1024px` header tidak melar dan mendorong toolbar jatuh berantakan.
 
 ---
 
 ## 6. Spesifikasi Layar Autentikasi (*50/50 Photographic Split Screen*)
 
-- Layar masuk, registrasi, dan status tunggu berbagi satu arsitektur **50/50 split screen** (`.auth-split`) tanpa kartu mengambang terpusat dan **tanpa teks hias / paragraf pengisi di atas foto**.
-- **Sisi Kiri (`50%`, `.auth-media`):** Foto penuh *sticky* (`100dvh`) personel Ditjen PSDKP dari partial [AuthPhoto.html](file:///home/pinefeast/Projects/Radar-POA/html/AuthPhoto.html) (`object-fit: cover; object-position: 34% 24%`) agar figur utama berserta baret dan emblem emas PSDKP tetap utuh di bidang vertikal.
-- **Sisi Kanan (`50%`, `.auth-panel` `#FFFFFF`):** Panel formulir putih bersih dengan pemisah hairline `1px solid var(--border-rule)`, konten terpusat optis (`max-width: 400px`), diawali lockup identitas hero `.auth-brand` (Logo PSDKP `58×66px` + `h1.auth-brand-name` **`RADAR POA`** `30px` dual-tone `#0E1722` & `#0B4F6C` + **`Rekapitulasi Data Strategis`** `14px` semibold + `Direktorat Pengendalian Operasi Armada` `12.5px`, ditutup garis bawah `1px solid var(--border-rule)`), diikuti judul form `h2.auth-title` (`18px`), field tinggi `40px`, tanpa ikon hias di dalam input, dan tombol primer `#0B4F6C` lebar penuh.
-- Pada layar mobile (`<= 900px`), `.auth-split` bertumpuk satu kolom: tajuk foto ringkas setinggi `220px` di atas dan formulir penuh di bawah.
+- **Sisi Kiri (`.auth-media`, `50%` desktop / `240px` mobile):**
+  - Menggunakan foto personel Ditjen PSDKP dari [AuthPhoto.html](file:///home/pinefeast/Projects/Radar-POA/html/AuthPhoto.html) dengan `object-fit: cover; object-position: 62% 20%;` (desktop) dan `object-position: 50% 18%;` (mobile) supaya barisan personel utama beserta baret & emblem tampak utuh **tanpa wajah atau dahi yang terpotong tepi layar**.
+  - Tanpa teks pengisi di atas foto; hanya vignette halus tipis di tepi bawah/kanan agar menyatu tenang.
+- **Sisi Kanan (`.auth-panel`, `50%`, `#FAFCFD`):**
+  - Tata `display: flex; flex-direction: column; justify-content: space-between; min-height: 100dvh; padding: 32px 48px;` dengan 1 zona spacer atas, zona formulir tengah (`max-width: 396px`, terpusat horizontal), dan 1 baris jangkar kaki di dasar panel (`Direktorat Jenderal PSDKP · Kementerian Kelautan dan Perikanan RI`).
+  - Lockup `.auth-brand` (Crest `58×66px` + `RADAR POA` + `Rekapitulasi Data Strategis` + `Direktorat Pengendalian Operasi Armada`) dipisahkan dengan **jarak ritmis `24px`** (buang garis `<hr>` pemotong).
+  - Input login/daftar setinggi `40px`, border `1px solid #B5C4D1`, radius `4px`, focus ring `0 0 0 3px rgba(11,79,108,0.16)`, dan tombol primer `Masuk` `#0B4F6C` bersih **tanpa ikon dekoratif**.
 
 ---
 
-## 7. Daftar Larangan Mutlak (*Negative Prompts*)
-1. **Zero Emoji:** Gunakan 100% ikon garis SVG inline.
-2. **Dilarang Huruf Fixed-Width / Teknikal (*fixed-pitch* / gaya terminal):** Seluruh antarmuka memakai satu keluarga huruf **`Public Sans`** beserta `tabular-nums`.
-3. **Dilarang Teks Berlebihan / Filler pada Layar Autentikasi:** Panel foto kiri mutlak bebas paragraf deskripsi maupun daftar tag; panel kanan langsung berfokus pada lockup identitas singkat dan formulir inti.
-4. **Penamaan & Istilah Baku Mutlak:** Wajib memakai **Direktorat Pengendalian Operasi Armada** serta istilah resmi *Rekapitulasi Data Strategis* / *Dasbor Strategis Pimpinan* di seluruh label UI, tombol masuk, komentar kode, dan dokumentasi; hindari seluruh istilah kasual/non-resmi atau singkatan salah kaprah.
-5. **Dilarang Menyerupai SIKAP/Nakhoda:** Tidak ada header kaca blur, tidak ada hijau jade SIKAP sebagai warna utama shell, tidak ada auth card 2-ruang terpusat, dan tidak ada sidebar abu-abu terang ala Nakhoda.
-6. **Dilarang `transition: all`, `text-transform: uppercase`, `scale(0)`, `style="height:..."`, latar kisi dekoratif, dan form input harian satelit.**
+## 7. Spesifikasi Visualisasi `Ikhtisar` & Peta Ikon Siluet Kapal Kelas I–V
+
+### 7.1 Klasifikasi Ikon Siluet Kapal Pengawas (Dual-Encoding)
+Setiap dari **34 Kapal Pengawas Besar** di peta diwakili oleh **ikon SVG siluet kapal tampak samping** (`_shipClassSvg`) — **bukan kotak teks nama kapal permanen** yang menyebabkan `38` tabrakan label:
+
+| Kelas Resmi (`Permen KP`) | Panjang | Jumlah Seed | Ukuran Ikon SVG | Karakteristik Siluet SVG | Lencana |
+|---|---|---|---|---|---|
+| **`KELAS_I`** (`ORCA 01–06`) | `> 60 m` | 6 kapal | `34×18px` | Lambung samudra panjang, superstruktur kemudi 2 tingkat, tiang radar tinggi + aksen dek tipis | `I` |
+| **`KELAS_II`** (`PAUS`, `BARAKUDA`, `TUTUL`, `HIU MACAN`) | `40–60 m` | 10 kapal | `28×15px` | Lambung patroli lepas pantai ramping, kabin 2 jenjang + 1 tiang radar | `II` |
+| **`KELAS_III`** (`HIU 01–17`) | `28–40 m` | 17 kapal | `23×13px` | Lambung patroli wilayah kompak, kabin kemudi tunggal sudut tegas | `III` |
+| **`KELAS_IV`** (`AKAR BAHAR 01`) | `18–28 m` | 1 kapal | `19×11px` | Lambung patroli pantai ringkas tanpa tiang tinggi | `IV` |
+| **`KELAS_V`** (Speedboat / Cadangan Master) | `< 18 m` | Dinamis | `16×10px` | Siluet *V-hull* reaksi cepat ramping | `V` |
+
+- **Warna Isi SVG = Status Taktis:**
+  - `#0B4F6C` (*Deep Admiralty Blue*) → `OPERASIONAL` (Operasional di Laut)
+  - `#15803D` (*Emerald*) → `SIAP_PANGKALAN` (Siap di Pangkalan)
+  - `#B45309` (*Amber*) → `GALANGAN` (Pemeliharaan Galangan)
+- **Keterbacaan & Anti-Tumpuk (`markerOverlaps === 0`):**
+  - Setiap SVG dibingkai *halo stroke* putih `#FFFFFF` (`2px`) agar tetap tajam di atas peta/choropleth maupun saat berdekatan.
+  - Koordinat kapal pangkalan bersama (Batam & Tanjung Priok Jakarta) diberi *spatial spread offset* halus agar seluruh ikon terbaca jelas.
+  - Nama kapal & kelas tidak lagi dicetak permanen menumpuk di peta; arahkan kursor (*hover*) untuk melihat tooltip Leaflet (`KP. ORCA 01 · Kelas I (60 m) · WPP 715`), atau klik ikon untuk membuka popup lengkap beserta tombol `Buka Profil Kapal`.
+- **Filter Ganda Status + Kelas & Layout `68/32`:**
+  - Kiri `68%`: Kanvas Peta Indonesia (`height: 430px`) dengan toolbar kontrol status (`Semua 34`, `Operasional 26`, `Siap Pangkalan 6`, `Galangan 2`) dan **bar legenda/filter Kelas I–V** interaktif yang langsung menampilkan masing-masing mini siluet SVG (`Semua Kelas`, `Kelas I · 6`, `Kelas II · 10`, `Kelas III · 17`, `Kelas IV · 1`). Banner error GeoJSON offline tampil ringkas di dalam kontainer tanpa terpotong (`clippedCount === 0`).
+  - Kanan `32%`: Panel **Sebaran WPP & Disposisi Armada** (1 bar proporsi siap operasi + daftar ringkas `5 WPP Teratas` berbar proporsional pendek + tautan `Lihat Kapal Terbaik →`).
+
+### 7.2 Urutan Layar `Ikhtisar` (`<= 2.000px` di `1440×900`, Tanpa Duplikasi)
+1. **Bar Notifikasi Persetujuan (Conditional):** Strip 1 baris ramping `44px` (latar lembut + 1 aksi `Lihat & Putuskan`, tanpa `border-top` tebal).
+2. **Strip 4 KPI Broadsheet (`border-top: 2px solid #0E1722`):** 4 sel bersekat garis `1px` — label sumber teks tenang `12px` + titik `6px` (**tanpa kotak pil pastel & tanpa bar progres dekoratif**), angka `28px tabular-nums`, dan 1 baris pembanding jelas.
+3. **Momen 1 — Peta Taktis `68% / 32%`** (rincian §7.1).
+4. **Momen 2 — Analitik Asimetris `65% / 35%`:**
+   - Kiri `65%`: Grafik garis ganda **Realisasi Anggaran SIKAP (YTD)** (`SP2D` solid `#0F766E` dengan fill ultra-tipis `0,07` + `Akrual` garis putus-putus `#64748B`, sumbu Y seragam `0`, `4 M`, `8 M`, `12 M`, `16 M`, `18 M`). **Hapus duplikasi grafik bar vertikal & donut chart** yang memecah fokus.
+   - Kanan `35%`: Panel **Postur Awak Kapal (Nakhoda)** — daftar bar horizontal terukur 4 kategori baku (`PNS`, `P3K`, `P3K Paruh`, `PJLP`: POA vs keseluruhan) + ringkasan laik sijil & sertifikat kedaluwarsa.
+5. **Tabel Monitoring Eksekutif Lintas Satelit (Full-Width):**
+   - Menggantikan **6 kartu divisi 50/50 duplikatif** dengan **1 Tabel Publikasi Terpadu (`executiveGrid`)** berkolom: `Unit Kerja`, `Satelit Sumber`, `Indikator Utama`, `Capaian / Postur`, `Status & Disparitas`.
+   - Satelit yang belum aktif (`Sistik`, `Siaga`, `Operasi & Pantau`) diringkas tenang sebagai baris tabel berstatus `Menunggu Integrasi`.
+
+---
+
+## 8. Spesifikasi `Kapal Terbaik`, `Profil Kapal`, & Standarisasi 5 Halaman Sekunder
+
+### 8.1 `Kapal Terbaik` & `Profil Kapal`
+- **Kapal Terbaik:**
+  - **Kelayakan Podium Non-Galangan:** Kapal berstatus `GALANGAN` dikeluarkan dari kelayakan `top3` Juara 1–3 agar kapal yang sedang *docking* tidak tampil sebagai juara terbaik (tetap tampil pada peringkat tabel dengan label status `Pemeliharaan Galangan`).
+  - **Sinkronisasi Filter Triwulan:** Nilai dropdown `#kt-filter-tw` & `#kt-filter-year` selalu disinkronkan dengan `res.data.triwulan` / `res.data.year` agar identik dengan kalimat temuan header.
+  - **Podium Tenang:** Hilangkan 3 warna border yang bertabrakan serta blok angka abu-abu hampa di bawah podium; beri aksen `#C88A2E` *Maritime Brass* **hanya untuk Juara 1**, lengkapi dengan ikon siluet SVG sesuai Kelas I–V pada podium & tabel 34 kapal, dan seragamkan skor 1 desimal koma Indonesia (`79,8`, `66,0`).
+- **Profil Kapal:**
+  - Jadikan nama kapal (**`KP. ORCA 01`**) sebagai `h1.page-title` (`26px`) disertai ikon siluet kelas & lencana `Kelas I · 60 m`, dengan tautan balik tenang di atas judul (`← Kembali ke Kapal Terbaik` / `← Kembali ke Ikhtisar`).
+  - Ganti 3 kotak putih identik dengan **1 strip spesifikasi broadsheet** 5 kolom (`Status Taktis`, `Wilayah / Pangkalan`, `Hari Layar YTD`, `Awak Aktif Nakhoda`, `Aset BMN SIKAP`).
+  - Terjemahkan semua enum database mentah ke bahasa manusia (`OPERASIONAL` → `Operasional di Laut`, `SIAP_PANGKALAN` → `Siap di Pangkalan`, `GALANGAN` → `Pemeliharaan Galangan`, `BAIK` → `Baik`, `RUSAK_RINGAN` → `Rusak Ringan`, `RUSAK_BERAT` → `Rusak Berat`, `P3K_PARUH_WAKTU` → `P3K Paruh Waktu`).
+
+### 8.2 Standarisasi 5 Halaman Sekunder (`Kegiatan`, `Notifikasi`, `Admin Panel`, `Master Data`, `Riwayat`)
+- **Zero Runtime `.map()` Crash:** Semua renderer (`_histRender`, `_riwLoad`, `_ntfReload`, `_mdLoad`) wajib memvalidasi `Array.isArray(rows)` dan memperbaiki alur render data agar halaman `Notifikasi`, `Master Data`, dan `Riwayat` tidak pernah terjebak kosong.
+- **Satu Bahasa Desain Komponen:**
+  - Strip ringkasan seragam (`.kpi-strip`), buang 4 gaya kartu yang berbeda antarmenu.
+  - Tabel publikasi dengan `white-space: nowrap` pada `Periode` dan `Tanggal`, format tanggal tunggal `14 Jun 2026`, serta tombol aksi baris tenang (`Lihat` & `Revisi` subtle, `Anulir`/`Tolak` text-danger halus).
+  - Empty state bermakna dengan pesan tenang dan tombol tindakan bila diperlukan (bukan kotak kosong hampa).
+- **Perbaikan Spesifik Per Layar:**
+  - **`Kegiatan`:** Judul tabel **`Daftar Kegiatan Direktorat`** (bukan `Feed Kegiatan Pendukung`), pencarian instan judul/pihak hadir, tab status (`Semua`, `Aktif`, `Ditimpa`, `Dianulir`), tampilkan nama pejabat peng-anulir (bukan ID mentah `USR-DIR-01`), dan **Calendar Picker Anti-Ketik Manual** (`onkeydown="return false"`, `onpaste="return false"`, `showPicker()` saat klik/fokus) pada semua `<input type="date">` (`#kgd-tanggal`, `#rv-kgd-tanggal`, filter rentang header).
+  - **`Notifikasi`:** Hapus 2 kartu selebar setengah layar kosong; tampilkan ringkasan ringkas *unread* + tombol aksi `Tandai Semua Dibaca` & `Muat Ulang` seragam `32px` dan indikator titik biru untuk notifikasi baru.
+  - **`Admin Panel`:** *Underline tabs* rata, kontras aksi `Setujui` / `Tolak`, kontrol tinggi seragam.
+  - **`Master Data`:** Hapus teks internal `(PRD §6)`, ganti 3 pil mini inline menjadi strip ringkasan standar, dan tampilkan kolom `Kelas Kapal (I–V)` + ikon siluet di tabel Master Kapal.
+  - **`Riwayat`:** Judul menjadi **`Riwayat Transaksi Terfederasi`** (hapus **`Seluruh Entri (& incl. SUPERSEDED & VOID)`**), satukan 5 kotak menjadi 1 strip ringkasan 4 metrik, dan perbaiki keterangan status `Ditimpa` dari `"Berlaku saat ini"` → **`Digantikan revisi`**.
+
+---
+
+## 9. Daftar Larangan Mutlak & Playwright Quality Gates
+
+1. **Zero Emoji:** 100% ikon SVG garis stroke `1.5` + ikon siluet SVG kapal kelas I–V.
+2. **Zero Huruf Teknis / Non-`Public Sans`:** Termasuk di dalam Leaflet map & Chart.js tooltips (`Helvetica Neue`/`Lucida Console` terlarang).
+3. **Zero Jargon Developer & Database di UI:** Dilarang tampil `PRD §6`, `SUPERSEDED & VOID`, `USR-DIR-01`, `RUSAK_RINGAN`, `715 (OPERASIONAL)` tanpa konversi label manusiawi.
+4. **Zero Kata Terlarang:** Dilarang keras memakai istilah non-resmi atau singkatan keliru terkait ruang kemudi/direktorat di kode, CSS, dan dokumen.
+5. **Zero Anti-Patterns Teknis:** Tidak ada `transition: all`, `text-transform: uppercase`, `scale(0)`, `backdrop-filter` blur header, warna violet `#2B3674`, inline `style="height:..."`, maupun form input harian satelit.
+
+### Automated Playwright Acceptance Gates (`tests/visual_audit.js` — 12 Skenario)
+| Gate | Target Ambang Batas Kelulusan |
+|---|---|
+| `pageErrors` | **`0`** di seluruh 12 skenario |
+| `overflowX` | **`0`** pada `1440×900`, `1024×768`, dan `390×844` |
+| `markerOverlaps` | **`0`** pada Peta 34 Kapal |
+| `brokenControlRows` | **`0`** di seluruh baris header/filter/toolbar |
+| `tinyTextCount` | **`0`** (tidak ada teks `< 12px`) |
+| `clippedCount` | **`0`** (tidak ada teks atau pesan peta yang terpotong) |
+| `distinctBg` (`Ikhtisar`) | **`<= 16`** |
+| `docHeight` (`Ikhtisar 1440px`) | **`<= 2.100px`** (`<= 2` layar penuh) |
+| `impeccable detect --json` | **`[]`** (0 temuan slop) |
+| **Visual Self-Judgment** | Seluruh PNG di `tests/screenshots/` dibuka & dinilai via `read_file` |
