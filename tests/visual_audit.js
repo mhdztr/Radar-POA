@@ -11,7 +11,7 @@ const vm = require('vm');
 const { chromium } = require('/home/pinefeast/node_modules/playwright');
 
 const ROOT = path.resolve(__dirname, '..');
-const OUT_DIR = '/home/pinefeast/.gemini/antigravity/brain/158eb089-069b-468c-89b1-e87731c2c7df/scratch/screenshots';
+const OUT_DIR = path.resolve(__dirname, 'screenshots');
 
 function buildCompiledHtml() {
   let html = fs.readFileSync(path.join(ROOT, 'html/Index.html'), 'utf8');
