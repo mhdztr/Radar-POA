@@ -1583,9 +1583,9 @@
 
     var rangeInputs =
       '<div class="filter-inputs" id="filter-range" ' + (f.mode !== 'range' ? 'style="display:none"' : '') + '>' +
-      '<input type="date" class="filter-date" value="' + (f.dateFrom || '') + '" onchange="_setFilterFrom(this.value)">' +
+      '<input type="date" class="filter-date date-picker-locked" value="' + (f.dateFrom || '') + '" onkeydown="return false" onpaste="return false" ondrop="return false" onclick="_openDatePicker(this)" onfocus="_openDatePicker(this)" onchange="_setFilterFrom(this.value)">' +
       '<span class="filter-sep">s.d.</span>' +
-      '<input type="date" class="filter-date" value="' + (f.dateTo || '') + '"   onchange="_setFilterTo(this.value)">' +
+      '<input type="date" class="filter-date date-picker-locked" value="' + (f.dateTo || '') + '" onkeydown="return false" onpaste="return false" ondrop="return false" onclick="_openDatePicker(this)" onfocus="_openDatePicker(this)" onchange="_setFilterTo(this.value)">' +
       '</div>';
 
     return mode + '<div class="filter-mode-sep"></div>' + monthlyInputs + rangeInputs;
@@ -1613,6 +1613,18 @@
     if (APP.currentView && APP.currentView !== 'master-data') {
       _renderViewContent(APP.currentView);
     }
+  }
+
+  // ── VIEW TEMPLATE CACHE (hindari duplikat ID dari #view-templates) ──
+  var _VIEW_TPL_CACHE = {};
+  function _tplHtml(tplId) {
+    if (_VIEW_TPL_CACHE[tplId] !== undefined) return _VIEW_TPL_CACHE[tplId];
+    var tpl = document.getElementById(tplId);
+    if (!tpl) return null;
+    var html = tpl.innerHTML;
+    _VIEW_TPL_CACHE[tplId] = html;
+    if (tpl.parentNode) tpl.parentNode.removeChild(tpl);
+    return html;
   }
 
   // ── VIEW CONTENT ──────────────────────────────────────────
@@ -2203,12 +2215,12 @@
   var _KT_DATA = null;
 
   function _renderKapalTerbaik(el) {
-    var tpl = document.getElementById('view-tpl-kapal-terbaik');
-    if (!tpl) {
+    var html = _tplHtml('view-tpl-kapal-terbaik');
+    if (html === null) {
       el.innerHTML = '<div class="n-msg error show">Template Kapal Terbaik tidak ditemukan.</div>';
       return;
     }
-    el.innerHTML = tpl.innerHTML;
+    el.innerHTML = html;
 
     var now = new Date();
     var curTw = Math.floor(now.getMonth() / 3) + 1;
@@ -2409,7 +2421,13 @@
     NON_ASN: 'Non-ASN',
     ACTIVE: 'Aktif',
     SUPERSEDED: 'Ditimpa',
-    VOID: 'Dianulir'
+    VOID: 'Dianulir',
+    KAPAL_PUSAT: 'Kapal Pengawas Pusat',
+    KAPAL_UPT: 'Kapal Pengawas UPT',
+    APPROVED: 'Aktif',
+    PENDING: 'Menunggu',
+    REJECTED: 'Ditolak',
+    NONAKTIF: 'Nonaktif'
   };
 
   function _humanEnum(tok) {
@@ -2418,6 +2436,129 @@
     var key = s.toUpperCase();
     if (_ENUM_HUMAN_MAP[key]) return _ENUM_HUMAN_MAP[key];
     return s.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+  }
+
+  function _asArray(val, altKey) {
+    if (Array.isArray(val)) return val;
+    if (val && typeof val === 'object') {
+      if (altKey && Array.isArray(val[altKey])) return val[altKey];
+      if (Array.isArray(val.rows)) return val.rows;
+      if (Array.isArray(val.items)) return val.items;
+      if (Array.isArray(val.data)) return val.data;
+    }
+    return [];
+  }
+
+  function _fmtDateTimeId(v) {
+    if (!v) return '\u2014';
+    var d = new Date(v);
+    if (isNaN(d)) return '\u2014';
+    var hh = (d.getHours() < 10 ? '0' : '') + d.getHours();
+    var mm = (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
+    return _fmtDateId(d) + ', ' + hh + '.' + mm;
+  }
+
+  function _humanActor(name, id) {
+    var n = String(name || '').trim();
+    if (n && !/^USR-[A-Z0-9_-]+$/i.test(n)) return n;
+    var raw = String(id || '').trim();
+    if (APP.user && raw && String(APP.user.userId) === raw && APP.user.nama) return APP.user.nama;
+    if (raw && !/^USR-[A-Z0-9_-]+$/i.test(raw)) return raw;
+    return 'Pejabat Dit. POA';
+  }
+
+  function _humanAuditAction(aksi) {
+    var k = String(aksi || '').trim().toUpperCase();
+    var map = {
+      CREATE: 'Tambah Data',
+      UPDATE: 'Perubahan Data',
+      DELETE: 'Hapus Data',
+      VOID: 'Pembatalan Data',
+      SYNC: 'Sinkronisasi',
+      APPROVE: 'Persetujuan',
+      REJECT: 'Penolakan',
+      LOGIN: 'Masuk Aplikasi'
+    };
+    return map[k] || _humanEnum(k);
+  }
+
+  function _humanSheetTarget(target) {
+    var t = String(target || '').trim();
+    var map = {
+      TX_KegiatanDirektorat: 'Kegiatan Direktorat',
+      TX_TataUsaha: 'Tata Usaha (SIKAP)',
+      TX_Paket_Progres: 'Paket Pengadaan (SIKAP)',
+      TX_TU_Pegawai: 'Kepegawaian (SIKAP)',
+      TX_Pengawakan_AKN: 'Komposisi AKN (Nakhoda)',
+      TX_Pengawakan_Kegiatan: 'Kegiatan Personel (Nakhoda)',
+      Kawasan_Konservasi: 'Master Kawasan Konservasi',
+      Users: 'Data Pengguna',
+      Approval_Queue: 'Antrean Persetujuan',
+      Kapal: 'Master Kapal',
+      WPP: 'Master WPP',
+      Opsi: 'Opsi Daftar',
+      SYSTEM: 'Pengaturan Sistem'
+    };
+    return map[t] || t || '\u2014';
+  }
+
+  function _resolveShipClassClient(kelasKapal, kelas, panjangMeter) {
+    var tok = String(kelasKapal || '').trim().toUpperCase();
+    var ser = String(kelas || '').trim().toUpperCase();
+    var len = Number(panjangMeter) || 0;
+    var key = '';
+    if (_SHIP_CLASS_SPEC[tok]) {
+      key = tok;
+    } else if (ser.indexOf('ORCA') !== -1) {
+      key = 'KELAS_I'; if (!len) len = 60;
+    } else if (ser.indexOf('PAUS') !== -1 || ser.indexOf('BARAKUDA') !== -1) {
+      key = 'KELAS_II'; if (!len) len = 42;
+    } else if (ser.indexOf('TUTUL') !== -1) {
+      key = 'KELAS_II'; if (!len) len = 40;
+    } else if (ser.indexOf('MACAN') !== -1) {
+      key = 'KELAS_II'; if (!len) len = 36;
+    } else if (ser.indexOf('HIU') !== -1) {
+      key = 'KELAS_III'; if (!len) len = 32;
+    } else if (ser.indexOf('AKAR') !== -1) {
+      key = 'KELAS_IV'; if (!len) len = 22;
+    } else if (len > 60) {
+      key = 'KELAS_I';
+    } else if (len >= 40) {
+      key = 'KELAS_II';
+    } else if (len >= 28) {
+      key = 'KELAS_III';
+    } else if (len >= 18) {
+      key = 'KELAS_IV';
+    } else {
+      key = 'KELAS_V'; if (!len) len = 14;
+    }
+    var meta = _SHIP_CLASS_SPEC[key] || _SHIP_CLASS_SPEC.KELAS_III;
+    var defLen = key === 'KELAS_I' ? 60 : key === 'KELAS_II' ? 40 : key === 'KELAS_III' ? 32 : key === 'KELAS_IV' ? 22 : 14;
+    return { key: meta.key, romawi: meta.romawi, label: meta.label, panjangMeter: len || defLen };
+  }
+
+  function _openDatePicker(el) {
+    try { if (el && typeof el.showPicker === 'function') el.showPicker(); } catch (e) {}
+  }
+
+  function _renderBroadsheetStrip(cells) {
+    var list = _asArray(cells);
+    var cls = list.length === 4 ? 'sec-kpi-strip cols-4' : 'sec-kpi-strip';
+    return '<div class="' + cls + '">' + list.map(function (c) {
+      return '<div class="sec-kpi-cell">' +
+        '<div class="sec-kpi-lbl">' + _esc(c.label || '') + '</div>' +
+        '<div class="sec-kpi-val">' + _esc(c.value != null ? String(c.value) : '0') + '</div>' +
+        (c.sub ? '<div class="sec-kpi-sub">' + _esc(c.sub) + '</div>' : '') +
+        '</div>';
+    }).join('') + '</div>';
+  }
+
+  function _renderEmptyState(title, desc, actionHtml) {
+    return '<div class="sec-empty">' +
+      '<div class="sec-empty-title">' + _esc(title || 'Belum ada data') + '</div>' +
+      (desc ? '<div class="sec-empty-desc">' + _esc(desc) + '</div>' : '') +
+      (actionHtml ? '<div class="sec-empty-act">' + actionHtml + '</div>' : '') +
+      '</div>';
   }
 
   function _shipStatusColor(status) {
@@ -3702,15 +3843,21 @@
   // panel geser kanan (banner KADIV/approver) tanpa duplikasi.
   // id default: ka-* → halaman Kelola Akun; dr-* → drawer kanan.
   var APPROVAL_WRAPS = [
-    { wrapId: 'ka-approval-table-wrap', msgId: 'ka-approval-msg' },
-    { wrapId: 'dr-approval-table-wrap', msgId: 'dr-approval-msg' }
+    { grp: 'ka', wrapId: 'ka-approval-table-wrap', msgId: 'ka-approval-msg' },
+    { grp: 'dr', wrapId: 'dr-approval-table-wrap', msgId: 'dr-approval-msg' }
   ];
+  var _APPREQ_TARGET = null;
 
   function _appActiveWraps() {
     var out = [];
     for (var i = 0; i < APPROVAL_WRAPS.length; i++) {
       var w = APPROVAL_WRAPS[i];
       if (document.getElementById(w.wrapId)) out.push(w);
+    }
+    if (_APPREQ_TARGET && out.length > 1) {
+      out.sort(function (a, b) {
+        return (a.grp === _APPREQ_TARGET ? -1 : b.grp === _APPREQ_TARGET ? 1 : 0);
+      });
     }
     return out;
   }
@@ -3745,36 +3892,41 @@
   function _renderApprovalTable(items) {
     var act = _appActiveWraps();
     if (act.length === 0) return;
+    var list = _asArray(items);
 
     for (var w = 0; w < act.length; w++) {
       var wrap = document.getElementById(act[w].wrapId);
       if (!wrap) continue;
 
-      if (!items || items.length === 0) {
-        wrap.innerHTML = '<div style="color:var(--n-text-muted);font-size:.875rem;padding:8px 0;">Tidak ada permintaan yang menunggu persetujuan.</div>';
+      if (list.length === 0) {
+        wrap.innerHTML = _renderEmptyState(
+          'Tidak ada antrean persetujuan',
+          'Seluruh permintaan registrasi baru telah diproses.'
+        );
         continue;
       }
 
-      var rows = items.map(function (it) {
-        var d = it.registeredAt ? new Date(it.registeredAt).toLocaleDateString('id-ID') : '-';
+      var rows = list.map(function (it) {
+        var d = _fmtDateId(it.registeredAt);
+        var roleText = it.roleDilamar === 'KADIV' ? 'Kepala Divisi / Ketua Tim Kerja' : (ROLE_LABEL[it.roleDilamar] || 'Staf');
         return '<tr>' +
-          '<td>' + _esc(it.nama) +
-          '<br><span style="font-size:.8rem;color:var(--n-text-muted);">' + _esc(it.email) + '</span></td>' +
-          '<td>' + _esc(it.namaDivisi || '-') + '</td>' +
-          '<td>' + (it.roleDilamar === 'KADIV' ? 'Kepala Divisi / Ketua Tim Kerja' : 'Staf') + '</td>' +
-          '<td>' + d + '</td>' +
+          '<td><strong>' + _esc(it.nama || '\u2014') + '</strong>' +
+          '<span class="td-sub">' + _esc(it.email || '\u2014') + '</span></td>' +
+          '<td>' + _esc(it.namaDivisi || '\u2014') + '</td>' +
+          '<td>' + _esc(roleText) + '</td>' +
+          '<td class="td-nowrap">' + _esc(d) + '</td>' +
           '<td><div class="ctl-row ctl-sm ctl-nowrap">' +
-          '<button class="btn-primary" onclick="doApprove(\'' + _esc(it.queueId) + '\')">Setujui</button>' +
-          '<button class="btn-danger"  onclick="openRejectModal(\'' + _esc(it.queueId) + '\')">Tolak</button>' +
+          '<button type="button" class="btn-primary" onclick="doApprove(\'' + _esc(it.queueId) + '\')">Setujui</button>' +
+          '<button type="button" class="btn-row-danger" onclick="openRejectModal(\'' + _esc(it.queueId) + '\')">Tolak</button>' +
           '</div></td>' +
           '</tr>';
       }).join('');
 
       wrap.innerHTML =
-        '<table class="n-table">' +
+        '<div class="n-table-wrap"><table class="n-table">' +
         '<thead><tr><th>Nama</th><th>Unit Kerja</th><th>Jabatan</th><th>Tgl Daftar</th><th>Tindakan</th></tr></thead>' +
         '<tbody>' + rows + '</tbody>' +
-        '</table>';
+        '</table></div>';
     }
   }
 
@@ -3832,10 +3984,9 @@
   }
 
   function _renderMasterData(el) {
-
-    var tpl = document.getElementById('view-tpl-master-data');
-    if (!tpl) { el.innerHTML = _moduleStub('Master Data'); return; }
-    el.innerHTML = tpl.innerHTML;
+    var html = _tplHtml('view-tpl-master-data');
+    if (html === null) { el.innerHTML = _moduleStub('Master Data'); return; }
+    el.innerHTML = html;
 
     // Tombol sinkron WPP hanya untuk SUPERADMIN (PRD §5.11)
     var btnSync = document.getElementById('md-btn-sync-wpp');
@@ -3854,9 +4005,9 @@
   var _ADN = { tab: 'persetujuan', users: [], audit: [], userFormId: null, divisi: [] };
 
   function _renderKelolaAkun(el) {
-    var tpl = document.getElementById('view-tpl-kelola-akun');
-    if (!tpl) { el.innerHTML = _moduleStub('Admin Panel'); return; }
-    el.innerHTML = tpl.innerHTML;
+    var html = _tplHtml('view-tpl-kelola-akun');
+    if (html === null) { el.innerHTML = _moduleStub('Admin Panel'); return; }
+    el.innerHTML = html;
 
     var isSA = (APP.user && APP.user.role === 'SUPERADMIN');
     var tabPengguna = document.getElementById('adn-tab-pengguna');
@@ -3911,11 +4062,12 @@
 
   // ── TAB PENGGUNA ───────────────────────────────────────────
   function _adnStatusBadge(st) {
-    if (st === 'APPROVED') return '<span class="status-badge" style="background:#ecfdf5;color:#047857;">AKTIF</span>';
-    if (st === 'PENDING') return '<span class="status-badge" style="background:var(--n-primary-light);color:var(--n-primary);">MENUNGGU</span>';
-    if (st === 'REJECTED') return '<span class="status-badge" style="background:#fee2e2;color:var(--n-status-critical);">DITOLAK</span>';
-    if (st === 'NONAKTIF') return '<span class="status-badge" style="background:#f3f4f6;color:#374151;">NONAKTIF</span>';
-    return _esc(st || '—');
+    var s = String(st || '').toUpperCase();
+    if (s === 'APPROVED') return '<span class="badge badge-ok">Aktif</span>';
+    if (s === 'PENDING') return '<span class="badge badge-info">Menunggu</span>';
+    if (s === 'REJECTED') return '<span class="badge badge-danger">Ditolak</span>';
+    if (s === 'NONAKTIF') return '<span class="badge badge-neutral">Nonaktif</span>';
+    return '<span class="badge badge-neutral">' + _esc(_humanEnum(s)) + '</span>';
   }
 
   function _adnLoadUsers() {
@@ -3933,7 +4085,7 @@
           return;
         }
         try {
-          _ADN.users = res.data || [];
+          _ADN.users = _asArray(res.data);
           _adnRenderUsers();
         } catch (e) {
           _asyncRenderFail('adn-users', wrap, e);
@@ -3950,43 +4102,40 @@
     var wrap = document.getElementById('adn-users-wrap');
     if (!wrap) return;
 
-    if (_ADN.users.length === 0) {
-      wrap.innerHTML = '<div class="n-pad-muted">Belum ada pengguna.</div>';
+    if (!_ADN.users.length) {
+      wrap.innerHTML = _renderEmptyState('Belum ada pengguna terdaftar', 'Daftar akun pengguna yang disetujui atau menunggu verifikasi akan tampil di sini.');
       return;
     }
 
-    var t = '<table class="n-table n-table-full"><thead><tr>' +
+    var t = '<div class="n-table-wrap"><table class="n-table n-table-full"><thead><tr>' +
       '<th>Nama</th><th>Unit Kerja</th><th>Jabatan</th><th>Status</th><th>Tgl Daftar</th><th>Aksi</th>' +
       '</tr></thead><tbody>';
 
     for (var i = 0; i < _ADN.users.length; i++) {
       var u = _ADN.users[i];
-      var roleLabel = ROLE_LABEL[u.role] || u.role;
+      var roleLabel = ROLE_LABEL[u.role] || _humanEnum(u.role);
       var isSelf = (APP.user && String(APP.user.userId) === String(u.userId));
       t += '<tr>' +
-        '<td>' + _esc(u.nama) +
-        '<br><span style="font-size:.8rem;color:var(--n-text-muted);">' +
-        _esc(u.nip ? 'NIP ' + u.nip + ' · ' : '') + _esc(u.email) + '</span></td>' +
-        '<td>' + _esc(u.namaDivisi) + '</td>' +
+        '<td><strong>' + _esc(u.nama || '\u2014') + '</strong>' +
+        '<span class="td-sub">' +
+        _esc(u.nip ? 'NIP ' + u.nip + ' \u00b7 ' : '') + _esc(u.email || '\u2014') + '</span></td>' +
+        '<td>' + _esc(u.namaDivisi || '\u2014') + '</td>' +
         '<td>' + _esc(roleLabel) + '</td>' +
         '<td>' + _adnStatusBadge(u.status) + '</td>' +
-        '<td>' + _esc(_adnFmtDate(u.registeredAt)) + '</td>' +
+        '<td class="td-nowrap">' + _esc(_fmtDateId(u.registeredAt)) + '</td>' +
         '<td>' +
         (isSelf
-          ? '<span style="font-size:.8rem;color:var(--n-text-muted);">Akun Anda</span>'
-          : '<button class="btn-mini" onclick="_adnOpenEdit(\'' + _esc(u.userId) + '\')">Kelola</button>') +
+          ? '<span class="ntf-read-lbl">Akun Anda</span>'
+          : '<div class="ctl-row ctl-sm"><button type="button" class="btn-row-subtle" onclick="_adnOpenEdit(\'' + _esc(u.userId) + '\')">Kelola</button></div>') +
         '</td></tr>';
     }
 
-    t += '</tbody></table>';
+    t += '</tbody></table></div>';
     wrap.innerHTML = t;
   }
 
   function _adnFmtDate(v) {
-    if (!v) return '—';
-    var d = new Date(v);
-    if (isNaN(d.getTime())) return '—';
-    return d.toLocaleDateString('id-ID');
+    return _fmtDateId(v);
   }
 
   function _adnLoadDivisi() {
@@ -4136,7 +4285,7 @@
           return;
         }
         try {
-          _ADN.audit = res.data || [];
+          _ADN.audit = _asArray(res.data);
           _adnRenderAudit();
         } catch (e) {
           _asyncRenderFail('adn-audit', wrap, e);
@@ -4155,37 +4304,36 @@
     var wrap = document.getElementById('adn-audit-wrap');
     if (!wrap) return;
 
-    if (_ADN.audit.length === 0) {
-      wrap.innerHTML = '<div class="n-pad-muted">Belum ada jejak audit.</div>';
+    if (!_ADN.audit.length) {
+      wrap.innerHTML = _renderEmptyState('Belum ada jejak audit', 'Catatan perubahan akun, persetujuan, dan pembaruan master data akan tampil di sini.');
       return;
     }
 
-    var t = '<table class="n-table n-table-full"><thead><tr>' +
-      '<th>Waktu</th><th>Pelaku</th><th>Aksi</th><th>Target</th><th>Keterangan</th>' +
+    var t = '<div class="n-table-wrap"><table class="n-table n-table-full"><thead><tr>' +
+      '<th>Waktu</th><th>Pelaku</th><th>Aksi</th><th>Objek</th><th>Keterangan</th>' +
       '</tr></thead><tbody>';
 
     for (var i = 0; i < _ADN.audit.length; i++) {
       var r = _ADN.audit[i];
+      var aksiUpper = String(r.aksi || '').toUpperCase();
+      var aksiBadge = aksiUpper === 'VOID' || aksiUpper === 'DELETE' ? 'badge-danger'
+        : (aksiUpper === 'CREATE' || aksiUpper === 'APPROVE' ? 'badge-ok' : 'badge-info');
       t += '<tr>' +
-        '<td style="white-space:nowrap;">' + _esc(_adnFmtDateTime(r.timestamp)) + '</td>' +
-        '<td>' + _esc(r.userName) +
-        '<br><span style="font-size:.8rem;color:var(--n-text-muted);">' + _esc(ROLE_LABEL[r.userRole] || r.userRole || '—') + '</span></td>' +
-        '<td>' + _esc(r.aksi) + '</td>' +
-        '<td>' + _esc(r.sheetTarget || '—') +
-        (r.rowIdTarget ? '<br><span style="font-size:.8rem;color:var(--n-text-muted);">' + _esc(r.rowIdTarget) + '</span>' : '') + '</td>' +
-        '<td>' + _esc(r.alasan || '—') + '</td>' +
+        '<td class="td-nowrap">' + _esc(_fmtDateTimeId(r.timestamp)) + '</td>' +
+        '<td><strong>' + _esc(_humanActor(r.userName, r.userId)) + '</strong>' +
+        '<span class="td-sub">' + _esc(ROLE_LABEL[r.userRole] || _humanEnum(r.userRole) || '\u2014') + '</span></td>' +
+        '<td><span class="badge ' + aksiBadge + '">' + _esc(_humanAuditAction(r.aksi)) + '</span></td>' +
+        '<td>' + _esc(_humanSheetTarget(r.sheetTarget)) + '</td>' +
+        '<td>' + _esc(r.alasan || '\u2014') + '</td>' +
         '</tr>';
     }
 
-    t += '</tbody></table>';
+    t += '</tbody></table></div>';
     wrap.innerHTML = t;
   }
 
   function _adnFmtDateTime(v) {
-    if (!v) return '—';
-    var d = new Date(v);
-    if (isNaN(d.getTime())) return '—';
-    return d.toLocaleString('id-ID');
+    return _fmtDateTimeId(v);
   }
 
   // ── TAB PENGINGAT MINGGUAN (SUPERADMIN) ───────────────────
@@ -4274,29 +4422,33 @@
 
   function _adnReminderResult(d) {
     if (!d) return '';
-    if (!d.divisions || d.divisions.length === 0) {
-      return '<div class="n-card"><div class="n-pad-muted" style="padding:0;">' +
-        'Semua divisi sudah melapor minggu ini (' + _esc(d.periode || '') + '). Tidak ada pengingat yang dikirim.</div></div>';
+    var divisions = _asArray(d.divisions);
+    if (divisions.length === 0) {
+      return '<div class="sec-table-card">' + _renderEmptyState(
+        'Seluruh unit kerja sudah melapor',
+        'Tidak ada pengingat yang perlu dikirim untuk periode ' + (d.periode || 'berjalan') + '.'
+      ) + '</div>';
     }
-    var rows = d.divisions.map(function (x) {
-      return '<tr><td>' + _esc(x.label) + '</td><td>' + x.targetCount + '</td></tr>';
+    var rows = divisions.map(function (x) {
+      return '<tr><td>' + _esc(x.label) + '</td><td class="text-right table-num">' + _idNum(x.targetCount) + '</td></tr>';
     }).join('');
     // Kegagalan email tidak boleh terlihat seperti "tidak ada yang perlu dikirim".
+    var errList = _asArray(d.emailErrors);
     var errBlock = '';
-    if (d.emailErrors && d.emailErrors.length) {
-      var errRows = d.emailErrors.map(function (e) {
-        return '<tr><td>' + _esc(e.email || '?') + '</td><td>' + _esc(e.reason || 'Gagal.') + '</td></tr>';
+    if (errList.length) {
+      var errRows = errList.map(function (e) {
+        return '<tr><td>' + _esc(e.email || '\u2014') + '</td><td>' + _esc(e.reason || 'Gagal mengirim email.') + '</td></tr>';
       }).join('');
-      errBlock = '<div style="margin-top:12px">' +
-        '<div class="n-msg error" style="margin:0 0 8px">' +
-        d.emailErrors.length + ' email gagal terkirim. Notifikasi dalam aplikasi tetap masuk.</div>' +
-        '<table class="n-table n-table-full"><thead><tr><th>Penerima</th><th>Penyebab</th></tr></thead>' +
-        '<tbody>' + errRows + '</tbody></table></div>';
+      errBlock = '<div class="mt-md">' +
+        '<div class="n-msg error show">' +
+        errList.length + ' email gagal terkirim. Notifikasi dalam aplikasi tetap masuk.</div>' +
+        '<div class="n-table-wrap"><table class="n-table n-table-full"><thead><tr><th>Penerima</th><th>Penyebab</th></tr></thead>' +
+        '<tbody>' + errRows + '</tbody></table></div></div>';
     }
-    return '<div class="n-card" style="padding:0;overflow:hidden">' +
-      '<div class="content-section-hd" style="padding:14px 20px;border-bottom:1px solid var(--n-border-subtle);">Ringkasan Periode ' + _esc(d.periode || '') + '</div>' +
-      '<table class="n-table n-table-full"><thead><tr><th>Divisi Belum Melapor</th><th>Penerima</th></tr></thead><tbody>' + rows + '</tbody></table>' +
-      '<div class="n-pad-muted">Email terkirim: ' + d.sentEmails + ' · notifikasi aplikasi: ' + d.notified + '</div>' +
+    return '<div class="sec-table-card">' +
+      '<div class="pk-table-hd"><div class="pk-table-title">Ringkasan Periode ' + _esc(d.periode || '') + '</div></div>' +
+      '<div class="n-table-wrap"><table class="n-table n-table-full"><thead><tr><th>Unit Kerja Belum Melapor</th><th class="text-right">Penerima</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '<div class="n-pad-muted">Email terkirim: ' + _idNum(d.sentEmails) + ' \u00b7 notifikasi aplikasi: ' + _idNum(d.notified) + '</div>' +
       errBlock +
       '</div>';
   }
@@ -4304,9 +4456,9 @@
   // Render antrean ke salah satu grup APPROVAL_WRAPS (ka/dr).
   // Satu sumber kebenaran: parametrik, id di APPROVAL_WRAPS.
   function _renderApprovalsInto(grp) {
+    _APPREQ_TARGET = grp || null;
     for (var i = 0; i < APPROVAL_WRAPS.length; i++) {
       if (APPROVAL_WRAPS[i].grp !== grp) continue;
-      APPREQ_ACTIVE = [APPROVAL_WRAPS[i]];
       _loadApprovals();
       return;
     }
@@ -4382,9 +4534,9 @@
 
     google.script.run
       .withSuccessHandler(function (res) {
-        if (!res.success) { _mdKapalMsg('error', res.error); return; }
-        _MD.data.kapal = res.data;
-        _mdRenderKapal(res.data);
+        if (!res || !res.success) { _mdKapalMsg('error', (res && res.error) || 'Gagal memuat data kapal.'); return; }
+        _MD.data.kapal = _asArray(res.data);
+        _mdRenderKapal(_MD.data.kapal);
       })
       .withFailureHandler(function () { _mdKapalMsg('error', 'Gagal memuat data kapal.'); })
       .master_getKapalList(APP.token);
@@ -4397,18 +4549,23 @@
     var sum = document.getElementById('md-kapal-summary');
     if (!wrap) return;
 
-    var list = items || [];
+    var list = _asArray(items);
     var aktif = list.filter(function (k) { return k.statusAktif; });
 
     if (sum) {
-      sum.innerHTML =
-        '<div class="md-chip"><span class="lbl">Total armada</span><span class="val">' + list.length + '</span></div>' +
-        '<div class="md-chip"><span class="lbl">Aktif</span><span class="val">' + aktif.length + '</span></div>' +
-        '<div class="md-chip"><span class="lbl">Tidak aktif</span><span class="val">' + (list.length - aktif.length) + '</span></div>';
+      sum.innerHTML = _renderBroadsheetStrip([
+        { label: 'Total Armada', value: _idNum(list.length), sub: 'Terdaftar di master kapal' },
+        { label: 'Kapal Aktif', value: _idNum(aktif.length), sub: 'Beroperasi atau siaga pangkalan' },
+        { label: 'Tidak Aktif', value: _idNum(list.length - aktif.length), sub: 'Arsip dinonaktifkan' }
+      ]);
     }
 
     if (list.length === 0) {
-      wrap.innerHTML = '<div style="padding:20px 24px;color:var(--n-text-muted);font-size:.875rem;">Belum ada data kapal. Gunakan "Tambah Kapal" untuk mulai.</div>';
+      wrap.innerHTML = _renderEmptyState(
+        'Belum ada data kapal',
+        'Tambahkan kapal pengawas agar dapat dirujuk lintas modul satelit.',
+        '<button type="button" class="btn-primary" onclick="_mdOpenKapalModal()">Tambah Kapal</button>'
+      );
       return;
     }
 
@@ -4416,32 +4573,38 @@
       var badge = k.statusAktif
         ? '<span class="badge badge-ok">Aktif</span>'
         : '<span class="badge badge-neutral">Tidak aktif</span>';
+      var cls = _resolveShipClassClient(k.kelasKapal, k.kelas, k.panjangMeter);
+      var hull = _shipClassSvg(cls.key, k.statusAktif ? '#0B4F6C' : '#5D656F', 'legend');
+      var clsHtml = '<span class="md-class-cell">' + hull +
+        '<span class="md-class-lbl">' + _esc(cls.label) + '</span>' +
+        '<span class="md-class-sub">\u00b7 ' + _esc(String(cls.panjangMeter || '')) + ' m</span>' +
+        '</span>';
+      var jenisLabel = k.jenisKapal ? _mdKapalJenisLabel(k.jenisKapal) : '\u2014';
       return '<tr>' +
-        '<td>' + _esc(k.kapalId) + '</td>' +
-        '<td>' + _esc(k.nama) + '</td>' +
-        '<td>' + _esc(k.kelas || '\u2014') + '</td>' +
+        '<td class="td-nowrap">' + _esc(k.kapalId || '\u2014') + '</td>' +
+        '<td><strong>' + _esc(k.nama || '\u2014') + '</strong></td>' +
+        '<td class="td-nowrap">' + clsHtml + '</td>' +
         '<td>' + _esc(k.homebaseUpt || '\u2014') + '</td>' +
-        '<td>' + _esc(k.jenisKapal ? _mdKapalJenisLabel(k.jenisKapal) : '\u2014') + '</td>' +
+        '<td>' + _esc(jenisLabel) + '</td>' +
         '<td>' + badge + '</td>' +
         '<td><div class="ctl-row ctl-sm ctl-nowrap">' +
-        '<button class="btn-outline" onclick="_openProfilKapal(\'' + _esc(k.kapalId) + '\')">Profil</button>' +
-        '<button class="btn-outline" onclick="_mdOpenKapalModal(\'' + _esc(k.kapalId) + '\')">Edit</button>' +
+        '<button type="button" class="btn-row-subtle" onclick="_openProfilKapal(\'' + _esc(k.kapalId) + '\')">Profil</button>' +
+        '<button type="button" class="btn-row-subtle" onclick="_mdOpenKapalModal(\'' + _esc(k.kapalId) + '\')">Edit</button>' +
         (k.statusAktif
-          ? '<button class="btn-danger" onclick="_mdToggleKapal(\'' + _esc(k.kapalId) + '\')">Nonaktifkan</button>'
-          : '<button class="btn-primary" onclick="_mdToggleKapal(\'' + _esc(k.kapalId) + '\')">Aktifkan</button>') +
+          ? '<button type="button" class="btn-row-danger" onclick="_mdToggleKapal(\'' + _esc(k.kapalId) + '\')">Nonaktifkan</button>'
+          : '<button type="button" class="btn-primary" onclick="_mdToggleKapal(\'' + _esc(k.kapalId) + '\')">Aktifkan</button>') +
         '</div></td>' +
         '</tr>';
     }).join('');
 
     wrap.innerHTML =
-      '<table class="n-table"><thead><tr>' +
-      '<th>ID</th><th>Nama</th><th>Kelas</th><th>Homebase / UPT</th><th>Jenis</th><th>Status</th><th>Aksi</th>' +
-      '</tr></thead><tbody>' + rows + '</tbody></table>';
+      '<div class="n-table-wrap"><table class="n-table"><thead><tr>' +
+      '<th>Kode</th><th>Nama Kapal</th><th>Kelas Kapal</th><th>Pangkalan / UPT</th><th>Jenis</th><th>Status</th><th>Aksi</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table></div>';
   }
 
   // Label enum JenisKapal untuk tabel Master Kapal. Opsi diambil dari cache
-  // `master_getOpsiJenis`; kalau belum termuat, tampilkan token mentahnya
-  // (bukan kosong) supaya admin tetap bisa melihat kapal lewat kategori apa pun.
+  // `master_getOpsiJenis`; jika belum termuat, konversi token via _humanEnum.
   function _mdKapalJenisLabel(token) {
     var t = String(token || '').trim();
     if (!t) return '';
@@ -4449,7 +4612,7 @@
     for (var i = 0; i < items.length; i++) {
       if (items[i].value === t) return items[i].label;
     }
-    return t;
+    return _humanEnum(t);
   }
 
   function _mdOpenKapalModal(kapalId) {
@@ -4593,9 +4756,9 @@
 
     google.script.run
       .withSuccessHandler(function (res) {
-        if (!res.success) { _mdKawasanMsg('error', res.error); return; }
-        _MD.data.kawasan = res.data;
-        _mdRenderKawasan(res.data);
+        if (!res || !res.success) { _mdKawasanMsg('error', (res && res.error) || 'Gagal memuat data kawasan.'); return; }
+        _MD.data.kawasan = _asArray(res.data);
+        _mdRenderKawasan(_MD.data.kawasan);
       })
       .withFailureHandler(function () { _mdKawasanMsg('error', 'Gagal memuat data kawasan.'); })
       .master_getKawasanList(APP.token);
@@ -4607,32 +4770,35 @@
     var wrap = document.getElementById('md-kawasan-wrap');
     if (!wrap) return;
 
-    var list = items || [];
+    var list = _asArray(items);
 
     if (list.length === 0) {
-      wrap.innerHTML = '<div style="padding:20px 24px;color:var(--n-text-muted);font-size:.875rem;">Belum ada data kawasan konservasi. Gunakan "Tambah Kawasan" untuk mulai.</div>';
+      wrap.innerHTML = _renderEmptyState(
+        'Belum ada kawasan konservasi',
+        'Tambahkan referensi kawasan konservasi perairan melalui tombol Tambah Kawasan.'
+      );
       return;
     }
 
     var rows = list.map(function (k) {
       var loc = _fmtLatLng(k.latitude, k.longitude);
       return '<tr>' +
-        '<td>' + _esc(k.kawasanId) + '</td>' +
-        '<td>' + _esc(k.nama) + '</td>' +
-        '<td>' + _esc(k.provinsi) + '</td>' +
-        '<td>' + _esc(loc) + '</td>' +
+        '<td class="td-nowrap">' + _esc(k.kawasanId || '\u2014') + '</td>' +
+        '<td><strong>' + _esc(k.nama || '\u2014') + '</strong></td>' +
+        '<td>' + _esc(k.provinsi || '\u2014') + '</td>' +
+        '<td class="td-nowrap">' + _esc(loc) + '</td>' +
         '<td><div class="ctl-row ctl-sm ctl-nowrap">' +
-        '<button class="btn-outline" onclick="_mdOpenKawasanModal(\'' + _esc(k.kawasanId) + '\')">Edit</button>' +
-        '<button class="btn-danger n-iconbtn-sm" title="Hapus kawasan" aria-label="Hapus kawasan" ' +
+        '<button type="button" class="btn-row-subtle" onclick="_mdOpenKawasanModal(\'' + _esc(k.kawasanId) + '\')">Edit</button>' +
+        '<button type="button" class="btn-row-danger n-iconbtn-sm" title="Hapus kawasan" aria-label="Hapus kawasan" ' +
         'onclick="_mdDeleteKawasan(\'' + _esc(k.kawasanId) + '\')">' + _ico('trash') + '</button>' +
         '</div></td>' +
         '</tr>';
     }).join('');
 
     wrap.innerHTML =
-      '<table class="n-table"><thead><tr>' +
-      '<th>ID</th><th>Nama</th><th>Provinsi</th><th>Koordinat</th><th>Aksi</th>' +
-      '</tr></thead><tbody>' + rows + '</tbody></table>';
+      '<div class="n-table-wrap"><table class="n-table"><thead><tr>' +
+      '<th>Kode</th><th>Nama Kawasan</th><th>Provinsi</th><th>Koordinat</th><th>Aksi</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table></div>';
   }
 
   function _fmtLatLng(lat, lng) {
@@ -4740,10 +4906,10 @@
 
     google.script.run
       .withSuccessHandler(function (res) {
-        if (!res.success) { _mdWppMsg('error', res.error); return; }
-        _MD.data.wpp = res.data;
+        if (!res || !res.success) { _mdWppMsg('error', (res && res.error) || 'Gagal memuat data WPP.'); return; }
+        _MD.data.wpp = _asArray(res.data);
         _MD.wppFromFallback = !!res.fromFallback;
-        _mdRenderWpp(res.data, res.fromFallback);
+        _mdRenderWpp(_MD.data.wpp, res.fromFallback);
       })
       .withFailureHandler(function () { _mdWppMsg('error', 'Gagal memuat data WPP.'); })
       .master_getWppList(APP.token);
@@ -4756,25 +4922,31 @@
     var note = document.getElementById('md-wpp-source-note');
     if (!wrap) return;
 
-    var list = items || [];
+    var list = _asArray(items);
 
     if (fromFallback) {
       if (note) {
-        note.innerHTML = '<div class="n-info-static">Master WPP belum disinkronkan — daftar di bawah adalah referensi statis (WPP_NRI). Jalankan "Sinkronkan" (Superadmin) untuk menulis ke sheet master.</div>';
+        note.innerHTML = '<div class="n-info-static mb-md">Master wilayah pengelolaan perikanan belum disinkronkan. Daftar di bawah memakai referensi bawaan; jalankan Sinkronkan oleh Super Administrator untuk menyimpan ke basis data pusat.</div>';
       }
-    } else {
-      if (note) {
-        note.innerHTML = '<div style="font-size:.78rem;color:var(--n-text-muted);margin-bottom:10px;">Sumber: sheet master WPP.</div>';
-      }
+    } else if (note) {
+      note.innerHTML = '';
+    }
+
+    if (list.length === 0) {
+      wrap.innerHTML = _renderEmptyState(
+        'Belum ada data WPP',
+        'Tekan Sinkronkan untuk mengisi daftar Wilayah Pengelolaan Perikanan dari referensi resmi.'
+      );
+      return;
     }
 
     var rows = list.map(function (w) {
-      return '<tr><td>' + _esc(w.WPPCode) + '</td><td>' + _esc(w.NamaWilayah) + '</td></tr>';
+      return '<tr><td class="td-nowrap"><strong>' + _esc(w.WPPCode || '\u2014') + '</strong></td><td>' + _esc(w.NamaWilayah || '\u2014') + '</td></tr>';
     }).join('');
 
     wrap.innerHTML =
-      '<table class="n-table"><thead><tr><th>Kode</th><th>Nama Wilayah</th></tr></thead>' +
-      '<tbody>' + rows + '</tbody></table>';
+      '<div class="n-table-wrap"><table class="n-table"><thead><tr><th>Kode WPP</th><th>Nama Wilayah</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table></div>';
   }
 
   function _mdSyncWpp() {
@@ -4835,24 +5007,24 @@
     var canWrite = _mdOpsiCanWrite();
 
     var html = '';
-    var kodeList = d.kodeList || [];
+    var kodeList = _asArray(d && d.kodeList);
     for (var g = 0; g < kodeList.length; g++) {
       var kode = kodeList[g];
       var judul = (d.labels && d.labels[kode]) || kode;
-      var items = (d.groups && d.groups[kode]) || [];
+      var items = _asArray(d.groups && d.groups[kode]);
 
-      html += '<div class="content-section" style="margin-top:0;">' +
-        '<div class="content-section-hd">' + _esc(judul) + '</div>' +
-        '<div style="font-size:.8125rem;color:var(--n-text-muted);margin-bottom:12px;">' +
-        'Tersimpan di basis data sebagai nasab; output dropdown memakai teks "Tampil sebagai".</div>' +
-        '<div class="attach-list" style="margin-bottom:14px;">';
+      html += '<div class="n-card mb-md">' +
+        '<div class="content-section-hd sec-hd-flush">' + _esc(judul) + '</div>' +
+        '<div class="sec-sub mb-md">' +
+        'Nilai baku tersimpan aman di arsip dan ditampilkan pada pilihan formulir sesuai teks ramah pengguna.</div>' +
+        '<div class="attach-list mb-md">';
 
       for (var i = 0; i < items.length; i++) {
         var it = items[i];
         var tampil = it.labelTampil || it.label;
-        html += '<div class="attach-chip" style="display:inline-flex;">' +
+        html += '<div class="attach-chip">' +
           '<b>' + (it.aktif ? '\u2713' : '\u2715') + '</b>' +
-          '<span>' + _esc(it.label) + (tampil !== it.label ? ' \u2192 ' + _esc(tampil) : '') + '</span>' +
+          '<span>' + _esc(tampil) + '</span>' +
           (canWrite
             ? '<button type="button" title="Ubah teks tampilan" aria-label="Ubah teks tampilan" ' +
             'onclick="_mdOpsiEditLabel(\'' + kode + '\',\'' + _escJs(it.label) + '\',\'' + _escJs(tampil) + '\')">' +
@@ -4867,16 +5039,16 @@
       html += '</div>';
 
       if (canWrite) {
-        html += '<div style="display:flex;gap:10px;align-items:center;">' +
+        html += '<div class="md-opsi-add-row ctl-row ctl-md">' +
           '<input type="text" id="md-opsi-add-' + kode + '" maxlength="40" class="md-opsi-input" ' +
-          'placeholder="Nama ' + _esc(judul).toLowerCase() + ' baru..." style="flex:1;padding:9px 12px;border:1px solid var(--n-border-subtle);border-radius:var(--n-r-sm);background:var(--n-surface-2);color:var(--n-text-primary);" onkeydown="if(event.key===\'Enter\'){_mdOpsiAdd(\'' + kode + '\')}">' +
+          'placeholder="Nama ' + _esc(judul).toLowerCase() + ' baru" onkeydown="if(event.key===\'Enter\'){_mdOpsiAdd(\'' + kode + '\')}">' +
           '<button type="button" class="btn-primary" onclick="_mdOpsiAdd(\'' + kode + '\')">Tambah</button>' +
           '</div>';
       }
       html += '</div>';
     }
 
-    wrap.innerHTML = html;
+    wrap.innerHTML = html || _renderEmptyState('Belum ada grup opsi daftar', 'Opsi dropdown lintas satelit akan tampil di sini setelah dikonfigurasi.');
   }
 
   function _escJs(str) {
@@ -4941,9 +5113,9 @@
   var _RIW = { rows: [], statusTab: 'ALL' };
 
   function _renderRiwayat(el) {
-    var tpl = document.getElementById('view-tpl-riwayat');
-    if (!tpl) { el.innerHTML = _moduleStub('Riwayat Laporan'); return; }
-    el.innerHTML = tpl.innerHTML;
+    var html = _tplHtml('view-tpl-riwayat');
+    if (html === null) { el.innerHTML = _moduleStub('Riwayat Laporan'); return; }
+    el.innerHTML = html;
     _RIW.rows = [];
     _RIW.statusTab = 'ALL';
     _riwSyncTabs();
@@ -4951,10 +5123,7 @@
   }
 
   function _riwFmtTS(v) {
-    if (!v) return '—';
-    var d = new Date(v);
-    if (isNaN(d.getTime())) return '—';
-    return d.toLocaleString('id-ID');
+    return _fmtDateTimeId(v);
   }
 
   function _riwSyncTabs() {
@@ -4965,14 +5134,15 @@
       tabs[i].classList.toggle('active', st === _RIW.statusTab);
       var c = counts[st] || 0;
       var base = tabs[i].textContent.split(' (')[0];
-      tabs[i].textContent = base + ' (' + c + ')';
+      tabs[i].textContent = base + ' (' + _idNum(c) + ')';
     }
   }
 
   function _riwStatusCounts() {
-    var c = { ALL: _RIW.rows.length, ACTIVE: 0, SUPERSEDED: 0, VOID: 0 };
-    for (var i = 0; i < _RIW.rows.length; i++) {
-      var st = _RIW.rows[i].status;
+    var rows = _asArray(_RIW.rows);
+    var c = { ALL: rows.length, ACTIVE: 0, SUPERSEDED: 0, VOID: 0 };
+    for (var i = 0; i < rows.length; i++) {
+      var st = rows[i].status;
       if (c[st] !== undefined) c[st]++;
     }
     return c;
@@ -4993,14 +5163,18 @@
 
     google.script.run
       .withSuccessHandler(function (res) {
-        if (res.success) { _RIW.rows = res.data || []; _riwSyncTabs(); _riwRenderKPI(); _riwRender(); }
-        else {
-          wrap.innerHTML = '<div class="n-msg error">' + _esc(res.error) + '</div>';
+        if (res && res.success) {
+          _RIW.rows = _asArray(res.data);
+          _riwSyncTabs();
+          _riwRenderKPI();
+          _riwRender();
+        } else {
+          if (wrap) wrap.innerHTML = '<div class="n-msg error show">' + _esc((res && res.error) || 'Gagal memuat riwayat.') + '</div>';
           if (stripKPI) stripKPI.innerHTML = '';
         }
       })
       .withFailureHandler(function () {
-        wrap.innerHTML = '<div class="n-msg error">Koneksi terputus.</div>';
+        if (wrap) wrap.innerHTML = '<div class="n-msg error show">Koneksi terputus.</div>';
         if (stripKPI) stripKPI.innerHTML = '';
       })
       .riwayat_getAll(APP.token, APP.filter);
@@ -5010,68 +5184,64 @@
     var strip = document.getElementById('riw-kpi-strip');
     if (!strip) return;
 
-    function card(label, value, sub) {
-      return '<div class="n-card"><div class="kpi-label">' + _esc(label) + '</div>' +
-        '<div class="kpi-val">' + (value || 0) + '</div>' +
-        '<div class="kpi-sub">' + _esc(sub || '') + '</div></div>';
-    }
-
+    var rows = _asArray(_RIW.rows);
     var c = _riwStatusCounts();
     var modules = {};
-    for (var i = 0; i < _RIW.rows.length; i++) modules[_RIW.rows[i].sheetLabel] = true;
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].sheetLabel) modules[rows[i].sheetLabel] = true;
+    }
     var nModul = Object.keys(modules).length;
 
-    strip.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;">' +
-      card('Total Entri', c.ALL, 'Dalam rentang filter') +
-      card('Modul', nModul, 'Lintas divisi') +
-      card('Aktif', c.ACTIVE, 'Status berlaku') +
-      card('Ditimpa', c.SUPERSEDED, 'Berlaku saat ini') +
-      card('Dianulir', c.VOID, 'Dibatalkan') +
-      '</div>';
+    strip.innerHTML = _renderBroadsheetStrip([
+      { label: 'Total Entri', value: _idNum(c.ALL), sub: _idNum(nModul) + ' modul sumber dalam rentang filter' },
+      { label: 'Aktif', value: _idNum(c.ACTIVE), sub: 'Berlaku saat ini' },
+      { label: 'Ditimpa', value: _idNum(c.SUPERSEDED), sub: 'Digantikan revisi' },
+      { label: 'Dianulir', value: _idNum(c.VOID), sub: 'Dibatalkan beserta keterangan' }
+    ]);
   }
 
   function _riwRender() {
-    var rows = _RIW.rows;
+    var rows = _asArray(_RIW.rows);
     if (_RIW.statusTab !== 'ALL') {
       rows = rows.filter(function (r) { return r.status === _RIW.statusTab; });
     }
 
-    // Feed lintas divisi (PRD §7.5): kolom & badge disamakan dengan tabel riwayat
-    // modul, tapi aksi tetap "Lihat" saja — revisi/anulir harus diarahkan ke modal
-    // modul asalnya, jadi tidak dipakai di halaman agregat ini.
     _histRender('riw-history-wrap', {
       columns: ['Periode', 'Modul', 'Ringkasan', 'Divisi', 'Dikirim oleh'],
+      nowrapCols: [0],
       cells: function (r) {
         return [
-          _esc(r.periode || '—'),
-          _esc(r.sheetLabel || '—'),
-          _esc(r.ringkasan || '—'),
-          _esc(r.divisiNama || r.divisiId || '—'),
-          _esc(r.submittedByName || r.submittedBy || '—')
+          _esc(r.periode || '\u2014'),
+          _esc(r.sheetLabel || '\u2014'),
+          _esc(r.ringkasan || '\u2014'),
+          _esc(r.divisiNama || r.divisiId || '\u2014'),
+          _esc(_humanActor(r.submittedByName, r.submittedBy))
         ];
       },
       refSheet: function (r) { return r.sheet; },
-      title: function (r) { return (r.sheetLabel || '—') + ' — ' + (r.periode || ''); },
+      title: function (r) { return (r.sheetLabel || '\u2014') + ' \u2014 ' + (r.periode || ''); },
       detail: function (r) { return _riwDetailFields(r); },
-      empty: 'Tidak ada laporan pada rentang ini.'
+      empty: 'Tidak ada transaksi pada rentang ini',
+      emptySub: 'Ubah pilihan bulan atau rentang tanggal pada filter di kanan atas untuk melihat arsip lainnya.'
     }, rows);
   }
 
   function _riwDetailFields(r) {
     var fields = [
-      ['Periode', _esc(r.periode || '—')],
-      ['Modul', _esc(r.sheetLabel || '—')],
-      ['Divisi', _esc(r.divisiNama || r.divisiId || '—')],
-      ['Dikirim', _esc(_riwFmtTS(r.timestamp))],
-      ['Dikirim oleh', _esc(r.submittedByName || r.submittedBy || '—')],
-      ['Status', _esc(r.status)]
+      ['Periode', _esc(r.periode || '\u2014')],
+      ['Modul', _esc(r.sheetLabel || '\u2014')],
+      ['Divisi', _esc(r.divisiNama || r.divisiId || '\u2014')],
+      ['Dikirim', _esc(_fmtDateTimeId(r.timestamp))],
+      ['Dikirim oleh', _esc(_humanActor(r.submittedByName, r.submittedBy))],
+      ['Status', _esc(_humanEnum(r.status))]
     ];
-    for (var f = 0; f < (r.detail || []).length; f++) {
-      fields.push([_esc(r.detail[f][0]), _esc(r.detail[f][1])]);
+    var det = _asArray(r.detail);
+    for (var f = 0; f < det.length; f++) {
+      fields.push([_esc(det[f][0]), _esc(det[f][1])]);
     }
-    if (r.status === 'VOID') {
-      fields.push(['Alasan Anulir', _esc(r.voidReason || '—')]);
-      fields.push(['Dianulir oleh', _esc(r.voidedByName || r.voidedBy || '—')]);
+    if (String(r.status || '').toUpperCase() === 'VOID') {
+      fields.push(['Alasan Anulir', _esc(r.voidReason || '\u2014')]);
+      fields.push(['Dianulir oleh', _esc(_humanActor(r.voidedByName, r.voidedBy))]);
     }
     return fields;
   }
@@ -5080,9 +5250,9 @@
   var _NTF = { unread: 0 };
 
   function _renderNotifikasi(el) {
-    var tpl = document.getElementById('view-tpl-notifikasi');
-    if (!tpl) { el.innerHTML = _moduleStub('Notifikasi'); return; }
-    el.innerHTML = tpl.innerHTML;
+    var html = _tplHtml('view-tpl-notifikasi');
+    if (html === null) { el.innerHTML = _moduleStub('Notifikasi'); return; }
+    el.innerHTML = html;
     _ntfReload();
   }
 
@@ -5090,14 +5260,14 @@
     if (j === 'APPROVAL_REQUEST') return 'Persetujuan';
     if (j === 'DATA_VOIDED') return 'Data Dianulir';
     if (j === 'REMINDER_MINGGUAN') return 'Pengingat Mingguan';
-    return j || '—';
+    return _humanEnum(j);
   }
 
   function _ntfJenisBadge(j) {
-    if (j === 'APPROVAL_REQUEST') return '<span class="status-badge" style="background:#FEF3C7;color:#92400E;">Persetujuan</span>';
-    if (j === 'DATA_VOIDED') return '<span class="status-badge" style="background:#FEE2E2;color:var(--n-crit);">Data Dianulir</span>';
-    if (j === 'REMINDER_MINGGUAN') return '<span class="status-badge" style="background:var(--n-primary-light);color:var(--n-primary);">Pengingat</span>';
-    return '<span class="status-badge" style="background:#F3F4F6;color:#374151;">' + _esc(j || '—') + '</span>';
+    if (j === 'APPROVAL_REQUEST') return '<span class="badge badge-warn">Persetujuan</span>';
+    if (j === 'DATA_VOIDED') return '<span class="badge badge-danger">Data Dianulir</span>';
+    if (j === 'REMINDER_MINGGUAN') return '<span class="badge badge-info">Pengingat</span>';
+    return '<span class="badge badge-neutral">' + _esc(_ntfJenisLabel(j)) + '</span>';
   }
 
   function _ntfReload() {
@@ -5111,15 +5281,19 @@
       .withSuccessHandler(function (res) {
         _asyncDisarm('ntf-list');
         if (_asyncResErr(res)) {
-          list.innerHTML = '<div class="n-pad-muted"><div class="n-msg error">' +
+          list.innerHTML = '<div class="n-pad-muted"><div class="n-msg error show">' +
             _esc(_asyncResErr(res)) + '</div></div>';
           return;
         }
         try {
-          _NTF.unread = (res.data && res.data.unreadCount) || 0;
+          var items = _asArray(res && res.data, 'items');
+          var unread = (res && res.data && typeof res.data.unreadCount === 'number')
+            ? res.data.unreadCount
+            : items.filter(function (x) { return !x.isRead; }).length;
+          _NTF.unread = unread;
           _renderNotifBadge(_NTF.unread);
-          _ntfRenderStrip(res.data);
-          _ntfRenderList((res.data && res.data.items) || []);
+          _ntfRenderStrip(res.data, items, unread);
+          _ntfRenderList(items);
         } catch (e) {
           _asyncRenderFail('ntf-list', list, e);
         }
@@ -5132,51 +5306,56 @@
       .notifikasi_getList(APP.token);
   }
 
-  function _ntfRenderStrip(d) {
-    var el = document.getElementById('ntf-ringkasan');
+  function _ntfRenderStrip(d, itemsOverride, unreadOverride) {
+    var el = document.getElementById('ntf-summary-line');
     if (!el) return;
-    var items = (d && d.items) || [];
-    var unread = (d && d.unreadCount) || 0;
-    el.innerHTML =
-      '<div class="kpi-card"><div class="kpi-main">' +
-      '<div class="kpi-label">Total Notifikasi</div>' +
-      '<div class="kpi-value">' + items.length + '</div>' +
-      '</div></div>' +
-      '<div class="kpi-card"><div class="kpi-main">' +
-      '<div class="kpi-label">Belum Dibaca</div>' +
-      '<div class="kpi-value">' + unread + '</div>' +
-      '<div class="kpi-sub">' + (unread > 0 ? 'Perlu ditinjau' : 'Semua sudah dibaca') + '</div>' +
-      '</div></div>';
+    var items = _asArray(itemsOverride !== undefined ? itemsOverride : (d && d.items));
+    var unread = typeof unreadOverride === 'number'
+      ? unreadOverride
+      : ((d && typeof d.unreadCount === 'number') ? d.unreadCount : items.filter(function (x) { return !x.isRead; }).length);
+    if (unread > 0) {
+      el.innerHTML = '<span class="ntf-unread-dot" aria-hidden="true"></span>' +
+        '<span><strong>' + _idNum(unread) + '</strong> belum dibaca \u00b7 ' + _idNum(items.length) + ' total notifikasi</span>';
+    } else {
+      el.innerHTML = '<span>Semua notifikasi telah dibaca \u00b7 ' + _idNum(items.length) + ' total</span>';
+    }
   }
 
   function _ntfRenderList(items) {
-    var list = document.getElementById('ntf-list');
-    if (!list) return;
+    var listEl = document.getElementById('ntf-list');
+    if (!listEl) return;
 
-    if (!items || items.length === 0) {
-      list.innerHTML = '<div class="n-pad-muted">Belum ada notifikasi.</div>';
+    var itemsList = _asArray(items);
+    if (itemsList.length === 0) {
+      listEl.innerHTML = _renderEmptyState(
+        'Belum ada notifikasi',
+        'Pemberitahuan persetujuan akun, pembatalan entri, dan pengingat mingguan akan muncul di sini.'
+      );
       return;
     }
 
-    var t = '<table class="n-table n-table-full"><thead><tr>' +
-      '<th style="width:150px;">Jenis</th><th>Pesan</th><th style="width:150px;">Waktu</th><th style="width:120px;">Status</th>' +
+    var t = '<div class="n-table-wrap"><table class="n-table n-table-full"><thead><tr>' +
+      '<th>Jenis</th><th>Pesan</th><th>Waktu</th><th>Status</th>' +
       '</tr></thead><tbody>';
 
-    for (var i = 0; i < items.length; i++) {
-      var n = items[i];
+    for (var i = 0; i < itemsList.length; i++) {
+      var n = itemsList[i];
       var unread = !n.isRead;
-      t += '<tr' + (unread ? ' style="background:var(--n-surface-2);"' : '') + '>' +
-        '<td>' + _ntfJenisBadge(n.jenis) + '</td>' +
-        '<td style="font-weight:' + (unread ? '600' : '400') + ';">' + _esc(n.pesan) + '</td>' +
-        '<td>' + _esc(_riwFmtTS(n.createdAt)) + '</td>' +
+      t += '<tr' + (unread ? ' class="ntf-row-unread"' : '') + '>' +
+        '<td class="td-nowrap">' + _ntfJenisBadge(n.jenis) + '</td>' +
+        '<td><div class="ntf-msg-cell">' +
+        (unread ? '<span class="ntf-unread-dot" aria-hidden="true"></span>' : '') +
+        '<span class="' + (unread ? 'ntf-msg-unread' : 'ntf-msg-read') + '">' + _esc(n.pesan || '\u2014') + '</span>' +
+        '</div></td>' +
+        '<td class="td-nowrap">' + _esc(_fmtDateTimeId(n.createdAt)) + '</td>' +
         '<td>' + (unread
-          ? '<button class="btn-mini" onclick="_ntfMarkRead(\'' + _esc(n.notifId) + '\')">Tandai Dibaca</button>'
-          : '<span style="color:var(--n-text-muted);font-size:.8rem;">Dibaca</span>') +
+          ? '<div class="ctl-row ctl-sm"><button type="button" class="btn-row-subtle" onclick="_ntfMarkRead(\'' + _esc(n.notifId) + '\')">Tandai Dibaca</button></div>'
+          : '<span class="ntf-read-lbl">Dibaca</span>') +
         '</td></tr>';
     }
 
-    t += '</tbody></table>';
-    list.innerHTML = t;
+    t += '</tbody></table></div>';
+    listEl.innerHTML = t;
   }
 
   function _ntfMarkRead(notifId) {
@@ -5766,7 +5945,8 @@
     'Lihat': 'eye', 'Lihat Detail': 'eye', 'Lihat & Putuskan': 'eye',
     'Riwayat': 'history',
     'Kelola': 'sliders', 'Kelola Divisi': 'sliders',
-    'Kelola Divisi (Master Data)': 'sliders', 'Ubah Pagu': 'sliders',
+    'Kelola Divisi (Master Data)': 'sliders', 'Kelola Master Data': 'sliders', 'Ubah Pagu': 'sliders',
+    'Aktifkan Otomatis': 'power', 'Matikan Otomatis': 'power',
     'Tampilkan Semua': 'chevronDown',
     // menyunting — `Revisi` muncul di SETIAP baris riwayat (15 tabel),
     // `Edit` di tabel Master Data; keduanya sebelumnya polos teks.
@@ -6450,15 +6630,16 @@
           list.innerHTML = '<div class="n-msg error show">' + _esc((res && res.error) || 'Gagal memuat lampiran.') + '</div>';
           return;
         }
-        if (!res.data.length) {
-          list.innerHTML = '<div style="color:var(--n-text-muted);font-size:.85rem;">Belum ada lampiran untuk laporan ini.</div>';
+        var evList = _asArray(res.data);
+        if (!evList.length) {
+          list.innerHTML = '<div class="ntf-read-lbl">Belum ada lampiran untuk laporan ini.</div>';
           return;
         }
-        list.innerHTML = res.data.map(function (e) {
-          var tgl = e.uploadedAt ? new Date(e.uploadedAt).toLocaleString('id-ID') : '';
-          return '<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--n-border-subtle);">' +
-            '<a href="' + _esc(e.viewUrl) + '" target="_blank" rel="noopener" style="color:var(--n-primary);font-size:.85rem;">' + _esc(e.fileName) + '</a>' +
-            '<span style="font-size:.75rem;color:var(--n-text-muted);white-space:nowrap;">' + _esc(e.sourceMode) + ' \u00b7 ' + tgl + '</span>' +
+        list.innerHTML = evList.map(function (e) {
+          var tgl = _fmtDateTimeId(e.uploadedAt);
+          return '<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border-rule);">' +
+            '<a href="' + _esc(e.viewUrl) + '" target="_blank" rel="noopener" style="color:var(--action-primary);">' + _esc(e.fileName) + '</a>' +
+            '<span class="ntf-read-lbl td-nowrap">' + _esc(e.sourceMode || '') + ' \u00b7 ' + _esc(tgl) + '</span>' +
             '</div>';
         }).join('');
       })
@@ -6485,8 +6666,9 @@
   // sisi client saja — kontrak endpoint server tidak diubah.
   var _HIST_KEYMAP = {
     RowID: 'rowId', DivisiID: 'divisiId', Periode: 'periode', Timestamp: 'timestamp',
+    SubmittedBy: 'submittedBy', SubmittedByName: 'submittedByName',
     Status: 'status', SupersedesRowID: 'supersedesRowId',
-    VoidReason: 'voidReason', VoidedBy: 'voidedBy', VoidedAt: 'voidedAt'
+    VoidReason: 'voidReason', VoidedBy: 'voidedBy', VoidedByName: 'voidedByName', VoidedAt: 'voidedAt'
   };
 
   function _histNorm(r) {
@@ -6500,13 +6682,12 @@
 
   function _histBadge(status) {
     var s = String(status || '').toUpperCase();
-    if (s === 'ACTIVE') return '<span class="status-badge aktif">AKTIF</span>';
-    if (s === 'VOID') return '<span class="status-badge dianulir">DIANULIR</span>';
-    return '<span class="status-badge ditimpa">DITIMPA</span>';
+    if (s === 'ACTIVE') return '<span class="badge badge-ok">Aktif</span>';
+    if (s === 'VOID') return '<span class="badge badge-danger">Dianulir</span>';
+    return '<span class="badge badge-neutral">Ditimpa</span>';
   }
 
-  // Badge status domain (mis. SIAP/TIDAK SIAP, BASELINE/PENGGUNAAN) — tetap
-  // bermakna status, bukan dekorasi (DESIGN.md §1.3), jadi memakai kelas yang sama.
+  // Badge status domain (mis. Siap/Tidak Siap, Baseline/Penggunaan)
   function _histBadgeTone(label, tone) {
     return '<span class="status-badge ' + tone + '">' + _esc(label) + '</span>';
   }
@@ -6521,11 +6702,11 @@
   function _histActions(cfg, r) {
     var active = String(r.status || '').toUpperCase() === 'ACTIVE';
     var sheet = (typeof cfg.refSheet === 'function') ? cfg.refSheet(r) : cfg.refSheet;
-    var out = '<button class="btn-outline" onclick="_hdOpen(' +
+    var out = '<button type="button" class="btn-row-subtle" onclick="_hdOpen(' +
       _hdPush(sheet, r.rowId, cfg.title(r), cfg.detail(r), cfg.manage ? cfg.manage(r) : null) +
       ')">Lihat</button>';
-    if (active && cfg.revisi) out += '<button class="btn-outline" onclick="' + cfg.revisi(r) + '">Revisi</button>';
-    if (active && cfg.anulir) out += '<button class="btn-danger" onclick="' + cfg.anulir(r) + '">Anulir</button>';
+    if (active && cfg.revisi) out += '<button type="button" class="btn-row-subtle" onclick="' + cfg.revisi(r) + '">Revisi</button>';
+    if (active && cfg.anulir) out += '<button type="button" class="btn-row-danger" onclick="' + cfg.anulir(r) + '">Anulir</button>';
     return '<div class="hist-actions ctl-row ctl-sm ctl-nowrap">' + out + '</div>';
   }
 
@@ -6534,13 +6715,15 @@
     if (!wrap) return;
     _hdReset();
     var pre = prefixHtml || '';
-    var items = (rows || []).map(_histNorm);
+    var items = _asArray(rows).map(_histNorm);
 
     if (!items.length) {
-      wrap.innerHTML = pre + '<div class="hist-empty">' +
-        _esc(cfg.empty || 'Belum ada laporan untuk periode ini.') + '</div>';
+      wrap.innerHTML = pre + _renderEmptyState(cfg.empty || 'Belum ada data untuk periode ini.', cfg.emptySub || '');
       return;
     }
+
+    var nowrapSet = {};
+    _asArray(cfg.nowrapCols).forEach(function (idx) { nowrapSet[idx] = true; });
 
     var t = '<div class="n-table-wrap"><table class="n-table"><thead><tr>';
     cfg.columns.forEach(function (c) { t += '<th>' + _esc(c) + '</th>'; });
@@ -6548,16 +6731,19 @@
 
     items.forEach(function (r) {
       t += '<tr' + _histRowAttrs(r.status) + '>';
-      cfg.cells(r).forEach(function (cell) { t += '<td>' + cell + '</td>'; });
-      t += '<td>' + (r.timestamp ? _esc(new Date(r.timestamp).toLocaleDateString('id-ID')) : '—') + '</td>';
+      cfg.cells(r).forEach(function (cell, idx) {
+        t += nowrapSet[idx] ? ('<td class="td-nowrap">' + cell + '</td>') : ('<td>' + cell + '</td>');
+      });
+      t += '<td class="td-nowrap">' + _esc(_fmtDateId(r.timestamp)) + '</td>';
       t += '<td>' + _histBadge(r.status) + '</td>';
       t += '<td>' + _histActions(cfg, r) + '</td>';
       t += '</tr>';
 
       if (String(r.status || '').toUpperCase() === 'VOID' && r.voidReason) {
+        var voidActor = _humanActor(r.voidedByName, r.voidedBy);
         t += '<tr class="hist-void-note"><td colspan="' + (cfg.columns.length + 3) + '">' +
           '<strong>Alasan Anulir:</strong> ' + _esc(r.voidReason) +
-          (r.voidedBy ? ' (oleh ' + _esc(r.voidedBy) + ')' : '') + '</td></tr>';
+          (voidActor ? ' (oleh ' + _esc(voidActor) + ')' : '') + '</td></tr>';
       }
     });
 
@@ -6970,22 +7156,25 @@
 
 
   // ============================================================
-  // MODUL KEGIATAN DIREKTORAT — Fase 11 (PRD §5.10)
-  // Lintas-divisi (Direktur + semua Kadiv), feed kronologis per tanggal.
-  // Form input memakai POLA POPUP (backlog A).
+  // MODUL KEGIATAN DIREKTORAT — Lintas Divisi
   // ============================================================
   var _KGD = {
     pendingRowId: null,
-    rows: []
+    rows: [],
+    statusTab: 'ALL',
+    query: ''
   };
 
   function _renderKegiatan(el) {
-    var tpl = document.getElementById('view-tpl-kegiatan');
-    if (!tpl) { el.innerHTML = _moduleStub('Kegiatan Pendukung'); return; }
-    el.innerHTML = tpl.innerHTML;
+    var html = _tplHtml('view-tpl-kegiatan');
+    if (html === null) { el.innerHTML = _moduleStub('Kegiatan Direktorat'); return; }
+    el.innerHTML = html;
     _attachInit('kgd', { refSheet: 'TX_KegiatanDirektorat' });
 
     _KGD.rows = [];
+    _KGD.statusTab = 'ALL';
+    _KGD.query = '';
+    _kgdSyncTabs();
 
     var tglInput = document.getElementById('kgd-tanggal');
     if (tglInput) {
@@ -7000,10 +7189,7 @@
   }
 
   function _kgdFmtDate(v) {
-    if (!v) return '—';
-    var d = new Date(v);
-    if (isNaN(d.getTime())) return '—';
-    return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+    return _fmtDateId(v);
   }
 
   function _kgdDateInput(v) {
@@ -7023,11 +7209,11 @@
 
     google.script.run
       .withSuccessHandler(function (res) {
-        if (res.success) _kgdRenderKPI(res.data);
-        else if (strip) strip.innerHTML = '<div class="n-msg error">Gagal memuat KPI: ' + _esc(res.error) + '</div>';
+        if (res && res.success) _kgdRenderKPI(res.data);
+        else if (strip) strip.innerHTML = '<div class="n-msg error show">Gagal memuat ringkasan: ' + _esc((res && res.error) || 'Kesalahan server.') + '</div>';
       })
       .withFailureHandler(function () {
-        if (strip) strip.innerHTML = '<div class="n-msg error">Koneksi terputus.</div>';
+        if (strip) strip.innerHTML = '<div class="n-msg error show">Koneksi terputus.</div>';
       })
       .kegiatanDirektorat_getKPI(APP.token, APP.filter);
   }
@@ -7035,21 +7221,64 @@
   function _kgdRenderKPI(kpi) {
     var strip = document.getElementById('kgd-kpi-strip');
     if (!strip) return;
-
-    function card(label, value, sub) {
-      return '<div class="n-card"><div class="kpi-label">' + _esc(label) + '</div>' +
-        '<div class="kpi-val">' + (value || 0) + '</div>' +
-        '<div class="kpi-sub">' + _esc(sub || '') + '</div></div>';
-    }
-
-    strip.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;">' +
-      card('Kegiatan Periode Ini', _idNum(kpi.kegiatanPeriode), 'Dalam rentang filter') +
-      card('Kegiatan YTD', _idNum(kpi.kegiatanYtd), 'Sejak awal tahun terpilih') +
-      card('Terakhir Dicatat', kpi.terakhirDicatat ? _kgdFmtDate(kpi.terakhirDicatat) : '—', 'Entri aktif terbaru') +
-      '</div>';
+    var d = kpi || {};
+    strip.innerHTML = _renderBroadsheetStrip([
+      { label: 'Kegiatan Periode Ini', value: _idNum(d.kegiatanPeriode || 0), sub: 'Dalam rentang filter' },
+      { label: 'Kegiatan YTD', value: _idNum(d.kegiatanYtd || 0), sub: 'Sejak awal tahun terpilih' },
+      { label: 'Terakhir Dicatat', value: d.terakhirDicatat ? _fmtDateId(d.terakhirDicatat) : '\u2014', sub: 'Entri aktif terbaru' }
+    ]);
   }
 
-  // ── FEED KRONOLOGIS ──
+  // ── DAFTAR KEGIATAN DIREKTORAT ──
+  function _kgdStatusCounts() {
+    var rows = _asArray(_KGD.rows);
+    var c = { ALL: rows.length, ACTIVE: 0, SUPERSEDED: 0, VOID: 0 };
+    for (var i = 0; i < rows.length; i++) {
+      var st = String(rows[i].Status || rows[i].status || '').toUpperCase();
+      if (c[st] !== undefined) c[st]++;
+    }
+    return c;
+  }
+
+  function _kgdSyncTabs() {
+    var tabs = document.querySelectorAll('#kgd-status-tabs .n-tab');
+    var counts = _kgdStatusCounts();
+    for (var i = 0; i < tabs.length; i++) {
+      var st = tabs[i].getAttribute('data-status');
+      tabs[i].classList.toggle('active', st === _KGD.statusTab);
+      var base = tabs[i].textContent.split(' (')[0];
+      tabs[i].textContent = base + ' (' + _idNum(counts[st] || 0) + ')';
+    }
+  }
+
+  function _kgdSetTab(status) {
+    _KGD.statusTab = status || 'ALL';
+    _kgdSyncTabs();
+    _kgdRenderFiltered();
+  }
+
+  function _kgdOnSearch(val) {
+    _KGD.query = String(val || '').trim().toLowerCase();
+    _kgdRenderFiltered();
+  }
+
+  function _kgdRenderFiltered() {
+    var list = _asArray(_KGD.rows);
+    if (_KGD.statusTab !== 'ALL') {
+      list = list.filter(function (r) {
+        return String(r.Status || r.status || '').toUpperCase() === _KGD.statusTab;
+      });
+    }
+    if (_KGD.query) {
+      var q = _KGD.query;
+      list = list.filter(function (r) {
+        var hay = [r.JudulKegiatan, r.PihakHadir, r.Deskripsi, r.divisiNama, r.Periode, r.periode].join(' ').toLowerCase();
+        return hay.indexOf(q) !== -1;
+      });
+    }
+    _kgdRenderHistory(list);
+  }
+
   function _kgdLoadHistory(silent) {
     var wrap = document.getElementById('kgd-history-wrap');
     if (!wrap) return;
@@ -7057,11 +7286,16 @@
 
     google.script.run
       .withSuccessHandler(function (res) {
-        if (res.success) { _KGD.rows = res.data; _kgdRenderHistory(res.data); }
-        else wrap.innerHTML = '<div class="n-msg error">' + _esc(res.error) + '</div>';
+        if (res && res.success) {
+          _KGD.rows = _asArray(res.data);
+          _kgdSyncTabs();
+          _kgdRenderFiltered();
+        } else {
+          wrap.innerHTML = '<div class="n-msg error show">' + _esc((res && res.error) || 'Gagal memuat kegiatan.') + '</div>';
+        }
       })
       .withFailureHandler(function () {
-        wrap.innerHTML = '<div class="n-msg error">Koneksi terputus.</div>';
+        wrap.innerHTML = '<div class="n-msg error show">Koneksi terputus.</div>';
       })
       .kegiatanDirektorat_getHistory(APP.token, APP.filter);
   }
@@ -7070,39 +7304,49 @@
     var isPimpinan = (APP.user && (APP.user.role === 'DIREKTUR' || APP.user.role === 'SUPERADMIN' || APP.user.role === 'KADIV'));
 
     _histRender('kgd-history-wrap', {
-      // "Periode" ditambahkan agar bentuk kolom sama dengan modul lain; nilainya
-      // sudah disimpan server (dateToPeriode dari Tanggal kegiatan), bukan dihitung client.
       columns: ['Periode', 'Tanggal', 'Judul Kegiatan', 'Divisi', 'Pihak Hadir'],
+      nowrapCols: [0, 1],
       cells: function (r) {
         return [
-          _esc(r.periode),
-          _kgdFmtDate(r.Tanggal),
-          _esc(r.JudulKegiatan || '—'),
-          _esc(r.divisiNama || r.DivisiID || '—'),
-          _esc(r.PihakHadir || '—')
+          _esc(r.periode || r.Periode || '\u2014'),
+          _esc(_fmtDateId(r.Tanggal)),
+          '<strong>' + _esc(r.JudulKegiatan || '\u2014') + '</strong>',
+          _esc(r.divisiNama || r.DivisiID || '\u2014'),
+          _esc(r.PihakHadir || '\u2014')
         ];
       },
       refSheet: 'TX_KegiatanDirektorat',
-      title: function (r) { return 'Kegiatan — ' + (r.JudulKegiatan || '—'); },
+      title: function (r) { return 'Kegiatan \u2014 ' + (r.JudulKegiatan || '\u2014'); },
       detail: function (r) {
-        return [
-          ['Periode', _esc(r.periode || '—')],
-          ['Tanggal', _kgdFmtDate(r.Tanggal)],
-          ['Judul', _esc(r.JudulKegiatan || '—')],
-          ['Deskripsi', _esc(r.Deskripsi || '—')],
-          ['Pihak Hadir', _esc(r.PihakHadir || '—')],
-          ['Divisi', _esc(r.divisiNama || r.DivisiID || '—')],
-          ['Dikirim', _esc(r.timestamp ? new Date(r.timestamp).toLocaleString('id-ID') : '—')],
-          ['Status', _esc(r.status)]
+        var fields = [
+          ['Periode', _esc(r.periode || r.Periode || '\u2014')],
+          ['Tanggal', _esc(_fmtDateId(r.Tanggal))],
+          ['Judul', _esc(r.JudulKegiatan || '\u2014')],
+          ['Deskripsi', _esc(r.Deskripsi || '\u2014')],
+          ['Pihak Hadir', _esc(r.PihakHadir || '\u2014')],
+          ['Divisi', _esc(r.divisiNama || r.DivisiID || '\u2014')],
+          ['Dikirim oleh', _esc(_humanActor(r.submittedByName, r.submittedBy))],
+          ['Dikirim', _esc(_fmtDateTimeId(r.timestamp))],
+          ['Status', _esc(_humanEnum(r.status))]
         ];
+        if (String(r.status || '').toUpperCase() === 'VOID') {
+          fields.push(['Alasan Anulir', _esc(r.voidReason || '\u2014')]);
+          fields.push(['Dianulir oleh', _esc(_humanActor(r.voidedByName, r.voidedBy))]);
+        }
+        return fields;
       },
       revisi: isPimpinan ? function (r) { return "kgdOpenRevisiModal('" + _esc(r.rowId) + "')"; } : null,
       anulir: isPimpinan ? function (r) { return "kgdOpenAnulirModal('" + _esc(r.rowId) + "')"; } : null,
-      empty: 'Belum ada kegiatan direktorat pada rentang ini.'
-    }, data);
+      empty: _KGD.query || _KGD.statusTab !== 'ALL'
+        ? 'Tidak ada kegiatan yang sesuai filter'
+        : 'Belum ada kegiatan direktorat pada rentang ini',
+      emptySub: _KGD.query || _KGD.statusTab !== 'ALL'
+        ? 'Kosongkan kata kunci pencarian atau pilih tab status Semua.'
+        : 'Tekan tombol Catat Kegiatan untuk menambahkan agenda dan hasil rapat direktorat.'
+    }, _asArray(data));
   }
 
-  // ── FORM POPUP (BACKLOG A) ──
+  // ── FORM POPUP ──
   function kgdOpenForm() {
     var judul = document.getElementById('kgd-judul');
     var desk = document.getElementById('kgd-deskripsi');
@@ -7147,7 +7391,7 @@
           _msg('kgd-form-msg', 'success', res.data.message);
           var rowIds = (res.data && res.data.rowIds) || [];
           _attachUploadAll('kgd', rowIds, function (ok) {
-            _formSubmitDone('modal-kgd-form', 'Kegiatan pendukung tersimpan.', function () {
+            _formSubmitDone('modal-kgd-form', 'Kegiatan direktorat tersimpan', function () {
               _kgdLoadKPI();
               _kgdLoadHistory();
             }, ok);
@@ -7171,7 +7415,8 @@
   // ── Revisi / Anulir ──
   function _kgdFindRow(rowId) {
     for (var i = 0; i < _KGD.rows.length; i++) {
-      if (String(_KGD.rows[i].RowID) === String(rowId)) return _KGD.rows[i];
+      var id = String(_KGD.rows[i].RowID || _KGD.rows[i].rowId || '');
+      if (id === String(rowId)) return _KGD.rows[i];
     }
     return null;
   }
@@ -7182,7 +7427,7 @@
     _KGD.pendingRowId = rowId;
 
     document.getElementById('kgd-revisi-info').textContent =
-      (r.JudulKegiatan || '—') + ' — ' + _kgdFmtDate(r.Tanggal);
+      (r.JudulKegiatan || '\u2014') + ' \u2014 ' + _fmtDateId(r.Tanggal);
     document.getElementById('rv-kgd-judul').value = r.JudulKegiatan || '';
     document.getElementById('rv-kgd-tanggal').value = _kgdDateInput(r.Tanggal);
     document.getElementById('rv-kgd-deskripsi').value = r.Deskripsi || '';
@@ -7225,7 +7470,7 @@
           _attachCarry('TX_KegiatanDirektorat', params.targetRowId, res.data.rowId);
           _attachUploadAll('kgd-revisi', [res.data.rowId], function () {
             closeModal('modal-kgd-revisi');
-            _msg('kgd-hist-msg', 'success', res.data.message);
+            _msg('kgd-history-msg', 'success', res.data.message);
             _kgdLoadKPI();
             _kgdLoadHistory();
           });
@@ -7245,7 +7490,7 @@
     if (!r) return;
     _KGD.pendingRowId = rowId;
     document.getElementById('kgd-anulir-info').textContent =
-      (r.JudulKegiatan || '—') + ' — ' + _kgdFmtDate(r.Tanggal);
+      (r.JudulKegiatan || '\u2014') + ' \u2014 ' + _fmtDateId(r.Tanggal);
     document.getElementById('an-kgd-alasan').value = '';
     _msg('kgd-anulir-msg', '', '');
     document.getElementById('modal-kgd-anulir').classList.remove('n-hidden');

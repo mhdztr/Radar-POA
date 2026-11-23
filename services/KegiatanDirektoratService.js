@@ -64,6 +64,17 @@ function _kgdDivisiMap() {
   return map;
 }
 
+// Map UserID → Nama lengkap pejabat/pengguna agar UI tidak menampilkan ID mentah.
+function _kgdUserMap() {
+  var map = {};
+  try {
+    sheetToObjects(openMasterSheet(SHEET_MASTER.USERS)).forEach(function (row) {
+      map[String(row['UserID'])] = String(row['Nama'] || '');
+    });
+  } catch (e) { /* master tak terbaca → lookup kosong */ }
+  return map;
+}
+
 // ===========================================================================
 // READ ENDPOINTS
 // ===========================================================================
@@ -120,6 +131,7 @@ function kegiatanDirektorat_getHistory(token, filter) {
 
     var range = filterToDateRange(filter || { mode: 'monthly', month: new Date().getMonth() + 1, year: new Date().getFullYear() });
     var divMap = _kgdDivisiMap();
+    var userMap = _kgdUserMap();
 
     var rows = sheetToObjects(openTransaksiSheet(SHEET_TX.KEGIATAN_DIREKTORAT));
     var history = [];
@@ -129,6 +141,8 @@ function kegiatanDirektorat_getHistory(token, filter) {
       if (!t) continue;
       if (t >= range.startDate && t <= range.endDate) {
         row.divisiNama = divMap[String(row.DivisiID || '')] || String(row.DivisiID || '');
+        row.submittedByName = userMap[String(row.SubmittedBy || '')] || '';
+        row.voidedByName = userMap[String(row.VoidedBy || '')] || '';
         history.push(row);
       }
     }
@@ -309,9 +323,9 @@ function kegiatanDirektorat_anulir(token, params) {
             NotifID: Utilities.getUuid(),
             UserID: publisherId,
             Jenis: 'DATA_VOIDED',
-            Pesan: 'Kegiatan Pendukung (' + String(target.obj['JudulKegiatan'] || '-') +
+            Pesan: 'Kegiatan Direktorat (' + String(target.obj['JudulKegiatan'] || '-') +
                    ', ' + (target.obj['Tanggal'] ? _kgdNormDate(target.obj['Tanggal']).toISOString().substring(0, 10) : '-') +
-                   ') telah dianulir oleh ' + session.role + '. Komentar: ' + alasan,
+                   ') telah dianulir oleh ' + (session.nama || session.role) + '. Komentar: ' + alasan,
             IsRead: false,
             CreatedAt: new Date().toISOString()
           });

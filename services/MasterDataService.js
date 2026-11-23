@@ -751,12 +751,22 @@ function master_setOpsiJenisAktif(token, params) {
 // ===========================================================================
 
 function _normalizeKapal(row) {
+  var kelasRaw = String(row['Kelas'] === undefined || row['Kelas'] === null ? '' : row['Kelas']);
+  var kelasKapalRaw = String(row['KelasKapal'] === undefined || row['KelasKapal'] === null ? '' : row['KelasKapal']);
+  var panjangRaw = _cleanNullableNumber(row['PanjangMeter']);
+  var cls = (typeof _dashResolveShipClass === 'function')
+    ? _dashResolveShipClass(kelasKapalRaw, kelasRaw, panjangRaw)
+    : { kelasKapal: kelasKapalRaw, kelasRomawi: '', kelasLabel: '', panjangMeter: panjangRaw };
   return {
-    kapalId:    String(row['KapalID']   === undefined || row['KapalID']   === null ? '' : row['KapalID']),
-    nama:       String(row['Nama']      === undefined || row['Nama']      === null ? '' : row['Nama']),
-    kelas:      String(row['Kelas']     === undefined || row['Kelas']     === null ? '' : row['Kelas']),
-    homebaseUpt:String(row['Homebase_UPT'] === undefined || row['Homebase_UPT'] === null ? '' : row['Homebase_UPT']),
-    jenisKapal: String(row['JenisKapal'] === undefined || row['JenisKapal'] === null ? '' : String(row['JenisKapal']).toUpperCase()),
+    kapalId:     String(row['KapalID']      === undefined || row['KapalID']      === null ? '' : row['KapalID']),
+    nama:        String(row['Nama']         === undefined || row['Nama']         === null ? '' : row['Nama']),
+    kelas:       kelasRaw,
+    kelasKapal:  cls.kelasKapal,
+    kelasRomawi: cls.kelasRomawi,
+    kelasLabel:  cls.kelasLabel,
+    panjangMeter:cls.panjangMeter,
+    homebaseUpt: String(row['Homebase_UPT'] === undefined || row['Homebase_UPT'] === null ? '' : row['Homebase_UPT']),
+    jenisKapal:  String(row['JenisKapal']   === undefined || row['JenisKapal']   === null ? '' : String(row['JenisKapal']).toUpperCase()),
     statusAktif: row['StatusAktif'] === true || String(row['StatusAktif']) === 'true' ||
                  String(row['StatusAktif']) === 'TRUE' || row['StatusAktif'] === 1
   };

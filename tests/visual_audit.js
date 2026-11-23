@@ -186,7 +186,7 @@ function buildMockInitScript(fixtures) {
   return `
     (function () {
       const F = ${JSON.stringify(fixtures)};
-      const DEMO_USER = {
+      const CURRENT_USER = {
         userId: 'USR-DIR-01',
         nama: 'Ir. Haryo Prakoso, M.Si.',
         email: 'direktur.poa@kkp.go.id',
@@ -194,11 +194,171 @@ function buildMockInitScript(fixtures) {
         status: 'APPROVED',
         divisiId: null
       };
+      window.__auditSetUser = function (patch) {
+        Object.assign(CURRENT_USER, patch || {});
+      };
       const DIVISI_LIST = [
         { divisiId: 'DIV-TU',     namaDashboard: 'Tata Usaha (SIKAP)',   namaResmi: 'Subbagian Tata Usaha' },
         { divisiId: 'DIV-AWAK',   namaDashboard: 'Pengawakan (Nakhoda)', namaResmi: 'Timja Pengawakan & Personel' },
         { divisiId: 'DIV-LOG',    namaDashboard: 'Logistik (Sistik)',    namaResmi: 'Timja Logistik & Sarpras' },
         { divisiId: 'DIV-RAWAT',  namaDashboard: 'Pemeliharaan (Siaga)', namaResmi: 'Timja Pemeliharaan Kapal' }
+      ];
+      const MASTER_KAPAL = [
+        { kapalId: 'KP-ORCA-01',      nama: 'KP. ORCA 01',      kelas: 'ORCA (60 m)',      kelasKapal: 'KELAS_I',   kelasRomawi: 'I',   kelasLabel: 'Kelas I',   panjangMeter: 60, homebaseUpt: 'Pangkalan Tual/Ambon', jenisKapal: 'KAPAL_PUSAT', statusAktif: true },
+        { kapalId: 'KP-ORCA-02',      nama: 'KP. ORCA 02',      kelas: 'ORCA (60 m)',      kelasKapal: 'KELAS_I',   kelasRomawi: 'I',   kelasLabel: 'Kelas I',   panjangMeter: 60, homebaseUpt: 'Pangkalan Belawan',    jenisKapal: 'KAPAL_PUSAT', statusAktif: true },
+        { kapalId: 'KP-ORCA-05',      nama: 'KP. ORCA 05',      kelas: 'ORCA (60 m)',      kelasKapal: 'KELAS_I',   kelasRomawi: 'I',   kelasLabel: 'Kelas I',   panjangMeter: 60, homebaseUpt: 'Pangkalan Bitung',     jenisKapal: 'KAPAL_PUSAT', statusAktif: true },
+        { kapalId: 'KP-HM-TUTUL-01',  nama: 'KP. H.M. TUTUL 01',kelas: 'TUTUL (40 m)',     kelasKapal: 'KELAS_II',  kelasRomawi: 'II',  kelasLabel: 'Kelas II',  panjangMeter: 40, homebaseUpt: 'Pangkalan Kupang',     jenisKapal: 'KAPAL_PUSAT', statusAktif: true },
+        { kapalId: 'KP-BARAKUDA-01',  nama: 'KP. BARAKUDA 01',  kelas: 'BARAKUDA (42 m)',  kelasKapal: 'KELAS_II',  kelasRomawi: 'II',  kelasLabel: 'Kelas II',  panjangMeter: 42, homebaseUpt: 'Pangkalan Jakarta',    jenisKapal: 'KAPAL_PUSAT', statusAktif: true },
+        { kapalId: 'KP-BARAKUDA-02',  nama: 'KP. BARAKUDA 02',  kelas: 'BARAKUDA (42 m)',  kelasKapal: 'KELAS_II',  kelasRomawi: 'II',  kelasLabel: 'Kelas II',  panjangMeter: 42, homebaseUpt: 'Galangan Jakarta',     jenisKapal: 'KAPAL_PUSAT', statusAktif: false },
+        { kapalId: 'KP-PAUS-01',      nama: 'KP. PAUS 01',      kelas: 'PAUS (42 m)',      kelasKapal: 'KELAS_II',  kelasRomawi: 'II',  kelasLabel: 'Kelas II',  panjangMeter: 42, homebaseUpt: 'Pangkalan Ambon',      jenisKapal: 'KAPAL_PUSAT', statusAktif: true },
+        { kapalId: 'KP-HIU-MACAN-01', nama: 'KP. HIU MACAN 01', kelas: 'HIU MACAN (36 m)', kelasKapal: 'KELAS_II',  kelasRomawi: 'II',  kelasLabel: 'Kelas II',  panjangMeter: 36, homebaseUpt: 'Pangkalan Batam',      jenisKapal: 'KAPAL_PUSAT', statusAktif: true },
+        { kapalId: 'KP-HIU-01',       nama: 'KP. HIU 01',       kelas: 'HIU (32 m)',       kelasKapal: 'KELAS_III', kelasRomawi: 'III', kelasLabel: 'Kelas III', panjangMeter: 32, homebaseUpt: 'Pangkalan Belawan',    jenisKapal: 'KAPAL_UPT',   statusAktif: true },
+        { kapalId: 'KP-HIU-11',       nama: 'KP. HIU 11',       kelas: 'HIU (32 m)',       kelasKapal: 'KELAS_III', kelasRomawi: 'III', kelasLabel: 'Kelas III', panjangMeter: 32, homebaseUpt: 'Pangkalan Batam',      jenisKapal: 'KAPAL_UPT',   statusAktif: true },
+        { kapalId: 'KP-AKAR-BAHAR-01',nama: 'KP. AKAR BAHAR 01',kelas: 'AKAR BAHAR (22 m)',kelasKapal: 'KELAS_IV',  kelasRomawi: 'IV',  kelasLabel: 'Kelas IV',  panjangMeter: 22, homebaseUpt: 'Pangkalan Jakarta',    jenisKapal: 'KAPAL_UPT',   statusAktif: true }
+      ];
+      const MASTER_KAWASAN = [
+        { kawasanId: 'TN-WAKATOBI',    nama: 'Taman Nasional Wakatobi',          provinsi: 'Sulawesi Tenggara', latitude: -5.52, longitude: 123.75 },
+        { kawasanId: 'KKPD-RAJAAMPAT', nama: 'KKPD Kepulauan Raja Ampat',        provinsi: 'Papua Barat Daya',  latitude: -0.52, longitude: 130.52 },
+        { kawasanId: 'TNP-LAUTSAWU',   nama: 'Taman Nasional Perairan Laut Sawu', provinsi: 'Nusa Tenggara Timur', latitude: -9.85, longitude: 121.85 }
+      ];
+      const MASTER_WPP = [
+        { WPPCode: '571', NamaWilayah: 'Selat Malaka dan Laut Andaman' },
+        { WPPCode: '572', NamaWilayah: 'Samudera Hindia Barat Sumatera dan Selat Sunda' },
+        { WPPCode: '573', NamaWilayah: 'Samudera Hindia Selatan Jawa hingga Laut Timor' },
+        { WPPCode: '711', NamaWilayah: 'Selat Karimata, Laut Natuna, dan Laut Natuna Utara' },
+        { WPPCode: '712', NamaWilayah: 'Laut Jawa' },
+        { WPPCode: '713', NamaWilayah: 'Selat Makassar, Teluk Bone, Laut Flores, dan Laut Bali' },
+        { WPPCode: '714', NamaWilayah: 'Teluk Tolo dan Laut Banda' },
+        { WPPCode: '715', NamaWilayah: 'Teluk Tomini, Laut Maluku, Laut Halmahera, Laut Seram' },
+        { WPPCode: '716', NamaWilayah: 'Laut Sulawesi dan Sebelah Utara Pulau Halmahera' },
+        { WPPCode: '717', NamaWilayah: 'Teluk Cenderawasih dan Samudera Pasifik' },
+        { WPPCode: '718', NamaWilayah: 'Laut Aru, Laut Arafuru, dan Laut Timor Bagian Timur' }
+      ];
+      const MASTER_OPSI = {
+        kodeList: ['KAPAL_JENIS', 'AWAK_KATEGORI', 'AMUNISI', 'BBM'],
+        labels: {
+          KAPAL_JENIS: 'Jenis Kapal',
+          AWAK_KATEGORI: 'Kategori Pengawakan',
+          AMUNISI: 'Jenis Amunisi',
+          BBM: 'Jenis BBM'
+        },
+        groups: {
+          KAPAL_JENIS: [
+            { label: 'KAPAL_PUSAT', labelTampil: 'Kapal Pengawas Pusat', aktif: true },
+            { label: 'KAPAL_UPT',   labelTampil: 'Kapal Pengawas UPT',   aktif: true }
+          ],
+          AWAK_KATEGORI: [
+            { label: 'PNS',             labelTampil: 'PNS',             aktif: true },
+            { label: 'P3K',             labelTampil: 'P3K',             aktif: true },
+            { label: 'P3K_PARUH_WAKTU', labelTampil: 'P3K Paruh Waktu', aktif: true },
+            { label: 'PJLP',            labelTampil: 'PJLP',            aktif: true }
+          ],
+          AMUNISI: [
+            { label: 'KALIBER_12_7', labelTampil: 'Peluru 12,7 mm', aktif: true },
+            { label: 'KALIBER_20',   labelTampil: 'Amunisi 20 mm',  aktif: true }
+          ],
+          BBM: [
+            { label: 'SOLAR_HSD', labelTampil: 'Biosolar / HSD', aktif: true },
+            { label: 'B40',       labelTampil: 'Biodiesel B40',  aktif: true }
+          ]
+        }
+      };
+      const KEGIATAN_ROWS = [
+        {
+          RowID: 'KGD-2026-001',
+          Periode: '2026-W24',
+          Tanggal: '2026-06-14',
+          JudulKegiatan: 'Rapat Evaluasi Operasi Terpadu TW II',
+          Deskripsi: 'Penyelarasan sektor pengawasan WPP 715 dan 718 bersama komandan kapal.',
+          PihakHadir: 'Direktur POA, Timja Operasi, Timja Pengawakan',
+          DivisiID: 'PUSAT',
+          divisiNama: 'Direktorat POA',
+          SubmittedBy: 'USR-DIR-01',
+          submittedByName: 'Ir. Haryo Prakoso, M.Si.',
+          Timestamp: '2026-06-14T14:20:00+07:00',
+          Status: 'ACTIVE',
+          VoidReason: '',
+          VoidedBy: '',
+          voidedByName: ''
+        },
+        {
+          RowID: 'KGD-2026-002',
+          Periode: '2026-W24',
+          Tanggal: '2026-06-11',
+          JudulKegiatan: 'Koordinasi Kelaiklautan & Sijil Awak KP. Orca 01',
+          Deskripsi: 'Verifikasi sijil 5 pos utama dan kelengkapan navigasi radar.',
+          PihakHadir: 'Timja Pengawakan, Nakhoda KP. Orca 01',
+          DivisiID: 'DIV-AWAK',
+          divisiNama: 'Pengawakan (Nakhoda)',
+          SubmittedBy: 'USR-KADIV-01',
+          submittedByName: 'Andi Wijaya, S.Pi.',
+          Timestamp: '2026-06-11T10:15:00+07:00',
+          Status: 'ACTIVE',
+          VoidReason: '',
+          VoidedBy: '',
+          voidedByName: ''
+        },
+        {
+          RowID: 'KGD-2026-003',
+          Periode: '2026-W23',
+          Tanggal: '2026-06-05',
+          JudulKegiatan: 'Sinkronisasi Jadwal Docking Galangan Lamongan',
+          Deskripsi: 'Penjadwalan ulang pemeliharaan berkala KP. Hiu Macan 03.',
+          PihakHadir: 'Timja Pemeliharaan, Galangan Lamongan',
+          DivisiID: 'DIV-RAWAT',
+          divisiNama: 'Pemeliharaan (Siaga)',
+          SubmittedBy: 'USR-KADIV-02',
+          submittedByName: 'Bambang Sutrisno, S.T.',
+          Timestamp: '2026-06-05T16:00:00+07:00',
+          Status: 'SUPERSEDED',
+          VoidReason: 'Jadwal diperbarui setelah inspeksi lambung',
+          VoidedBy: 'USR-DIR-01',
+          voidedByName: 'Ir. Haryo Prakoso, M.Si.'
+        },
+        {
+          RowID: 'KGD-2026-004',
+          Periode: '2026-W23',
+          Tanggal: '2026-06-03',
+          JudulKegiatan: 'Rapat Teknis Pengisian BBM Darurat Zona Timur',
+          Deskripsi: 'Koordinasi penyaluran BBM cadangan di Pangkalan Tual.',
+          PihakHadir: 'Timja Logistik, Pangkalan Tual',
+          DivisiID: 'DIV-LOG',
+          divisiNama: 'Logistik (Sistik)',
+          SubmittedBy: 'USR-STAF-02',
+          submittedByName: 'Dewi Anggraini, M.M.',
+          Timestamp: '2026-06-03T09:30:00+07:00',
+          Status: 'VOID',
+          VoidReason: 'Digabung dengan agenda koordinasi wilayah timur minggu ke-24',
+          VoidedBy: 'USR-DIR-01',
+          voidedByName: 'Ir. Haryo Prakoso, M.Si.'
+        }
+      ];
+      const NOTIF_ITEMS = [
+        { notifId: 'NTF-01', jenis: 'APPROVAL_REQUEST', pesan: 'Capt. Ahmad Fauzi (Timja Pengawakan) mengajukan aktivasi akun pengguna baru.', isRead: false, createdAt: '2026-06-15T09:10:00+07:00' },
+        { notifId: 'NTF-02', jenis: 'APPROVAL_REQUEST', pesan: 'Rina Kusuma, S.Kom. (Subbagian Tata Usaha) menunggu persetujuan akun.', isRead: false, createdAt: '2026-06-15T08:15:00+07:00' },
+        { notifId: 'NTF-03', jenis: 'DATA_VOIDED', pesan: 'Kegiatan Direktorat (Rapat Teknis Pengisian BBM Darurat Zona Timur) dianulir oleh Ir. Haryo Prakoso, M.Si.', isRead: false, createdAt: '2026-06-14T17:05:00+07:00' },
+        { notifId: 'NTF-04', jenis: 'REMINDER_MINGGUAN', pesan: 'Pengingat laporan mingguan periode 2026-W24 telah dikirim ke seluruh unit kerja.', isRead: true, createdAt: '2026-06-12T16:00:00+07:00' },
+        { notifId: 'NTF-05', jenis: 'REMINDER_MINGGUAN', pesan: 'Konsolidasi data satelit SIKAP dan Nakhoda periode 2026-W23 selesai diverifikasi.', isRead: true, createdAt: '2026-06-08T11:30:00+07:00' }
+      ];
+      const ADMIN_USERS = [
+        { userId: 'USR-DIR-01', nama: 'Ir. Haryo Prakoso, M.Si.', email: 'direktur.poa@kkp.go.id', nip: '197204111998031002', role: 'DIREKTUR', divisiId: '', namaDivisi: 'Direktorat POA', status: 'APPROVED', registeredAt: '2026-01-05T08:00:00+07:00' },
+        { userId: 'USR-SA-01', nama: 'Surya Pratama, S.Kom.', email: 'admin.poa@kkp.go.id', nip: '198609182010121004', role: 'SUPERADMIN', divisiId: '', namaDivisi: 'Direktorat POA', status: 'APPROVED', registeredAt: '2026-01-04T08:00:00+07:00' },
+        { userId: 'USR-KADIV-01', nama: 'Andi Wijaya, S.Pi.', email: 'andi.wijaya@kkp.go.id', nip: '198103222006041007', role: 'KADIV', divisiId: 'DIV-AWAK', namaDivisi: 'Pengawakan (Nakhoda)', status: 'APPROVED', registeredAt: '2026-01-12T09:30:00+07:00' },
+        { userId: 'USR-STAF-02', nama: 'Rina Kusuma, S.Kom.', email: 'rina.kusuma@kkp.go.id', nip: '199311082019022003', role: 'STAF', divisiId: 'DIV-TU', namaDivisi: 'Tata Usaha (SIKAP)', status: 'PENDING', registeredAt: '2026-06-15T08:15:00+07:00' }
+      ];
+      const ADMIN_AUDIT = [
+        { logId: 'LOG-01', aksi: 'CREATE', sheetTarget: 'TX_KegiatanDirektorat', rowIdTarget: 'KGD-2026-001', alasan: 'Tambah kegiatan: Rapat Evaluasi Operasi Terpadu TW II', timestamp: '2026-06-14T14:20:00+07:00', userId: 'USR-DIR-01', userName: 'Ir. Haryo Prakoso, M.Si.', userRole: 'DIREKTUR' },
+        { logId: 'LOG-02', aksi: 'VOID', sheetTarget: 'TX_KegiatanDirektorat', rowIdTarget: 'KGD-2026-004', alasan: 'Digabung dengan agenda koordinasi wilayah timur minggu ke-24', timestamp: '2026-06-14T13:10:00+07:00', userId: 'USR-DIR-01', userName: 'Ir. Haryo Prakoso, M.Si.', userRole: 'DIREKTUR' },
+        { logId: 'LOG-03', aksi: 'UPDATE', sheetTarget: 'Users', rowIdTarget: 'USR-KADIV-01', alasan: 'Pembaruan jabatan Kepala Timja Pengawakan', timestamp: '2026-06-12T10:05:00+07:00', userId: 'USR-SA-01', userName: 'Surya Pratama, S.Kom.', userRole: 'SUPERADMIN' },
+        { logId: 'LOG-04', aksi: 'SYNC', sheetTarget: 'WPP', rowIdTarget: '', alasan: 'Sinkronisasi 11 Wilayah Pengelolaan Perikanan NRI', timestamp: '2026-06-10T09:00:00+07:00', userId: 'USR-SA-01', userName: 'Surya Pratama, S.Kom.', userRole: 'SUPERADMIN' }
+      ];
+      const RIWAYAT_ROWS = [
+        { rowId: 'KGD-2026-001', sheet: 'TX_KegiatanDirektorat', sheetLabel: 'Kegiatan Direktorat', periode: '2026-W24', divisiId: 'PUSAT', divisiNama: 'Direktorat POA', submittedBy: 'USR-DIR-01', submittedByName: 'Ir. Haryo Prakoso, M.Si.', timestamp: '2026-06-14T14:20:00+07:00', status: 'ACTIVE', ringkasan: 'Rapat Evaluasi Operasi Terpadu TW II', detail: [['Tanggal', '14 Jun 2026'], ['Pihak Hadir', 'Direktur POA, Timja Operasi']] },
+        { rowId: 'TU-2026-W24', sheet: 'TX_TataUsaha', sheetLabel: 'SIKAP — Tata Usaha', periode: '2026-W24', divisiId: 'DIV-TU', divisiNama: 'Tata Usaha (SIKAP)', submittedBy: 'USR-STAF-02', submittedByName: 'Rina Kusuma, S.Kom.', timestamp: '2026-06-14T11:45:00+07:00', status: 'ACTIVE', ringkasan: 'SP2D Rp 83,2 M · Akrual Rp 89,6 M', detail: [['Pagu Total', 'Rp 128.400.000.000'], ['Realisasi SP2D', '64,8%']] },
+        { rowId: 'AWK-2026-W24', sheet: 'TX_Pengawakan_AKN', sheetLabel: 'Nakhoda — Komposisi AKN', periode: '2026-W24', divisiId: 'DIV-AWAK', divisiNama: 'Pengawakan (Nakhoda)', submittedBy: 'USR-KADIV-01', submittedByName: 'Andi Wijaya, S.Pi.', timestamp: '2026-06-13T15:10:00+07:00', status: 'ACTIVE', ringkasan: '396 awak POA dari total 512 personel', detail: [['PNS', '196 POA / 248 total'], ['P3K', '104 POA / 132 total']] },
+        { rowId: 'PKT-2026-W23', sheet: 'TX_Paket_Progres', sheetLabel: 'SIKAP — Paket Pengadaan', periode: '2026-W23', divisiId: 'DIV-TU', divisiNama: 'Tata Usaha (SIKAP)', submittedBy: 'USR-STAF-02', submittedByName: 'Rina Kusuma, S.Kom.', timestamp: '2026-06-08T16:40:00+07:00', status: 'SUPERSEDED', ringkasan: '42 paket aktif (progres fisik 68,2%)', detail: [['Status', 'Digantikan pembaruan 2026-W24']] },
+        { rowId: 'KGD-2026-003', sheet: 'TX_KegiatanDirektorat', sheetLabel: 'Kegiatan Direktorat', periode: '2026-W23', divisiId: 'DIV-RAWAT', divisiNama: 'Pemeliharaan (Siaga)', submittedBy: 'USR-KADIV-02', submittedByName: 'Bambang Sutrisno, S.T.', timestamp: '2026-06-05T16:00:00+07:00', status: 'SUPERSEDED', ringkasan: 'Sinkronisasi Jadwal Docking Galangan Lamongan', detail: [['Tanggal', '5 Jun 2026']] },
+        { rowId: 'TU-2026-W23-V', sheet: 'TX_TataUsaha', sheetLabel: 'SIKAP — Tata Usaha', periode: '2026-W23', divisiId: 'DIV-TU', divisiNama: 'Tata Usaha (SIKAP)', submittedBy: 'USR-STAF-02', submittedByName: 'Rina Kusuma, S.Kom.', timestamp: '2026-06-04T10:20:00+07:00', status: 'VOID', voidReason: 'Koreksi nilai pagu revisi anggaran Juni', voidedBy: 'USR-DIR-01', voidedByName: 'Ir. Haryo Prakoso, M.Si.', ringkasan: 'Draf realisasi minggu ke-23', detail: [['Catatan', 'Entri koreksi sebelum revisi DIPA']] }
       ];
       const runObj = {};
       function cloneWith(base, patch) {
@@ -224,10 +384,10 @@ function buildMockInitScript(fixtures) {
         withFailureHandler(fn) { return cloneWith(this, { _err: fn }); },
         auth_getDivisiList() { respond(this, { success: true, data: DIVISI_LIST }); },
         auth_getSessionInfo(token) {
-          if (token === 'DEMO_DIR_TOKEN') respond(this, { success: true, data: DEMO_USER });
+          if (token === 'DEMO_DIR_TOKEN') respond(this, { success: true, data: CURRENT_USER });
           else respond(this, { success: false, error: 'No session' });
         },
-        auth_login() { respond(this, { success: true, data: { token: 'DEMO_DIR_TOKEN', user: DEMO_USER } }); },
+        auth_login() { respond(this, { success: true, data: { token: 'DEMO_DIR_TOKEN', user: CURRENT_USER } }); },
         auth_logout() { respond(this, { success: true }); },
         app_getSyncState() {
           respond(this, {
@@ -251,6 +411,10 @@ function buildMockInitScript(fixtures) {
           });
         },
         notifikasi_getRingkasan() { respond(this, { success: true, data: { unreadCount: 3, divisiBelumMelapor: null } }); },
+        notifikasi_getList() { respond(this, { success: true, data: { unreadCount: 3, items: NOTIF_ITEMS } }); },
+        notifikasi_markRead() { respond(this, { success: true, data: {} }); },
+        notifikasi_markAllRead() { respond(this, { success: true, data: { marked: 3 } }); },
+        notifikasi_getReminderSettings() { respond(this, { success: true, data: { aktif: true, jadwal: 'Jumat 16:00 (mingguan)' } }); },
         dashboard_getOverview() { respond(this, F.overview); },
         radar_triggerSyncNow() { respond(this, F.syncNow); },
         dashboard_getScoringKapalTerbaik() { respond(this, F.kapalTerbaik); },
@@ -259,13 +423,18 @@ function buildMockInitScript(fixtures) {
           if (id === 'KP-ORCA-05') respond(this, F.profilOrca05);
           else respond(this, F.profilOrca01);
         },
-        master_getWppList() { respond(this, { success: true, data: [] }); },
-        master_getKapalList() { respond(this, { success: true, data: [] }); },
+        master_getKapalList() { respond(this, { success: true, data: MASTER_KAPAL }); },
+        master_getKawasanList() { respond(this, { success: true, data: MASTER_KAWASAN }); },
+        master_getWppList() { respond(this, { success: true, data: MASTER_WPP, fromFallback: false }); },
+        master_getOpsiJenis() { respond(this, { success: true, data: MASTER_OPSI }); },
         utils_getCartoKey() { respond(this, ''); },
-        riwayat_getAll() { respond(this, { success: true, data: { rows: [] } }); },
-        kegiatan_getList() { respond(this, { success: true, data: { rows: [] } }); },
-        notifikasi_getList() { respond(this, { success: true, data: { rows: [] } }); },
-        admin_getUsers() { respond(this, { success: true, data: [] }); }
+        riwayat_getAll() { respond(this, { success: true, data: RIWAYAT_ROWS }); },
+        kegiatanDirektorat_getKPI() { respond(this, { success: true, data: { kegiatanPeriode: 4, kegiatanYtd: 19, terakhirDicatat: '2026-06-14T14:20:00+07:00' } }); },
+        kegiatanDirektorat_getHistory() { respond(this, { success: true, data: KEGIATAN_ROWS }); },
+        kegiatan_getList() { respond(this, { success: true, data: KEGIATAN_ROWS }); },
+        evidence_list() { respond(this, { success: true, data: [] }); },
+        admin_getUsers() { respond(this, { success: true, data: ADMIN_USERS }); },
+        admin_getAuditLog() { respond(this, { success: true, data: ADMIN_AUDIT }); }
       });
       window.google = { script: { run: runObj } };
     })();
@@ -284,7 +453,7 @@ async function inspectPage(page, name) {
     const brokenImgs = imgs.filter((i) => !i.complete || i.naturalWidth === 0).map((i) => i.alt || i.src.slice(0, 40));
     const finding = document.getElementById('page-finding');
     const brokenControlRows = [];
-    document.querySelectorAll('.page-header, .topbar-actions, .filter-box, .n-tabs, .hist-actions, .ctl-row, .kt-page-toolbar, .kt-filter-group').forEach((box) => {
+    document.querySelectorAll('.page-header, .topbar-actions, .filter-box, .n-tabs, .hist-actions, .ctl-row, .kt-page-toolbar, .kt-filter-group, .sec-hd-bar, .ntf-toolbar, .md-opsi-add-row, .adn-rem-row').forEach((box) => {
       if (box.offsetParent === null) return;
       const ctls = Array.from(box.querySelectorAll('button, select, input')).filter((c) => c.offsetParent !== null);
       const hs = [...new Set(ctls.map((c) => Math.round(c.getBoundingClientRect().height)))];
@@ -591,10 +760,154 @@ async function inspectPage(page, name) {
     reports['profil-kapal-mobile'] = await inspectPage(mPage, 'profil-kapal-mobile');
     await mPage.screenshot({ path: path.join(OUT_DIR, '06b-profil-kapal-mobile.png'), fullPage: true });
 
+    // ── 7. Kegiatan Direktorat (Desktop + Search + Status Tabs + Calendar Anti-Ketik) ──
+    await page.evaluate(() => _routeTo('kegiatan'));
+    await page.waitForSelector('#kgd-history-wrap .n-table', { timeout: 10000 });
+    await page.waitForTimeout(350);
+    reports['kegiatan-desktop'] = await inspectPage(page, 'kegiatan-desktop');
+    await page.screenshot({ path: path.join(OUT_DIR, '07-kegiatan-desktop.png'), fullPage: true });
+    const kgdBeforeSearch = await page.evaluate(() => document.querySelectorAll('#kgd-history-wrap tbody tr:not(.hist-void-note)').length);
+    await page.fill('#kgd-search-input', 'Orca');
+    await page.waitForTimeout(150);
+    const kgdAfterSearch = await page.evaluate(() => document.querySelectorAll('#kgd-history-wrap tbody tr:not(.hist-void-note)').length);
+    await page.fill('#kgd-search-input', '');
+    await page.waitForTimeout(150);
+    await page.click('#kgd-btn-open-form');
+    await page.waitForSelector('#modal-kgd-form:not(.n-hidden)', { timeout: 5000 });
+    const kgdValBefore = await page.inputValue('#kgd-tanggal');
+    await page.focus('#kgd-tanggal');
+    await page.keyboard.press('1');
+    const kgdValAfter = await page.inputValue('#kgd-tanggal');
+    const kgdState = await page.evaluate((meta) => {
+      const txt = (document.getElementById('page-content') || {}).textContent || '';
+      const kpiCells = document.querySelectorAll('#kgd-kpi-strip .sec-kpi-cell').length;
+      const tabs = [...document.querySelectorAll('#kgd-status-tabs .n-tab')].map((t) => t.textContent.trim());
+      const formDate = document.getElementById('kgd-tanggal');
+      const revDate = document.getElementById('rv-kgd-tanggal');
+      return {
+        hasTitle: txt.includes('Daftar Kegiatan Direktorat') && !txt.includes('Feed Kegiatan Pendukung'),
+        kpiCells,
+        tabs,
+        beforeSearch: meta.kgdBeforeSearch,
+        afterSearch: meta.kgdAfterSearch,
+        dateLockedForm: !!(formDate && formDate.getAttribute('onkeydown') === 'return false' && formDate.getAttribute('onpaste') === 'return false' && meta.kgdValBefore === meta.kgdValAfter),
+        dateLockedRevisi: !!(revDate && revDate.getAttribute('onkeydown') === 'return false' && revDate.getAttribute('onpaste') === 'return false'),
+        hasRawUserId: /\bUSR-[A-Z0-9_-]+\b/.test(txt)
+      };
+    }, { kgdBeforeSearch, kgdAfterSearch, kgdValBefore, kgdValAfter });
+    await page.evaluate(() => { closeModal('modal-kgd-form'); _setFilterMode('range'); });
+    await page.waitForTimeout(150);
+    const headerRangeLocked = await page.evaluate(() => {
+      const inputs = [...document.querySelectorAll('#filter-range .filter-date')];
+      return inputs.length === 2 && inputs.every((i) => i.getAttribute('onkeydown') === 'return false' && i.getAttribute('onpaste') === 'return false');
+    });
+    await page.evaluate(() => _setFilterMode('monthly'));
+    await page.waitForTimeout(200);
+    console.log('[AUDIT] kegiatan-state:', JSON.stringify(Object.assign({}, kgdState, { headerRangeLocked })));
+
+    // ── 8. Notifikasi (Desktop) ──
+    await page.evaluate(() => _routeTo('notifikasi'));
+    await page.waitForSelector('#ntf-list .n-table', { timeout: 10000 });
+    await page.waitForTimeout(300);
+    const ntfState = await page.evaluate(() => {
+      const sumEl = document.getElementById('ntf-summary-line');
+      const kpiGridCount = document.querySelectorAll('#page-content .kpi-grid').length;
+      const dots = document.querySelectorAll('#ntf-list .ntf-unread-dot').length;
+      const rows = document.querySelectorAll('#ntf-list tbody tr').length;
+      return {
+        summaryText: sumEl ? sumEl.textContent.trim() : '',
+        kpiGridCount,
+        dots,
+        rows
+      };
+    });
+    console.log('[AUDIT] notifikasi-state:', JSON.stringify(ntfState));
+    reports['notifikasi-desktop'] = await inspectPage(page, 'notifikasi-desktop');
+    await page.screenshot({ path: path.join(OUT_DIR, '08-notifikasi-desktop.png'), fullPage: true });
+
+    // ── 9. Admin Panel (Desktop — 4 Underline Tabs + Approval Queue + Users + Audit) ──
+    await page.evaluate(() => {
+      window.__auditSetUser({ role: 'SUPERADMIN' });
+      APP.user.role = 'SUPERADMIN';
+      _routeTo('kelola-akun');
+    });
+    await page.waitForSelector('#ka-approval-table-wrap .n-table', { timeout: 10000 });
+    await page.waitForTimeout(350);
+    const adminState = await page.evaluate(() => {
+      const approvalRows = document.querySelectorAll('#ka-approval-table-wrap tbody tr').length;
+      const visibleTabs = [...document.querySelectorAll('#adn-tabs .n-tab:not([hidden])')].map((t) => t.textContent.trim());
+      return { approvalRows, visibleTabs };
+    });
+    reports['admin-desktop'] = await inspectPage(page, 'admin-desktop');
+    await page.screenshot({ path: path.join(OUT_DIR, '09-admin-desktop.png'), fullPage: true });
+    await page.click('#adn-tab-pengguna');
+    await page.waitForSelector('#adn-users-wrap .n-table', { timeout: 10000 });
+    await page.waitForTimeout(250);
+    reports['admin-pengguna'] = await inspectPage(page, 'admin-pengguna');
+    await page.click('#adn-tab-audit');
+    await page.waitForSelector('#adn-audit-wrap .n-table', { timeout: 10000 });
+    await page.waitForTimeout(250);
+    const adminAuditText = await page.evaluate(() => (document.getElementById('adn-audit-wrap') || {}).textContent || '');
+    reports['admin-audit'] = await inspectPage(page, 'admin-audit');
+    await page.click('#adn-tab-reminder');
+    await page.waitForTimeout(250);
+    const reminderStatusText = await page.evaluate(() => (document.getElementById('adn-reminder-status') || {}).textContent || '');
+    await page.evaluate(() => {
+      window.__auditSetUser({ role: 'DIREKTUR' });
+      APP.user.role = 'DIREKTUR';
+    });
+    console.log('[AUDIT] admin-state:', JSON.stringify(Object.assign({}, adminState, { hasAuditRows: !adminAuditText.includes('USR-'), reminderStatusText })));
+
+    // ── 10. Master Data (Desktop — Kapal Classes + Kawasan + WPP + Opsi) ──
+    await page.evaluate(() => _routeTo('master-data'));
+    await page.waitForSelector('#md-kapal-wrap .n-table', { timeout: 10000 });
+    await page.waitForTimeout(350);
+    const mdState = await page.evaluate(() => {
+      const txt = (document.getElementById('page-content') || {}).textContent || '';
+      const summaryCells = document.querySelectorAll('#md-kapal-summary .sec-kpi-cell').length;
+      const hulls = document.querySelectorAll('#md-kapal-wrap .md-class-cell .ship-hull').length;
+      const rawToken = txt.match(/\b(?:KAPAL_PUSAT|KAPAL_UPT|HIU_MACAN|AKAR_BAHAR|PRD\s*§)\b/);
+      return {
+        summaryCells,
+        hulls,
+        hasPrd: /PRD\s*§/i.test(txt),
+        rawToken: rawToken ? rawToken[0] : ''
+      };
+    });
+    reports['master-data-desktop'] = await inspectPage(page, 'master-data-desktop');
+    await page.screenshot({ path: path.join(OUT_DIR, '10-master-data-desktop.png'), fullPage: true });
+    await page.click('#md-tabs [data-md-tab="opsi"]');
+    await page.waitForSelector('#md-opsi-wrap .md-opsi-add-row', { timeout: 10000 });
+    await page.waitForTimeout(250);
+    const mdOpsiHasTypo = await page.evaluate(() => /\bnasab\b/i.test((document.getElementById('md-opsi-wrap') || {}).textContent || ''));
+    reports['master-opsi'] = await inspectPage(page, 'master-opsi');
+    console.log('[AUDIT] master-data-state:', JSON.stringify(Object.assign({}, mdState, { mdOpsiHasTypo })));
+
+    // ── 11. Riwayat Transaksi Terfederasi (Desktop) ──
+    await page.evaluate(() => _routeTo('riwayat'));
+    await page.waitForSelector('#riw-history-wrap .n-table', { timeout: 10000 });
+    await page.waitForTimeout(350);
+    const riwState = await page.evaluate(() => {
+      const txt = (document.getElementById('page-content') || {}).textContent || '';
+      const stripCells = document.querySelectorAll('#riw-kpi-strip .sec-kpi-cell').length;
+      const periodCell = document.querySelector('#riw-history-wrap tbody td.td-nowrap');
+      const periodWs = periodCell ? getComputedStyle(periodCell).whiteSpace : '';
+      return {
+        hasCleanTitle: txt.includes('Riwayat Transaksi Terfederasi') && !/SUPERSEDED\s*&\s*VOID/i.test(txt),
+        stripCells,
+        hasFixedDitimpaSub: txt.includes('Digantikan revisi'),
+        hasRawUserId: /\bUSR-[A-Z0-9_-]+\b/.test(txt),
+        periodWs
+      };
+    });
+    reports['riwayat-desktop'] = await inspectPage(page, 'riwayat-desktop');
+    await page.screenshot({ path: path.join(OUT_DIR, '11-riwayat-desktop.png'), fullPage: true });
+    console.log('[AUDIT] riwayat-state:', JSON.stringify(riwState));
+
     console.log('[CONSOLE ERRORS]:', consoleErrors.length, consoleErrors);
     console.log('[PAGE ERRORS]:', pageErrors.length, pageErrors);
 
-    // Fase R2 + R3 automated quality gates
+    // Fase R2 + R3 + R4 automated quality gates
     const ov = reports['overview-desktop'];
     const failures = [];
     if (pageErrors.length !== 0) failures.push('pageErrors=' + pageErrors.length);
@@ -617,29 +930,52 @@ async function inspectPage(page, name) {
     if (pkState.specCells !== 5) failures.push('pkSpecCells=' + pkState.specCells);
     if (!pkState.hasHumanEnum || !pkState.hasHumanDate) failures.push('pkHuman=' + JSON.stringify(pkState));
     if (pkState.rawToken) failures.push('pkRawToken=' + pkState.rawToken);
+    if (!kgdState.hasTitle || kgdState.kpiCells !== 3 || kgdState.beforeSearch !== 4 || kgdState.afterSearch !== 1 || !kgdState.dateLockedForm || !kgdState.dateLockedRevisi || !headerRangeLocked || kgdState.hasRawUserId) {
+      failures.push('kgdState=' + JSON.stringify(Object.assign({}, kgdState, { headerRangeLocked })));
+    }
+    if (!ntfState.summaryText.includes('3 belum dibaca') || ntfState.kpiGridCount !== 0 || ntfState.dots < 1 || ntfState.rows !== 5) {
+      failures.push('ntfState=' + JSON.stringify(ntfState));
+    }
+    if (adminState.approvalRows !== 2 || adminState.visibleTabs.length !== 4 || adminAuditText.includes('USR-')) {
+      failures.push('adminState=' + JSON.stringify(adminState));
+    }
+    if (mdState.summaryCells !== 3 || mdState.hulls < 10 || mdState.hasPrd || mdState.rawToken || mdOpsiHasTypo) {
+      failures.push('mdState=' + JSON.stringify(Object.assign({}, mdState, { mdOpsiHasTypo })));
+    }
+    if (!riwState.hasCleanTitle || riwState.stripCells !== 4 || !riwState.hasFixedDitimpaSub || riwState.hasRawUserId || riwState.periodWs !== 'nowrap') {
+      failures.push('riwState=' + JSON.stringify(riwState));
+    }
     if (mobileDockState.navBarDisplay !== 'none' || mobileDockState.dockDisplay !== 'grid' || mobileDockState.dockLeft !== 0 || mobileDockState.dockRight !== 390 || mobileDockState.dockBorderRadius !== '0px') {
       failures.push('mobileDockState=' + JSON.stringify(mobileDockState));
     }
-    ['login-desktop', 'login-mobile', 'overview-desktop', 'overview-1024', 'overview-mobile', 'kapal-terbaik-desktop', 'kapal-terbaik-mobile', 'profil-kapal-desktop', 'profil-kapal-mobile'].forEach((k) => {
+    [
+      'login-desktop', 'login-mobile',
+      'overview-desktop', 'overview-1024', 'overview-mobile',
+      'kapal-terbaik-desktop', 'kapal-terbaik-mobile',
+      'profil-kapal-desktop', 'profil-kapal-mobile',
+      'kegiatan-desktop', 'notifikasi-desktop',
+      'admin-desktop', 'admin-pengguna', 'admin-audit',
+      'master-data-desktop', 'master-opsi', 'riwayat-desktop'
+    ].forEach((k) => {
       const r = reports[k];
-      if (!r) return;
+      if (!r) { failures.push('missingReport:' + k); return; }
       if (r.overflowX !== 0) failures.push(k + ':overflowX=' + r.overflowX);
       if (r.brokenControlRows.length !== 0) failures.push(k + ':brokenControlRows=' + JSON.stringify(r.brokenControlRows));
+      if (r.tinyTextCount !== 0) failures.push(k + ':tinyTextCount=' + r.tinyTextCount + ':' + JSON.stringify(r.tinyTextSamples));
+      if (r.clippedCount !== 0) failures.push(k + ':clippedCount=' + r.clippedCount + ':' + JSON.stringify(r.clippedSamples));
+      if (r.nonPublicSansCount !== 0) failures.push(k + ':nonPublicSansCount=' + r.nonPublicSansCount + ':' + JSON.stringify(r.nonPublicSansSamples));
     });
     if (ov) {
       if (ov.markerCount !== 34) failures.push('ov.markerCount=' + ov.markerCount);
       if (ov.markerOverlaps !== 0) failures.push('ov.markerOverlaps=' + ov.markerOverlaps);
-      if (ov.tinyTextCount !== 0) failures.push('ov.tinyTextCount=' + ov.tinyTextCount + ':' + JSON.stringify(ov.tinyTextSamples));
-      if (ov.clippedCount !== 0) failures.push('ov.clippedCount=' + ov.clippedCount + ':' + JSON.stringify(ov.clippedSamples));
       if (ov.distinctBg > 16) failures.push('ov.distinctBg=' + ov.distinctBg + ':' + JSON.stringify(ov.distinctBgList));
       if (ov.docHeight > 2100) failures.push('ov.docHeight=' + ov.docHeight);
-      if (ov.nonPublicSansCount !== 0) failures.push('ov.nonPublicSansCount=' + ov.nonPublicSansCount + ':' + JSON.stringify(ov.nonPublicSansSamples));
     }
     if (failures.length) {
       console.error('[AUDIT GATES FAILED]:', failures.join(' | '));
       process.exitCode = 1;
     } else {
-      console.log('[AUDIT GATES PASSED]: ALL FASE R2 GATES GREEN');
+      console.log('[AUDIT GATES PASSED]: ALL 12 FASE R4 GATES GREEN');
     }
   } finally {
     await browser.close();

@@ -1,91 +1,88 @@
 <!-- html/views/Admin.html -->
 <!--
-  Admin Panel (Fase 13) — menggantikan stub "Kelola Akun".
-  Empat tab:
-    1. Persetujuan Registrasi — leverage APPROVAL_WRAPS ('ka'), difinalisasi via auth_decideApproval
-    2. Pengguna             — SUPERADMIN: ubah role/divisi/status, nonaktifkan, reset password
-    3. Audit Log            — SUPERADMIN: baca jejak audit (admin_getAuditLog)
-    4. Pengingat Mingguan    — SUPERADMIN: trigger Jumat 16:00 + kirim manual
-  Tab 2-4 disembunyikan client bila bukan SUPERADMIN (server tetap menolak).
+  Admin Panel: Persetujuan Registrasi, Manajemen Pengguna, Jejak Audit, Pengingat Mingguan.
+  Tab Pengguna, Audit, dan Pengingat hanya tampil untuk Super Administrator.
 -->
 <div id="view-tpl-kelola-akun" hidden>
 
-  <div class="n-tabs" id="adn-tabs" style="margin-bottom:20px">
+  <div class="n-tabs adn-tabs-mb" id="adn-tabs">
     <button type="button" class="n-tab active" data-tab="persetujuan" onclick="_adnSwitch('persetujuan')">Persetujuan Registrasi</button>
     <button type="button" class="n-tab" data-tab="pengguna" id="adn-tab-pengguna" onclick="_adnSwitch('pengguna')" hidden>Pengguna</button>
     <button type="button" class="n-tab" data-tab="audit" id="adn-tab-audit" onclick="_adnSwitch('audit')" hidden>Audit Log</button>
     <button type="button" class="n-tab" data-tab="reminder" id="adn-tab-reminder" onclick="_adnSwitch('reminder')" hidden>Pengingat Mingguan</button>
   </div>
 
-  <!-- TAB 1 — PERSETUJUAN (wrap 'ka' didaftarkan di APPROVAL_WRAPS) -->
+  <!-- TAB 1 — PERSETUJUAN -->
   <div id="adn-panel-persetujuan">
     <div class="content-section">
-      <div class="content-section-hd">Antrean Persetujuan</div>
+      <div class="sec-hd-bar">
+        <div class="content-section-hd sec-hd-flush">Antrean Persetujuan</div>
+      </div>
       <div id="ka-approval-msg" class="n-msg"></div>
-      <div class="n-card" style="padding:0;overflow-x:auto">
-        <div id="ka-approval-table-wrap">
-          <div class="n-pad-muted">Memuat antrean…</div>
-        </div>
+      <div class="sec-table-card" id="ka-approval-table-wrap">
+        <div class="n-pad-muted">Memuat antrean&hellip;</div>
       </div>
     </div>
   </div>
 
-  <!-- TAB 2 — PENGGUNA (SUPERADMIN) -->
+  <!-- TAB 2 — PENGGUNA -->
   <div id="adn-panel-pengguna" hidden>
     <div class="content-section">
-      <div class="content-section-hd hd-row">
-        <div>Manajemen Pengguna</div>
-        <button class="btn-mini" onclick="_adnGoMasterData()">Kelola Divisi (Master Data)</button>
+      <div class="sec-hd-bar">
+        <div class="content-section-hd sec-hd-flush">Manajemen Pengguna</div>
+        <div class="ctl-row ctl-md">
+          <button type="button" class="btn-outline" onclick="_adnGoMasterData()">Kelola Master Data</button>
+        </div>
       </div>
-      <div class="n-info-static" style="margin-bottom:16px">
-        Perubahan role, divisi, dan status akun dicatat di Audit Log. Menonaktifkan akun
-        langsung memblokir login dan membatalkan sesi aktif. Password tidak pernah ditampilkan —
-        Superadmin dapat menyetel ulang password baru bila staf kehilangan akses.
+      <div class="n-info-static adn-info-mb">
+        Perubahan jabatan, unit kerja, dan status akun tercatat di jejak audit. Menonaktifkan akun segera membatalkan sesi berjalan. Penyetelan ulang kata sandi tersedia bagi staf yang kehilangan akses.
       </div>
       <div id="adn-users-msg" class="n-msg"></div>
-      <div class="n-card" style="padding:0;overflow-x:auto">
-        <div id="adn-users-wrap"><div class="n-pad-muted">Memuat pengguna…</div></div>
+      <div class="sec-table-card" id="adn-users-wrap">
+        <div class="n-pad-muted">Memuat daftar pengguna&hellip;</div>
       </div>
     </div>
   </div>
 
-  <!-- TAB 3 — AUDIT LOG (SUPERADMIN) -->
+  <!-- TAB 3 — AUDIT LOG -->
   <div id="adn-panel-audit" hidden>
     <div class="content-section">
-      <div class="content-section-hd hd-row">
-        <div>Jejak Audit</div>
-        <button class="btn-mini btn-ghost" onclick="_adnReloadAudit()">Muat Ulang</button>
+      <div class="sec-hd-bar">
+        <div class="content-section-hd sec-hd-flush">Jejak Audit</div>
+        <div class="ctl-row ctl-md">
+          <button type="button" class="btn-outline" onclick="_adnReloadAudit()">Muat Ulang</button>
+        </div>
       </div>
       <div id="adn-audit-msg" class="n-msg"></div>
-      <div class="n-card" style="padding:0;overflow-x:auto">
-        <div id="adn-audit-wrap"><div class="n-pad-muted">Memuat jejak audit…</div></div>
+      <div class="sec-table-card" id="adn-audit-wrap">
+        <div class="n-pad-muted">Memuat jejak audit&hellip;</div>
       </div>
     </div>
   </div>
 
-  <!-- TAB 4 — PENGINGAT MINGGUAN (SUPERADMIN) -->
+  <!-- TAB 4 — PENGINGAT MINGGUAN -->
   <div id="adn-panel-reminder" hidden>
     <div class="content-section">
-      <div class="content-section-hd">Pengingat Laporan Mingguan</div>
-      <div class="n-info-static" style="margin-bottom:16px">
-        Setiap jadwal otomatis, sistem mengirim email pengingat ke Kepala Divisi dan Staf
-        di divisi yang belum mengirim laporan pada minggu berjalan, sekaligus menulis
-        notifikasi di aplikasi. Divisi yang <strong>sudah</strong> melapor tidak dikirimi.
+      <div class="sec-hd-bar">
+        <div class="content-section-hd sec-hd-flush">Pengingat Laporan Mingguan</div>
+      </div>
+      <div class="n-info-static adn-info-mb">
+        Sesuai jadwal, sistem mengirim email pengingat dan notifikasi aplikasi kepada pejabat unit kerja yang belum melaporkan capaian pada minggu berjalan.
       </div>
       <div id="adn-reminder-msg" class="n-msg"></div>
       <div class="n-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;">
+        <div class="adn-rem-row">
           <div>
-            <div style="font-weight:600;">Status Pengiriman Otomatis</div>
-            <div id="adn-reminder-status" style="font-size:.8125rem;color:var(--n-text-muted);margin-top:2px;">Memuat…</div>
+            <div class="adn-rem-title">Status Pengiriman Otomatis</div>
+            <div id="adn-reminder-status" class="adn-rem-sub">Memuat&hellip;</div>
           </div>
-          <div class="ctl-row ctl-sm">
-            <button class="btn-primary" id="btn-adn-reminder-send" onclick="_adnSendReminderNow()">Kirim Sekarang</button>
-            <button class="btn-outline" id="btn-adn-reminder-toggle" onclick="_adnToggleReminder()">Aktifkan</button>
+          <div class="ctl-row ctl-md">
+            <button type="button" class="btn-primary" id="btn-adn-reminder-send" onclick="_adnSendReminderNow()">Kirim Sekarang</button>
+            <button type="button" class="btn-outline" id="btn-adn-reminder-toggle" onclick="_adnToggleReminder()">Aktifkan</button>
           </div>
         </div>
       </div>
-      <div id="adn-reminder-result" style="margin-top:16px;"></div>
+      <div id="adn-reminder-result" class="adn-rem-result"></div>
     </div>
   </div>
 

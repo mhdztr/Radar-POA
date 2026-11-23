@@ -22,7 +22,7 @@ ROADMAP PENGEMBANGAN RADAR POA v2.0
 ├── [Fase R1] Selesai [x] — Shell Baru (Top Bar 56px + Floating Bottom Maritime Dock), Toolbar 32px, Sync Popover, & Login 50/50
 ├── [Fase R2] Selesai [x] — Redesign Ikhtisar: Peta 68/32 Berikon Siluet Kapal Kelas I–V, Grafik Asimetris 65/35, & Tabel Eksekutif Lintas Satelit
 ├── [Fase R3] Selesai [x] — Redesign Kapal Terbaik (Non-Galangan Podium & Sync TW) & Profil Kapal (h1 Kapal + Enum Manusiawi)
-├── [Fase R4] [ ]         — Standarisasi 5 Halaman Sekunder, Fix Error .map(), Jargon Clean-Up, Calendar Anti-Ketik, & 12-Screen Playwright Gate
+├── [Fase R4] Selesai [x] — Standarisasi 5 Halaman Sekunder, Fix Error .map(), Jargon Clean-Up, Calendar Anti-Ketik, & 12-Screen Playwright Gate
 │
 ├── [Fase 5]  [ ]         — Pengujian E2E Siklus Kegiatan Direktorat (Submit -> Revisi SUPERSEDED -> Anulir VOID) & Multi-Evidence Drive
 ├── [Fase 6]  [ ]         — Pipeline Data Mart Looker Studio (LookerMartService.js), applyFormalSheetFormatting(), & Scheduled Trigger
@@ -121,7 +121,7 @@ ROADMAP PENGEMBANGAN RADAR POA v2.0
 ---
 
 ### Fase R4: Standarisasi 5 Halaman Sekunder + Calendar Picker Anti-Ketik + Full Playwright Suite
-- **Status:** **Siap Dikerjakan (`[ ]`)**
+- **Status:** **Selesai (`[x]`)**
 - **Tujuan Utama:** Membereskan runtime error `(rows || []).map is not a function`, menyamakan komponen UI seluruh halaman sekunder, membuang jargon developer, menerapkan Calendar Picker Anti-Ketik Manual, dan memperluas `tests/visual_audit.js` ke seluruh 12 skenario layar.
 - **Komponen yang Harus Dikerjakan:**
   1. **Perbaikan Error & Penyelarasan Komponen (`html/Script_Main.html`, `html/Style.html`):**
@@ -137,8 +137,8 @@ ROADMAP PENGEMBANGAN RADAR POA v2.0
      - Lengkapi mock RPC seluruh halaman sekunder dan tangkap **12 skenario** (`login-desktop`, `login-mobile`, `overview-1440`, `overview-1024`, `overview-mobile`, `kapal-terbaik-desktop`, `profil-kapal-desktop`, `kegiatan-desktop`, `notifikasi-desktop`, `admin-desktop`, `master-data-desktop`, `riwayat-desktop`) ke `tests/screenshots/`.
      - Terapkan gate otomatis: `pageErrors === 0`, `overflowX === 0`, `markerOverlaps === 0`, `brokenControlRows === 0`, `tinyTextCount === 0`, `clippedCount === 0`, `distinctBg <= 16` (`Ikhtisar`), `docHeight <= 2100` (`Ikhtisar 1440px`), `impeccable detect --json === []`.
 - **Kriteria Verifikasi:**
-  - [ ] `node tests/visual_audit.js` keluar kode `0` dengan 0 kegagalan assertion pada 12 skenario dan `[PAGE ERRORS]: 0`.
-  - [ ] Seluruh 12+ screenshot di `tests/screenshots/` dibuka & diverifikasi langsung lewat `read_file`.
+  - [x] `node tests/visual_audit.js` keluar kode `0` dengan 0 kegagalan assertion pada 12 skenario dan `[PAGE ERRORS]: 0`.
+  - [x] Seluruh 12+ screenshot di `tests/screenshots/` dibuka & diverifikasi langsung lewat `read_file`.
 
 ---
 

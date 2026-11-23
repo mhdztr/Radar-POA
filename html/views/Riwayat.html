@@ -1,32 +1,31 @@
 <!-- html/views/Riwayat.html -->
 <!--
-  Halaman Riwayat Laporan — PRD §7.5.
-  Feed kronologis lintas modul (semua sheet TX_*), mencakup ACTIVE, SUPERSEDED,
-  dan VOID, dengan status jelas dan komentar anulir tampil inline.
-  Data diagregasi server-side oleh riwayat_getAll() — client hanya merender.
+  Halaman Riwayat Transaksi Terfederasi (Direktorat, SIKAP, Nakhoda).
   Di-include ke Index.html via html_include(), dirender oleh _renderRiwayat().
 -->
 <div id="view-tpl-riwayat" hidden>
 
-  <!-- ── KPI STRIP ───────────────────────────────── -->
+  <!-- ── RINGKASAN BROADSHEET ──────────────────────── -->
   <div class="content-section">
     <div id="riw-kpi-strip">
       <!-- diisi _riwRenderKPI() -->
     </div>
   </div>
 
-  <!-- ── FEED LINTAS MODUL ──────────────────────── -->
+  <!-- ── RIWAYAT TRANSAKSI TERFEDERASI ────────────── -->
   <div class="content-section">
-    <div class="content-section-hd">Seluruh Entri (& incl. SUPERSEDED &amp; VOID)</div>
-    <div class="n-tabs" id="riw-status-tabs" style="margin-bottom:16px;">
+    <div class="sec-hd-bar">
+      <div class="content-section-hd sec-hd-flush">Riwayat Transaksi Terfederasi</div>
+    </div>
+    <div class="n-tabs" id="riw-status-tabs">
       <button type="button" class="n-tab" data-status="ALL" onclick="_riwSetTab('ALL')">Semua</button>
       <button type="button" class="n-tab" data-status="ACTIVE" onclick="_riwSetTab('ACTIVE')">Aktif</button>
       <button type="button" class="n-tab" data-status="SUPERSEDED" onclick="_riwSetTab('SUPERSEDED')">Ditimpa</button>
       <button type="button" class="n-tab" data-status="VOID" onclick="_riwSetTab('VOID')">Dianulir</button>
     </div>
     <div id="riw-history-msg" class="n-msg"></div>
-    <div class="n-card" style="padding:0;overflow-x:auto;" id="riw-history-wrap">
-      <div style="padding:20px 24px;color:var(--n-text-muted);font-size:.875rem;">Memuat riwayat…</div>
+    <div class="sec-table-card" id="riw-history-wrap">
+      <div class="n-pad-muted">Memuat riwayat&hellip;</div>
     </div>
   </div>
 

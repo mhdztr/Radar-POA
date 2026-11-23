@@ -1,31 +1,21 @@
 <!-- html/views/Notifikasi.html -->
 <!--
-  Halaman Notifikasi — daftar notifikasi in-app (APPROVAL_REQUEST, DATA_VOIDED, REMINDER_MINGGUAN).
-  Badge unread & reminder strip terhubung ke notifikasi_getRingkasan().
+  Halaman Notifikasi — daftar pemberitahuan dalam aplikasi
+  (persetujuan registrasi, pembatalan data, pengingat mingguan).
 -->
 <div id="view-tpl-notifikasi" hidden>
 
-  <!-- RINGKASAN -->
   <div class="content-section">
-    <div id="ntf-ringkasan" class="kpi-grid">
-      <!-- skeleton diisi _ntfRenderStrip() -->
-    </div>
-  </div>
-
-  <!-- DAFTAR NOTIFIKASI -->
-  <div class="content-section">
-    <div class="content-section-hd hd-row">
-      <div>Notifikasi Anda</div>
-      <div>
-        <button class="btn-mini btn-ghost" onclick="_ntfMarkAllRead()">Tandai Semua Dibaca</button>
-        <button class="btn-mini" onclick="_ntfReload()">Muat Ulang</button>
+    <div class="ntf-toolbar">
+      <div class="ntf-summary-line" id="ntf-summary-line">Memuat ringkasan notifikasi&hellip;</div>
+      <div class="ctl-row ctl-md">
+        <button type="button" class="btn-outline" onclick="_ntfMarkAllRead()">Tandai Semua Dibaca</button>
+        <button type="button" class="btn-outline" onclick="_ntfReload()">Muat Ulang</button>
       </div>
     </div>
     <div id="ntf-msg" class="n-msg"></div>
-    <div class="n-card" style="padding:0;overflow:hidden">
-      <div id="ntf-list">
-        <!-- diisi _ntfRenderList() -->
-      </div>
+    <div class="sec-table-card" id="ntf-list">
+      <div class="n-pad-muted">Memuat notifikasi&hellip;</div>
     </div>
   </div>
 

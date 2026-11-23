@@ -1,12 +1,10 @@
 <!-- html/views/MasterData.html
-     Template Master Data (PRD §5.11) — Kapal, Kawasan Konservasi, WPP.
-     Di-include ke Index.html via html_include() server-side,
-     disimpan dalam <div id="view-tpl-master-data" hidden>.
+     Template Master Data — Kapal Pengawas, Kawasan Konservasi, WPP, Opsi Daftar.
      Konten dirender oleh _renderMasterData() di Script_Main.html. -->
 <div id="view-tpl-master-data" hidden>
 
   <!-- ── TABS ─────────────────────────────────────── -->
-  <div class="n-tabs" id="md-tabs">
+  <div class="n-tabs adn-tabs-mb" id="md-tabs">
     <button type="button" class="n-tab active" data-md-tab="kapal" onclick="_mdSetTab('kapal')">Kapal</button>
     <button type="button" class="n-tab" data-md-tab="kawasan" onclick="_mdSetTab('kawasan')">Kawasan Konservasi</button>
     <button type="button" class="n-tab" data-md-tab="wpp" onclick="_mdSetTab('wpp')">WPP</button>
@@ -15,64 +13,60 @@
 
   <!-- ════════════════ KAPAL ═══════════════════════ -->
   <div class="content-section" id="md-pane-kapal">
-    <div class="md-pane-hd">
+    <div class="sec-hd-bar">
       <div>
-        <div class="content-section-hd" style="margin:0;">Master Kapal</div>
-        <div style="font-size:.78rem;color:var(--n-text-muted);">
-          Referensi armada untuk Operasi, Perawatan, Logistik, dan Pemantauan (PRD §6). Kapal tidak dihapus fisik — dinonaktifkan.
-        </div>
+        <div class="content-section-hd sec-hd-flush">Master Kapal</div>
+        <div class="sec-sub">Referensi armada pengawas lintas satelit. Kapal yang tidak beroperasi dinonaktifkan tanpa menghapus arsip.</div>
       </div>
-      <button type="button" class="btn-primary" id="md-btn-add-kapal" onclick="_mdOpenKapalModal()">Tambah Kapal</button>
+      <div class="ctl-row ctl-md">
+        <button type="button" class="btn-primary" id="md-btn-add-kapal" onclick="_mdOpenKapalModal()">Tambah Kapal</button>
+      </div>
     </div>
 
-    <div id="md-kapal-summary" class="md-summary"></div>
+    <div id="md-kapal-summary" class="mb-md"></div>
     <div id="md-kapal-msg" class="n-msg"></div>
-    <div class="n-card" style="padding:0;overflow-x:auto;" id="md-kapal-wrap"></div>
+    <div class="sec-table-card" id="md-kapal-wrap"></div>
   </div>
 
   <!-- ════════════ KAWASAN KONSERVASI ═══════════════ -->
   <div class="content-section n-hidden" id="md-pane-kawasan">
-    <div class="md-pane-hd">
+    <div class="sec-hd-bar">
       <div>
-        <div class="content-section-hd" style="margin:0;">Master Kawasan Konservasi</div>
-        <div style="font-size:.78rem;color:var(--n-text-muted);">
-          Pohon referensi kawasan untuk modul Intelijen (PRD §5.9 — dropdown, bukan free text). Latitude/Longitude opsional untuk peta.
-        </div>
+        <div class="content-section-hd sec-hd-flush">Master Kawasan Konservasi</div>
+        <div class="sec-sub">Referensi kawasan konservasi perairan lintas wilayah. Koordinat lintang dan bujur bersifat opsional untuk pemetaan.</div>
       </div>
-      <button type="button" class="btn-primary" onclick="_mdOpenKawasanModal()">Tambah Kawasan</button>
+      <div class="ctl-row ctl-md">
+        <button type="button" class="btn-primary" onclick="_mdOpenKawasanModal()">Tambah Kawasan</button>
+      </div>
     </div>
 
     <div id="md-kawasan-msg" class="n-msg"></div>
-    <div class="n-card" style="padding:0;overflow-x:auto;" id="md-kawasan-wrap"></div>
+    <div class="sec-table-card" id="md-kawasan-wrap"></div>
   </div>
 
   <!-- ════════════════ WPP ═════════════════════════ -->
   <div class="content-section n-hidden" id="md-pane-wpp">
-    <div class="md-pane-hd">
+    <div class="sec-hd-bar">
       <div>
-        <div class="content-section-hd" style="margin:0;">Master WPP</div>
-        <div style="font-size:.78rem;color:var(--n-text-muted);">
-          Read-only. Sumber: <code>wpp_final.geojson</code> (referensi geospasial). Sinkron manual oleh Superadmin bila batas wilayah diperbarui.
-        </div>
+        <div class="content-section-hd sec-hd-flush">Master WPP</div>
+        <div class="sec-sub">Referensi resmi Wilayah Pengelolaan Perikanan Negara Republik Indonesia (WPPNRI). Sinkronisasi manual dilakukan oleh Super Administrator.</div>
       </div>
-      <button type="button" class="btn-primary" id="md-btn-sync-wpp" onclick="_mdSyncWpp()">Sinkronkan</button>
+      <div class="ctl-row ctl-md">
+        <button type="button" class="btn-primary" id="md-btn-sync-wpp" onclick="_mdSyncWpp()">Sinkronkan</button>
+      </div>
     </div>
 
     <div id="md-wpp-msg" class="n-msg"></div>
     <div id="md-wpp-source-note"></div>
-    <div class="n-card" style="padding:0;overflow-x:auto;" id="md-wpp-wrap"></div>
+    <div class="sec-table-card" id="md-wpp-wrap"></div>
   </div>
 
   <!-- ════════════════ OPSI DAFTAR ═══════════════════ -->
   <div class="content-section n-hidden" id="md-pane-opsi">
-    <div class="md-pane-hd">
+    <div class="sec-hd-bar">
       <div>
-        <div class="content-section-hd" style="margin:0;">Kelola Opsi Daftar</div>
-        <div style="font-size:.78rem;color:var(--n-text-muted);">
-          Nilai untuk dropdown <em>Jenis Amunisi</em>, <em>Jenis BBM</em>, <em>Komponen Personil</em>, dan
-          <em>Kategori Pengawakan</em> pada form modul divisi. Nilai nasab tetap aman; hanya dropdown yang berubah.
-          Dikelola oleh Superadmin &amp; Direktur.
-        </div>
+        <div class="content-section-hd sec-hd-flush">Kelola Opsi Daftar</div>
+        <div class="sec-sub">Pilihan daftar untuk komponen logistik, pengawakan, dan klasifikasi armada. Data historis tetap terjaga saat label tampilan diperbarui.</div>
       </div>
     </div>
 
@@ -87,26 +81,26 @@
       <div id="md-kapal-modal-msg" class="n-msg"></div>
 
       <div class="form-grp">
-        <label for="md-kapal-id">KapalID <span style="color:var(--n-status-critical);">*</span></label>
-        <input type="text" id="md-kapal-id" placeholder="cth: KP-Orca01" maxlength="40" autocomplete="off">
+        <label for="md-kapal-id">Kode Kapal <span class="req-star">*</span></label>
+        <input type="text" id="md-kapal-id" placeholder="cth: KP-ORCA-01" maxlength="40" autocomplete="off">
       </div>
       <div class="form-grp">
-        <label for="md-kapal-nama">Nama Kapal <span style="color:var(--n-status-critical);">*</span></label>
-        <input type="text" id="md-kapal-nama" placeholder="cth: Kapal Pengawas Orca 01" maxlength="120" autocomplete="off">
+        <label for="md-kapal-nama">Nama Kapal <span class="req-star">*</span></label>
+        <input type="text" id="md-kapal-nama" placeholder="cth: KP. ORCA 01" maxlength="120" autocomplete="off">
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="form-grid-2">
         <div class="form-grp">
           <label for="md-kapal-kelas">Kelas / Tipe</label>
-          <input type="text" id="md-kapal-kelas" placeholder="cth: Kapal Cepat 60m" maxlength="80" autocomplete="off">
+          <input type="text" id="md-kapal-kelas" placeholder="cth: ORCA (60 m)" maxlength="80" autocomplete="off">
         </div>
         <div class="form-grp">
-          <label for="md-kapal-homebase">Homebase / UPT</label>
-          <input type="text" id="md-kapal-homebase" placeholder="cth: Bitung" maxlength="80" autocomplete="off">
+          <label for="md-kapal-homebase">Pangkalan / UPT</label>
+          <input type="text" id="md-kapal-homebase" placeholder="cth: Pangkalan Bitung" maxlength="80" autocomplete="off">
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="form-grid-2">
         <div class="form-grp">
-          <label for="md-kapal-jenis">Jenis Kapal <span style="color:var(--n-status-critical);">*</span></label>
+          <label for="md-kapal-jenis">Jenis Kapal <span class="req-star">*</span></label>
           <select id="md-kapal-jenis"></select>
         </div>
         <div class="form-grp">
@@ -118,9 +112,9 @@
         </div>
       </div>
 
-      <div style="display:flex;gap:12px;margin-top:24px;">
+      <div class="ctl-row ctl-lg ctl-fill mt-lg">
         <button type="button" class="btn-primary" id="md-btn-kapal-save" onclick="_mdSaveKapal()">Simpan</button>
-        <button type="button" class="btn-ghost" onclick="closeModal('modal-md-kapal')">Batal</button>
+        <button type="button" class="btn-outline" onclick="closeModal('modal-md-kapal')">Batal</button>
       </div>
     </div>
   </div>
@@ -132,31 +126,31 @@
       <div id="md-kawasan-modal-msg" class="n-msg"></div>
 
       <div class="form-grp">
-        <label for="md-kawasan-id">KawasanID <span style="color:var(--n-status-critical);">*</span></label>
+        <label for="md-kawasan-id">Kode Kawasan <span class="req-star">*</span></label>
         <input type="text" id="md-kawasan-id" placeholder="cth: TN-Karimunjawa" maxlength="40" autocomplete="off">
       </div>
       <div class="form-grp">
-        <label for="md-kawasan-nama">Nama Kawasan <span style="color:var(--n-status-critical);">*</span></label>
+        <label for="md-kawasan-nama">Nama Kawasan <span class="req-star">*</span></label>
         <input type="text" id="md-kawasan-nama" placeholder="cth: Taman Nasional Karimunjawa" maxlength="160" autocomplete="off">
       </div>
       <div class="form-grp">
-        <label for="md-kawasan-provinsi">Provinsi <span style="color:var(--n-status-critical);">*</span></label>
+        <label for="md-kawasan-provinsi">Provinsi <span class="req-star">*</span></label>
         <input type="text" id="md-kawasan-provinsi" placeholder="cth: Jawa Tengah" maxlength="80" autocomplete="off">
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="form-grid-2">
         <div class="form-grp">
-          <label for="md-kawasan-lat">Latitude (opsional)</label>
+          <label for="md-kawasan-lat">Latitude <span class="opt-lbl">(opsional)</span></label>
           <input type="number" id="md-kawasan-lat" step="any" placeholder="-5.9">
         </div>
         <div class="form-grp">
-          <label for="md-kawasan-lng">Longitude (opsional)</label>
+          <label for="md-kawasan-lng">Longitude <span class="opt-lbl">(opsional)</span></label>
           <input type="number" id="md-kawasan-lng" step="any" placeholder="110.3">
         </div>
       </div>
 
-      <div style="display:flex;gap:12px;margin-top:24px;">
+      <div class="ctl-row ctl-lg ctl-fill mt-lg">
         <button type="button" class="btn-primary" id="md-btn-kawasan-save" onclick="_mdSaveKawasan()">Simpan</button>
-        <button type="button" class="btn-ghost" onclick="closeModal('modal-md-kawasan')">Batal</button>
+        <button type="button" class="btn-outline" onclick="closeModal('modal-md-kawasan')">Batal</button>
       </div>
     </div>
   </div>
