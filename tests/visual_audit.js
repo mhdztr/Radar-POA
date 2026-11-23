@@ -345,7 +345,7 @@ async function inspectPage(page, name) {
       }
     });
 
-    document.querySelectorAll('.ops-map-notice, .ops-map-status, .page-finding, .dr-banner-tx').forEach((el) => {
+    document.querySelectorAll('.ops-map-notice, .ops-map-status, .page-finding, .dr-banner-t').forEach((el) => {
       if (el.getClientRects().length === 0) return;
       if (el.scrollWidth > el.clientWidth + 2) {
         clippedSamples.push({ cls: String(el.className || '').slice(0, 30), sw: el.scrollWidth, cw: el.clientWidth });

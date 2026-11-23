@@ -1617,12 +1617,9 @@ function _renderOverview(el) {
     html +=
       '<div id="dr-banner" class="dr-banner n-hidden">' +
         '<div class="dr-banner-in">' +
-          '<div class="dr-banner-ic" aria-hidden="true">!</div>' +
-          '<div class="dr-banner-tx">' +
-            '<span class="dr-banner-t"><span id="dr-banner-count">0</span> permintaan registrasi menunggu persetujuan</span>' +
-            '<span class="dr-banner-s">Antrean terbatas pada kewenangan Anda</span>' +
-          '</div>' +
-          '<button type="button" class="btn-primary dr-banner-btn" onclick="openApprovalDrawer()">Lihat &amp; Putuskan</button>' +
+          '<i class="dr-banner-dot" aria-hidden="true"></i>' +
+          '<span class="dr-banner-t"><span id="dr-banner-count">0</span> registrasi menunggu persetujuan</span>' +
+          '<button type="button" class="btn-primary dr-banner-btn" data-no-ico onclick="openApprovalDrawer()">Tinjau</button>' +
         '</div>' +
       '</div>';
   }
@@ -1630,34 +1627,24 @@ function _renderOverview(el) {
   // ── 2. Strip 4 KPI Broadsheet Tenang ──
   html +=
     '<div class="content-section">' +
-      '<div class="content-section-hd">KPI Strategis Nasional</div>' +
       '<div class="ov-kpi-row" id="ov-kpi-row">' +
-        _kpiHeadline('Pagu & Serapan Anggaran (SP2D)', '\u2014', '%', 'YTD kumulatif', { source: 'SIKAP \u00B7 Anggaran', sourceTone: 'sikap' }) +
-        _kpiHeadline('Postur Awak Kapal (Nakhoda)', '\u2014', 'personel', 'AKN POA & sertifikasi', { source: 'NAKHODA \u00B7 Postur AKN', sourceTone: 'nakhoda' }) +
-        _kpiHeadline('Kesiapan Armada Kapal Besar', '\u2014', '/ 34', 'Operasional & pangkalan', { source: 'ARMADA \u00B7 34 Kapal', sourceTone: 'radar' }) +
-        _kpiHeadline('Kegiatan Direktorat (YTD)', '\u2014', 'kegiatan', 'Lintas unit kerja', { source: 'PUSAT \u00B7 Kegiatan Dit.', sourceTone: 'pusat' }) +
+        _kpiHeadline('Serapan SP2D', '\u2014', '%', '', { source: 'SIKAP', sourceTone: 'sikap' }) +
+        _kpiHeadline('Awak Kapal', '\u2014', '', '', { source: 'Nakhoda', sourceTone: 'nakhoda' }) +
+        _kpiHeadline('Kesiapan Armada', '\u2014', '/ 34', '', { source: 'Armada', sourceTone: 'radar' }) +
+        _kpiHeadline('Kegiatan Direktorat', '\u2014', '', '', { source: 'Pusat', sourceTone: 'pusat' }) +
       '</div>' +
     '</div>';
 
   // ── 3. Momen 1: Peta Taktis 68/32 Berikon Siluet Kapal Kelas I–V ──
   html +=
     '<div class="content-section">' +
-      '<div class="content-section-hd">Sebaran WPPNRI &amp; Peta Taktis Armada</div>' +
       '<div class="chart-cell ov-map-cell">' +
         '<div class="ov-map-top">' +
-          '<div>' +
-            '<div class="chart-cell-title" id="ov-map-title">Disposisi 34 Kapal Pengawas Besar</div>' +
-            '<div class="chart-cell-sub" id="ov-map-sub">WPPNRI 571 s.d. 718 &middot; Siluet membedakan Kelas I&ndash;V, warna menandakan status taktis</div>' +
-          '</div>' +
+          '<div class="chart-cell-title" id="ov-map-title">Peta Armada</div>' +
           '<div class="ov-fleet-filter-bar" id="ov-fleet-filter-bar" role="group" aria-label="Filter status armada kapal"></div>' +
         '</div>' +
         '<div class="ov-map-class-row">' +
           '<div class="ov-fleet-class-bar" id="ov-fleet-class-bar" role="group" aria-label="Filter kelas kapal"></div>' +
-          '<div class="ov-status-key" aria-label="Keterangan status taktis">' +
-            '<span class="ov-status-key-item"><i class="ov-status-dot is-op"></i>Operasional di Laut</span>' +
-            '<span class="ov-status-key-item"><i class="ov-status-dot is-siap"></i>Siap Pangkalan</span>' +
-            '<span class="ov-status-key-item"><i class="ov-status-dot is-gal"></i>Galangan</span>' +
-          '</div>' +
         '</div>' +
         '<div class="ov-map-split">' +
           '<div class="ov-map-wrap">' +
@@ -1673,7 +1660,7 @@ function _renderOverview(el) {
           '<div class="ov-map-side">' +
             '<div id="ov-armada-summary" class="ov-armada-summary"></div>' +
             '<div class="ov-map-rank" id="ov-map-rank"></div>' +
-            '<button type="button" class="btn-outline ov-map-kt-btn" onclick="_routeTo(\'kapal-terbaik\')">Peringkat Kapal Terbaik &rarr;</button>' +
+            '<button type="button" class="btn-outline ov-map-kt-btn" onclick="_routeTo(\'kapal-terbaik\')">Peringkat Kapal &rarr;</button>' +
           '</div>' +
         '</div>' +
       '</div>' +
@@ -1682,14 +1669,10 @@ function _renderOverview(el) {
   // ── 4. Momen 2: Analitik Asimetris 65/35 (SIKAP & Nakhoda) ──
   html +=
     '<div class="content-section">' +
-      '<div class="content-section-hd">Analitik SIKAP &amp; Nakhoda</div>' +
       '<div class="chart-grid-65-35">' +
         '<div class="chart-cell">' +
           '<div class="chart-cell-hd">' +
-            '<div>' +
-              '<div class="chart-cell-title">Realisasi Anggaran SIKAP (YTD)</div>' +
-              '<div class="chart-cell-sub">Januari s.d. bulan terpilih pada filter (SP2D vs Akrual)</div>' +
-            '</div>' +
+            '<div class="chart-cell-title">Realisasi Anggaran</div>' +
             '<div class="chart-cell-chips">' +
               '<span class="chart-chip"><i style="background:var(--sat-sikap);"></i>SP2D</span>' +
               '<span class="chart-chip"><i class="is-dashed"></i>Akrual</span>' +
@@ -1699,10 +1682,7 @@ function _renderOverview(el) {
         '</div>' +
         '<div class="chart-cell">' +
           '<div class="chart-cell-hd">' +
-            '<div>' +
-              '<div class="chart-cell-title">Postur Awak Kapal AKN (Nakhoda)</div>' +
-              '<div class="chart-cell-sub">Proporsi awak POA terhadap keseluruhan personel</div>' +
-            '</div>' +
+            '<div class="chart-cell-title">Postur Awak Kapal</div>' +
           '</div>' +
           '<div class="ov-akn-panel" id="ov-akn-panel"><div class="chart-empty">Memuat postur awak kapal&hellip;</div></div>' +
         '</div>' +
@@ -1714,22 +1694,19 @@ function _renderOverview(el) {
     '<div class="content-section">' +
       '<div class="n-card ov-exec-card">' +
         '<div class="ov-exec-hd">' +
-          '<div>' +
-            '<div class="chart-cell-title">Monitoring Eksekutif Lintas Satelit</div>' +
-            '<div class="chart-cell-sub">Konsolidasi unit kerja Pusat, SIKAP, Nakhoda, dan satelit operasional</div>' +
-          '</div>' +
+          '<div class="chart-cell-title">Ringkasan Satelit</div>' +
           '<span class="badge badge-neutral" id="ov-exec-periode">&mdash;</span>' +
         '</div>' +
         '<div class="n-table-wrap">' +
           '<table class="n-table ov-exec-table">' +
             '<thead><tr>' +
               '<th>Unit Kerja</th>' +
-              '<th>Satelit Sumber</th>' +
-              '<th>Indikator Utama</th>' +
-              '<th>Capaian / Postur</th>' +
-              '<th>Status &amp; Catatan</th>' +
+              '<th>Satelit</th>' +
+              '<th>Indikator</th>' +
+              '<th>Capaian</th>' +
+              '<th>Status</th>' +
             '</tr></thead>' +
-            '<tbody id="ov-exec-body"><tr><td colspan="5" class="hist-empty">Memuat ringkasan terfederasi&hellip;</td></tr></tbody>' +
+            '<tbody id="ov-exec-body"><tr><td colspan="5" class="hist-empty">Memuat ringkasan satelit&hellip;</td></tr></tbody>' +
           '</table>' +
         '</div>' +
       '</div>' +
@@ -1796,17 +1773,7 @@ function _ovLoadError(msg) {
 function _ovRenderData(d) {
   if (!d) return;
 
-  var ang = (d.sikap && d.sikap.anggaran) || {};
-  var kes = (d.charts && d.charts.kesiapan) || {};
-  var akn = (d.nakhoda && d.nakhoda.akn) || {};
-  var disp = (d.sikap && d.sikap.kepegawaian) ? Number(d.sikap.kepegawaian.disparitasNakhoda || 0) : 0;
-  var pctStr = String(ang.sp2dPct !== undefined ? ang.sp2dPct : 0).replace('.', ',');
-  _setPageFinding(
-    'Serapan SP2D ' + pctStr + '% \u00B7 ' +
-    (kes.siap || 0) + '/' + (kes.totalArmada || 34) + ' kapal besar siap operasi \u00B7 ' +
-    _idNum(akn.poa || 0) + ' awak POA tercatat \u00B7 ' +
-    (disp === 0 ? 'kepegawaian SIKAP-Nakhoda sinkron' : (disp + ' disparitas SIKAP-Nakhoda perlu verifikasi'))
-  );
+  _setPageFinding('');
 
   if (d.satellites) _updateSyncSatellitesUI(d.satellites);
   if (d.meta && d.meta.syncedAt) {
@@ -1875,8 +1842,8 @@ function _ovRenderData(d) {
       aknPanel.innerHTML =
         '<div class="ov-akn-list">' + rowsHtml + '</div>' +
         '<div class="ov-akn-foot">' +
-          '<span>Laik Sijil: <strong>' + _idNum(sijil.laikAwak || 0) + ' / ' + _idNum(sijil.totalKapalEvaluasi || 34) + '</strong> kapal</span>' +
-          '<span>Sertifikat kedaluwarsa: <strong>' + _idNum(komp.kedaluwarsa || 0) + '</strong></span>' +
+          '<span>Laik sijil <strong>' + _idNum(sijil.laikAwak || 0) + '/' + _idNum(sijil.totalKapalEvaluasi || 34) + '</strong></span>' +
+          '<span>Kedaluwarsa <strong>' + _idNum(komp.kedaluwarsa || 0) + '</strong></span>' +
         '</div>';
     }
   }
@@ -3128,9 +3095,7 @@ function _ovMapRenderChips() {
   }
 
   var title = document.getElementById('ov-map-title');
-  var sub = document.getElementById('ov-map-sub');
-  if (title) title.textContent = 'Disposisi 34 Kapal Pengawas Besar';
-  if (sub) sub.textContent = _OV_MAP_META[_OV_MAP.metric] || '';
+  if (title) title.textContent = 'Peta Armada';
 }
 
 function _ovMapLegend(scale) {
@@ -3185,16 +3150,16 @@ function _ovMapRenderSideSummary() {
   var pctSiap = Math.round((siap / total) * 100);
   var pctGal = Math.max(0, 100 - pctOp - pctSiap);
   host.innerHTML =
-    '<div class="ov-armada-hd">Disposisi Kesiapan Armada (' + fleet.length + ' Kapal)</div>' +
+    '<div class="ov-armada-hd">Status Armada (' + fleet.length + ')</div>' +
     '<div class="ov-armada-bar">' +
       '<div class="ov-armada-seg is-op" style="width:' + (op / total * 100).toFixed(1) + '%;"></div>' +
       '<div class="ov-armada-seg is-siap" style="width:' + (siap / total * 100).toFixed(1) + '%;"></div>' +
       '<div class="ov-armada-seg is-gal" style="width:' + (gal / total * 100).toFixed(1) + '%;"></div>' +
     '</div>' +
     '<div class="ov-armada-rows">' +
-      '<div class="ov-armada-row"><i class="ov-status-dot is-op"></i><span class="ov-armada-lbl">Operasional di Laut</span><span class="ov-armada-val">' + op + '</span><span class="ov-armada-pct">' + pctOp + '%</span></div>' +
-      '<div class="ov-armada-row"><i class="ov-status-dot is-siap"></i><span class="ov-armada-lbl">Siap di Pangkalan</span><span class="ov-armada-val">' + siap + '</span><span class="ov-armada-pct">' + pctSiap + '%</span></div>' +
-      '<div class="ov-armada-row"><i class="ov-status-dot is-gal"></i><span class="ov-armada-lbl">Pemeliharaan Galangan</span><span class="ov-armada-val">' + gal + '</span><span class="ov-armada-pct">' + pctGal + '%</span></div>' +
+      '<div class="ov-armada-row"><i class="ov-status-dot is-op"></i><span class="ov-armada-lbl">Operasional</span><span class="ov-armada-val">' + op + '</span><span class="ov-armada-pct">' + pctOp + '%</span></div>' +
+      '<div class="ov-armada-row"><i class="ov-status-dot is-siap"></i><span class="ov-armada-lbl">Siap Pangkalan</span><span class="ov-armada-val">' + siap + '</span><span class="ov-armada-pct">' + pctSiap + '%</span></div>' +
+      '<div class="ov-armada-row"><i class="ov-status-dot is-gal"></i><span class="ov-armada-lbl">Galangan</span><span class="ov-armada-val">' + gal + '</span><span class="ov-armada-pct">' + pctGal + '%</span></div>' +
     '</div>';
 }
 

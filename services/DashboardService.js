@@ -44,57 +44,57 @@ function dashboard_getOverview(token, filter) {
     var melaporDetail = _dashMelaporDetailFromAgg(agg);
     var nMelapor = melaporDetail.filter(function (d) { return d.melapor; }).length;
 
-    // 4 Top KPI SiMata (PRD §3.3 & kompatibel dengan shell Overview)
+    // 4 Top KPI SiMata (ringkas & terstruktur)
     var headline = [
       {
-        label: 'Pagu & Serapan Anggaran (SP2D)',
-        source: 'SIKAP \u00B7 Anggaran',
+        label: 'Serapan SP2D',
+        source: 'SIKAP',
         sourceTone: 'sikap',
         value: ang.sp2dPct,
         unit: '%',
-        sub: 'Realisasi Rp ' + _dashCompact(ang.realisasiSP2D) + ' \u00B7 Pagu Rp ' + _dashCompact(ang.paguTotal),
+        sub: 'Rp ' + _dashCompact(ang.realisasiSP2D) + ' / Rp ' + _dashCompact(ang.paguTotal),
         foot: {
-          left:  { lbl: 'SP2D YTD', val: 'Rp ' + _dashCompact(ang.realisasiSP2D) },
-          right: { lbl: 'Pagu',     val: 'Rp ' + _dashCompact(ang.paguTotal) }
+          left:  { lbl: '',     val: 'Rp ' + _dashCompact(ang.realisasiSP2D) },
+          right: { lbl: 'Pagu', val: 'Rp ' + _dashCompact(ang.paguTotal) }
         },
         pct: ang.sp2dPct
       },
       {
-        label: 'Postur Awak Kapal (Nakhoda)',
-        source: 'NAKHODA \u00B7 Postur AKN',
+        label: 'Awak Kapal',
+        source: 'Nakhoda',
         sourceTone: 'nakhoda',
         value: n.akn.keseluruhan,
-        unit: 'personel',
-        sub: 'AKN POA ' + n.akn.poa + ' orang \u00B7 Sertifikat aktif ' + n.kompetensi.berlaku,
+        unit: '',
+        sub: _dashIntId(n.akn.poa) + ' POA \u00B7 ' + _dashIntId(n.kompetensi.kedaluwarsa) + ' sert. habis',
         foot: {
-          left:  { lbl: 'POA',         val: n.akn.poa + ' orang' },
-          right: { lbl: 'Kedaluwarsa', val: n.kompetensi.kedaluwarsa + ' sert.' }
+          left:  { lbl: 'POA',   val: _dashIntId(n.akn.poa) },
+          right: { lbl: 'Habis', val: _dashIntId(n.kompetensi.kedaluwarsa) + ' sert.' }
         },
         pct: n.akn.keseluruhan > 0 ? Math.round(n.akn.poa / n.akn.keseluruhan * 100) : 0
       },
       {
-        label: 'Kesiapan Armada Kapal Besar',
-        source: 'ARMADA \u00B7 ' + totalArmada + ' Kapal',
+        label: 'Kesiapan Armada',
+        source: 'Armada',
         sourceTone: 'radar',
         value: siapCount,
         unit: '/ ' + totalArmada,
-        sub: opCount + ' Operasional \u00B7 ' + pangkalanCount + ' Siap Pangkalan \u00B7 ' + galanganCount + ' Galangan',
+        sub: opCount + ' operasi \u00B7 ' + pangkalanCount + ' pangkalan \u00B7 ' + galanganCount + ' galangan',
         foot: {
-          left:  { lbl: 'Siap',     val: siapCount + ' kapal' },
-          right: { lbl: 'Galangan', val: galanganCount + ' kapal' }
+          left:  { lbl: 'Operasi',  val: String(opCount) },
+          right: { lbl: 'Galangan', val: String(galanganCount) }
         },
         pct: siapPct
       },
       {
-        label: 'Kegiatan Direktorat (YTD)',
-        source: 'PUSAT \u00B7 Kegiatan Dit.',
+        label: 'Kegiatan Direktorat',
+        source: 'Pusat',
         sourceTone: 'pusat',
         value: p.kegiatanYtd,
-        unit: 'kegiatan',
-        sub: 'Periode ini ' + p.kegiatanPeriode + ' kegiatan \u00B7 ' + nMelapor + '/7 divisi melapor',
+        unit: '',
+        sub: p.kegiatanPeriode + ' bulan ini \u00B7 ' + _dashConnectedCount(agg.satellites) + ' satelit aktif',
         foot: {
-          left:  { lbl: 'Periode Ini', val: p.kegiatanPeriode + ' keg.' },
-          right: { lbl: 'Satelit Aktif', val: _dashConnectedCount(agg.satellites) + ' sumber' }
+          left:  { lbl: 'Bulan ini', val: String(p.kegiatanPeriode) },
+          right: { lbl: 'Satelit',   val: _dashConnectedCount(agg.satellites) + ' aktif' }
         },
         pct: Math.round(nMelapor / 7 * 100)
       }
@@ -233,80 +233,80 @@ function dashboard_getOverview(token, filter) {
 
     var executiveGrid = [
       {
-        unit: 'Tata Usaha \u2014 Anggaran',
+        unit: 'Tata Usaha',
         satelit: 'SIKAP',
         satTone: 'sikap',
         connected: !!s.connected,
-        indikatorKunci: 'Serapan SP2D & Akrual YTD',
+        indikatorKunci: 'Anggaran SP2D',
         capaian: 'Rp ' + _dashCompact(ang.realisasiSP2D) + ' (' + _dashFmtDecId(ang.sp2dPct, 1) + '%)',
-        pembanding: 'Pagu Rp ' + _dashCompact(ang.paguTotal) + ' \u00B7 Akrual ' + _dashFmtDecId(ang.akrualPct, 1) + '%',
-        statusTeks: s.connected ? 'Tersinkron' : 'Belum Terhubung',
+        pembanding: 'Akrual ' + _dashFmtDecId(ang.akrualPct, 1) + '% \u00B7 Pagu Rp ' + _dashCompact(ang.paguTotal),
+        statusTeks: s.connected ? 'Tersinkron' : 'Terputus',
         statusTone: s.connected ? 'ok' : 'warn'
       },
       {
-        unit: 'Tata Usaha \u2014 BMN & Pengadaan',
+        unit: 'BMN & Pengadaan',
         satelit: 'SIKAP',
         satTone: 'sikap',
         connected: !!s.connected,
-        indikatorKunci: 'Aset BMN & Paket Pengadaan',
+        indikatorKunci: 'Aset & Paket',
         capaian: _dashIntId(s.bmn.totalUnit) + ' unit \u00B7 ' + _dashIntId(s.paket.totalPaket) + ' paket',
-        pembanding: 'Rusak berat ' + s.bmn.kondisi.RUSAK_BERAT + ' \u00B7 Progres fisik ' + _dashFmtDecId(s.paket.avgProgresFisik, 1) + '%',
+        pembanding: 'Rusak berat ' + s.bmn.kondisi.RUSAK_BERAT + ' \u00B7 Fisik ' + _dashFmtDecId(s.paket.avgProgresFisik, 1) + '%',
         statusTeks: s.bmn.dalamPenghapusan > 0 ? (s.bmn.dalamPenghapusan + ' Penghapusan') : 'Terkendali',
         statusTone: s.bmn.kondisi.RUSAK_BERAT > 0 ? 'warn' : 'ok'
       },
       {
-        unit: 'Pengawakan & Kompetensi',
+        unit: 'Pengawakan',
         satelit: 'Nakhoda',
         satTone: 'nakhoda',
         connected: !!n.connected,
-        indikatorKunci: 'Postur AKN POA & Sijil Kapal',
-        capaian: _dashIntId(n.akn.poa) + ' / ' + _dashIntId(n.akn.keseluruhan) + ' personel',
-        pembanding: n.sijil.laikAwak + '/' + (n.sijil.totalKapalEvaluasi || totalArmada) + ' laik sijil \u00B7 ' + n.kompetensi.kedaluwarsa + ' sert. kedaluwarsa',
-        statusTeks: s.kepegawaian.disparitasNakhoda > 0 ? (s.kepegawaian.disparitasNakhoda + ' Disparitas TU') : 'Sinkron',
+        indikatorKunci: 'AKN & Sijil',
+        capaian: _dashIntId(n.akn.poa) + ' / ' + _dashIntId(n.akn.keseluruhan) + ' awak',
+        pembanding: n.sijil.laikAwak + '/' + (n.sijil.totalKapalEvaluasi || totalArmada) + ' laik sijil \u00B7 ' + n.kompetensi.kedaluwarsa + ' habis',
+        statusTeks: s.kepegawaian.disparitasNakhoda > 0 ? (s.kepegawaian.disparitasNakhoda + ' Disparitas') : 'Sinkron',
         statusTone: s.kepegawaian.disparitasNakhoda > 0 ? 'warn' : 'ok'
       },
       {
-        unit: 'Kegiatan Direktorat',
+        unit: 'Direktorat',
         satelit: 'Pusat',
         satTone: 'pusat',
         connected: true,
-        indikatorKunci: 'Agenda Strategis Pimpinan (YTD)',
+        indikatorKunci: 'Kegiatan YTD',
         capaian: _dashIntId(p.kegiatanYtd) + ' kegiatan',
-        pembanding: 'Periode ini ' + _dashIntId(p.kegiatanPeriode) + ' \u00B7 Terakhir ' + (p.terakhirDicatat ? _dashFmtDateId(p.terakhirDicatat) : '\u2014'),
+        pembanding: _dashIntId(p.kegiatanPeriode) + ' periode ini' + (p.terakhirDicatat ? (' \u00B7 ' + _dashFmtDateId(p.terakhirDicatat)) : ''),
         statusTeks: 'Aktif',
         statusTone: 'ok'
       },
       {
-        unit: 'Logistik Armada',
+        unit: 'Logistik',
         satelit: 'Sistik',
         satTone: 'neut',
         connected: !!(agg.satellites.SISTIK && agg.satellites.SISTIK.connected),
-        indikatorKunci: 'BBM, Amunisi & Perbekalan',
+        indikatorKunci: 'BBM & Perbekalan',
         capaian: (agg.satellites.SISTIK && agg.satellites.SISTIK.connected) ? 'Terhubung' : '\u2014',
-        pembanding: 'Integrasi konektor satelit terjadwal',
-        statusTeks: (agg.satellites.SISTIK && agg.satellites.SISTIK.connected) ? 'Tersinkron' : 'Menunggu Integrasi',
+        pembanding: (agg.satellites.SISTIK && agg.satellites.SISTIK.connected) ? 'Aktif' : 'Belum terhubung',
+        statusTeks: (agg.satellites.SISTIK && agg.satellites.SISTIK.connected) ? 'Tersinkron' : 'Terjadwal',
         statusTone: (agg.satellites.SISTIK && agg.satellites.SISTIK.connected) ? 'ok' : 'neut'
       },
       {
-        unit: 'Pemeliharaan & Perawatan',
+        unit: 'Pemeliharaan',
         satelit: 'Siaga',
         satTone: 'neut',
         connected: !!(agg.satellites.SIAGA && agg.satellites.SIAGA.connected),
-        indikatorKunci: 'Status Docking & Harwat Kapal',
-        capaian: galanganCount + ' kapal galangan',
-        pembanding: 'Kesiapan dasar ' + siapCount + '/' + totalArmada + ' kapal besar',
-        statusTeks: (agg.satellites.SIAGA && agg.satellites.SIAGA.connected) ? 'Tersinkron' : 'Menunggu Integrasi',
+        indikatorKunci: 'Docking & Harwat',
+        capaian: galanganCount + ' galangan',
+        pembanding: siapCount + '/' + totalArmada + ' siap',
+        statusTeks: (agg.satellites.SIAGA && agg.satellites.SIAGA.connected) ? 'Tersinkron' : 'Terjadwal',
         statusTone: (agg.satellites.SIAGA && agg.satellites.SIAGA.connected) ? 'ok' : 'neut'
       },
       {
-        unit: 'Operasi & Pemantauan',
+        unit: 'Operasi',
         satelit: 'Operasi',
         satTone: 'neut',
         connected: !!(agg.satellites.OPERASI && agg.satellites.OPERASI.connected),
-        indikatorKunci: 'Hari Layar & Disposisi WPPNRI',
-        capaian: opCount + ' operasional \u00B7 ' + pangkalanCount + ' pangkalan',
-        pembanding: 'WPPNRI 571\u2013718 (' + totalArmada + ' kapal besar)',
-        statusTeks: (agg.satellites.OPERASI && agg.satellites.OPERASI.connected) ? 'Tersinkron' : 'Menunggu Integrasi',
+        indikatorKunci: 'Hari Layar & WPP',
+        capaian: opCount + ' operasi \u00B7 ' + pangkalanCount + ' pangkalan',
+        pembanding: 'WPP 571\u2013718',
+        statusTeks: (agg.satellites.OPERASI && agg.satellites.OPERASI.connected) ? 'Tersinkron' : 'Terjadwal',
         statusTone: (agg.satellites.OPERASI && agg.satellites.OPERASI.connected) ? 'ok' : 'neut'
       }
     ];
