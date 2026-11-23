@@ -4,12 +4,10 @@
 -->
 <div id="view-tpl-kapal-terbaik" style="display:none">
   
-  <!-- ── TOOLBAR / BREADCRUMB ATAS ─────────────────────────── -->
+  <!-- ── TOOLBAR PERIODE ─────────────────────────────────── -->
   <div class="kt-page-toolbar">
     <div class="kt-toolbar-left">
-      <button type="button" class="btn btn-sm btn-ghost kt-back-btn" onclick="_routeTo('overview')">
-        <span class="n-iconbtn-x" data-ico="arrowLeft" aria-hidden="true"></span> Kembali ke Ikhtisar
-      </button>
+      <div class="kt-toolbar-meta" id="kt-toolbar-meta"></div>
     </div>
     <div class="kt-toolbar-right">
       <div class="kt-filter-group">
@@ -24,7 +22,7 @@
           <option value="2026">2026</option>
           <option value="2025">2025</option>
         </select>
-        <button type="button" class="btn btn-secondary btn-sm kt-btn-refresh" onclick="_ktLoadData(true)" title="Muat ulang data">
+        <button type="button" class="btn btn-secondary btn-sm kt-btn-refresh" onclick="_ktLoadData(true)" title="Muat ulang data" aria-label="Muat ulang data">
           <span class="n-iconbtn-x" data-ico="refresh" aria-hidden="true"></span>
         </button>
       </div>
@@ -39,9 +37,9 @@
   <!-- ── LEADERBOARD TABEL 34 KAPAL ───────────────────────── -->
   <div class="content-section kt-table-section">
     <div class="kt-table-hd">
-      <div class="content-section-hd" style="margin-bottom:0">Peringkat 34 Kapal Pengawas</div>
+      <div class="kt-table-title">Peringkat 34 Kapal Pengawas</div>
       <div class="kt-table-search">
-        <input type="text" id="kt-search-input" class="n-input" placeholder="Cari kapal / pangkalan / komandan..." oninput="_ktFilterTable()">
+        <input type="text" id="kt-search-input" class="n-input" placeholder="Cari kapal, pangkalan, komandan" oninput="_ktFilterTable()">
       </div>
     </div>
     <div class="n-table-wrap kt-table-wrap">

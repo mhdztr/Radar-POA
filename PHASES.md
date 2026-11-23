@@ -21,7 +21,7 @@ ROADMAP PENGEMBANGAN RADAR POA v2.0
 ├── [Fase R0] Selesai [x] — Penyelarasan Dokumentasi & Kontrak Redesign Ultra-Detail di Seluruh *.md
 ├── [Fase R1] Selesai [x] — Shell Baru (Top Bar 56px + Floating Bottom Maritime Dock), Toolbar 32px, Sync Popover, & Login 50/50
 ├── [Fase R2] Selesai [x] — Redesign Ikhtisar: Peta 68/32 Berikon Siluet Kapal Kelas I–V, Grafik Asimetris 65/35, & Tabel Eksekutif Lintas Satelit
-├── [Fase R3] [ ]         — Redesign Kapal Terbaik (Non-Galangan Podium & Sync TW) & Profil Kapal (h1 Kapal + Enum Manusiawi)
+├── [Fase R3] Selesai [x] — Redesign Kapal Terbaik (Non-Galangan Podium & Sync TW) & Profil Kapal (h1 Kapal + Enum Manusiawi)
 ├── [Fase R4] [ ]         — Standarisasi 5 Halaman Sekunder, Fix Error .map(), Jargon Clean-Up, Calendar Anti-Ketik, & 12-Screen Playwright Gate
 │
 ├── [Fase 5]  [ ]         — Pengujian E2E Siklus Kegiatan Direktorat (Submit -> Revisi SUPERSEDED -> Anulir VOID) & Multi-Evidence Drive
@@ -101,7 +101,7 @@ ROADMAP PENGEMBANGAN RADAR POA v2.0
 ---
 
 ### Fase R3: Redesain `Kapal Terbaik` & `Profil Kapal`
-- **Status:** **Siap Dikerjakan (`[ ]`)**
+- **Status:** **Selesai (`[x]`)**
 - **Tujuan Utama:** Menuntaskan kontradiksi data Triwulan & kapal Galangan sebagai Juara 1, menyeragamkan angka desimal & kelas kapal, dan mengangkat identitas kapal di `Profil Kapal`.
 - **Komponen yang Harus Dikerjakan:**
   1. **Scoring Backend (`services/DashboardService.js`):**
@@ -115,8 +115,8 @@ ROADMAP PENGEMBANGAN RADAR POA v2.0
      - Ganti 3 kartu putih identik dengan 1 strip spesifikasi broadsheet horizontal (`Status`, `WPP & Pangkalan`, `Hari Layar`, `Awak Nakhoda`, `Aset BMN SIKAP`).
      - Konversi seluruh enum teknis ke label bahasa Indonesia bersih (`Rusak Ringan`, `Operasional di Laut`, `P3K Paruh Waktu`).
 - **Kriteria Verifikasi:**
-  - [ ] Tidak ada kapal `GALANGAN` di podium Top 3; filter Triwulan sinkron dengan kalimat temuan; format angka koma Indonesia konsisten.
-  - [ ] Screenshot `kapal-terbaik` dan `profil-kapal` desktop & mobile lolos inspeksi visual via `read_file`.
+  - [x] Tidak ada kapal `GALANGAN` di podium Top 3; filter Triwulan sinkron dengan kalimat temuan; format angka koma Indonesia konsisten.
+  - [x] Screenshot `kapal-terbaik` dan `profil-kapal` desktop & mobile lolos inspeksi visual via `read_file`.
 
 ---
 

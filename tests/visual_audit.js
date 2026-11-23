@@ -86,7 +86,7 @@ function buildBackendFixture() {
             { PegawaiID: 'AWK-001', Nama: 'Capt. M. Ridwan, S.St.Pi.', KategoriKepegawaian: 'PNS' },
             { PegawaiID: 'AWK-002', Nama: 'Hendra Wijaya, A.Md.', KategoriKepegawaian: 'PNS' },
             { PegawaiID: 'AWK-003', Nama: 'Budi Santoso, S.Pi.', KategoriKepegawaian: 'P3K' },
-            { PegawaiID: 'AWK-004', Nama: 'Rahmat Hidayat', KategoriKepegawaian: 'P3K' },
+            { PegawaiID: 'AWK-004', Nama: 'Rahmat Hidayat', KategoriKepegawaian: 'P3K_PARUH_WAKTU' },
             { PegawaiID: 'AWK-005', Nama: 'Dedi Kurniawan', KategoriKepegawaian: 'PJLP' }
           ]
         };
@@ -284,7 +284,7 @@ async function inspectPage(page, name) {
     const brokenImgs = imgs.filter((i) => !i.complete || i.naturalWidth === 0).map((i) => i.alt || i.src.slice(0, 40));
     const finding = document.getElementById('page-finding');
     const brokenControlRows = [];
-    document.querySelectorAll('.page-header, .topbar-actions, .filter-box, .n-tabs, .hist-actions, .ctl-row').forEach((box) => {
+    document.querySelectorAll('.page-header, .topbar-actions, .filter-box, .n-tabs, .hist-actions, .ctl-row, .kt-page-toolbar, .kt-filter-group').forEach((box) => {
       if (box.offsetParent === null) return;
       const ctls = Array.from(box.querySelectorAll('button, select, input')).filter((c) => c.offsetParent !== null);
       const hs = [...new Set(ctls.map((c) => Math.round(c.getBoundingClientRect().height)))];
@@ -525,32 +525,76 @@ async function inspectPage(page, name) {
     await mPage.click('#dock-more-mask');
     await mPage.waitForTimeout(200);
 
-    // ── 5. Kapal Terbaik ──
+    // ── 5. Kapal Terbaik (Desktop + Mobile) ──
     await page.evaluate(() => _routeTo('kapal-terbaik'));
-    await page.waitForSelector('#kt-table-body tr .n-badge', { timeout: 10000 });
+    await page.waitForSelector('#kt-table-body tr .badge', { timeout: 10000 });
     await page.waitForTimeout(300);
     const ktNavState = await page.evaluate(() => {
       const bar = document.getElementById('topnav-indicator');
       const barRect = bar ? bar.getBoundingClientRect() : null;
+      const twEl = document.getElementById('kt-filter-tw');
+      const yrEl = document.getElementById('kt-filter-year');
+      const findingEl = document.getElementById('page-finding');
+      const podiumCards = [...document.querySelectorAll('#kt-podium-container .kt-pedestal-card')];
+      const podiumTexts = podiumCards.map((c) => c.textContent || '');
+      const hasGalanganInPodium = podiumTexts.some((t) => /GALANGAN|BARAKUDA\s*02/i.test(t));
+      const podiumHulls = document.querySelectorAll('#kt-podium-container .ship-hull').length;
+      const tableHulls = document.querySelectorAll('#kt-table-body .ship-hull').length;
+      const ktText = (document.getElementById('page-content') || document.body).textContent || '';
+      const rawTokenMatch = ktText.match(/\b(?:HIU_MACAN|AKAR_BAHAR|SIAP_PANGKALAN|RUSAK_RINGAN|P3K_PARUH_WAKTU|AWK-\d+)\b/);
       return {
         indicatorX: barRect ? barRect.left : 0,
-        indicatorWidth: barRect ? barRect.width : 0
+        indicatorWidth: barRect ? barRect.width : 0,
+        twValue: twEl ? twEl.value : '',
+        yrValue: yrEl ? yrEl.value : '',
+        findingText: findingEl ? findingEl.textContent : '',
+        hasGalanganInPodium,
+        podiumHulls,
+        tableHulls,
+        rawToken: rawTokenMatch ? rawTokenMatch[0] : ''
       };
     });
     console.log('[AUDIT] kapal-terbaik-nav:', JSON.stringify(ktNavState));
     reports['kapal-terbaik-desktop'] = await inspectPage(page, 'kapal-terbaik-desktop');
     await page.screenshot({ path: path.join(OUT_DIR, '05-kapal-terbaik-desktop.png'), fullPage: true });
 
-    // ── 6. Profil Kapal ──
+    await mPage.evaluate(() => _routeTo('kapal-terbaik'));
+    await mPage.waitForSelector('#kt-table-body tr .badge', { timeout: 10000 });
+    await mPage.waitForTimeout(300);
+    reports['kapal-terbaik-mobile'] = await inspectPage(mPage, 'kapal-terbaik-mobile');
+    await mPage.screenshot({ path: path.join(OUT_DIR, '05b-kapal-terbaik-mobile.png'), fullPage: true });
+
+    // ── 6. Profil Kapal (Desktop + Mobile) ──
     await page.evaluate(() => _openProfilKapal('KP-ORCA-01'));
     await page.waitForSelector('#pk-tables .n-table', { timeout: 10000 });
+    const pkState = await page.evaluate(() => {
+      const h1 = document.querySelector('#page-header h1.page-title');
+      const specCells = document.querySelectorAll('#pk-kpi .pk-spec-strip .pk-spec-cell').length;
+      const bodyTxt = ((document.getElementById('page-header') || {}).textContent || '') + ' ' +
+        ((document.getElementById('page-content') || {}).textContent || '');
+      const rawTokenMatch = bodyTxt.match(/\b(?:OPERASIONAL|SIAP_PANGKALAN|RUSAK_RINGAN|RUSAK_BERAT|P3K_PARUH_WAKTU|AWK-\d+)\b|\d{4}-\d{2}-\d{2}/);
+      return {
+        h1Text: h1 ? h1.textContent.trim() : '',
+        specCells,
+        hasHumanEnum: bodyTxt.includes('Operasional di Laut') && bodyTxt.includes('Rusak Ringan') && bodyTxt.includes('P3K Paruh Waktu') && bodyTxt.includes('PNS') && bodyTxt.includes('PJLP'),
+        hasHumanDate: bodyTxt.includes('10 Jan 2026'),
+        rawToken: rawTokenMatch ? rawTokenMatch[0] : ''
+      };
+    });
+    console.log('[AUDIT] profil-kapal-state:', JSON.stringify(pkState));
     reports['profil-kapal-desktop'] = await inspectPage(page, 'profil-kapal-desktop');
     await page.screenshot({ path: path.join(OUT_DIR, '06-profil-kapal-desktop.png'), fullPage: true });
+
+    await mPage.evaluate(() => _openProfilKapal('KP-ORCA-01'));
+    await mPage.waitForSelector('#pk-tables .n-table', { timeout: 10000 });
+    await mPage.waitForTimeout(300);
+    reports['profil-kapal-mobile'] = await inspectPage(mPage, 'profil-kapal-mobile');
+    await mPage.screenshot({ path: path.join(OUT_DIR, '06b-profil-kapal-mobile.png'), fullPage: true });
 
     console.log('[CONSOLE ERRORS]:', consoleErrors.length, consoleErrors);
     console.log('[PAGE ERRORS]:', pageErrors.length, pageErrors);
 
-    // Fase R2 automated quality gates + Two-Tier Top Header & Flush Mobile Bar checks
+    // Fase R2 + R3 automated quality gates
     const ov = reports['overview-desktop'];
     const failures = [];
     if (pageErrors.length !== 0) failures.push('pageErrors=' + pageErrors.length);
@@ -564,10 +608,19 @@ async function inspectPage(page, name) {
     if (overviewNavState.headerTop < overviewNavState.topbarBottom - 1) failures.push('headerOverlappedByTopbar=' + overviewNavState.headerTop + '<' + overviewNavState.topbarBottom);
     if (!(overviewNavState.indicatorWidth > 40) || overviewNavState.indicatorOpacity !== '1') failures.push('overviewNavState=' + JSON.stringify(overviewNavState));
     if (!(ktNavState.indicatorX > overviewNavState.indicatorX) || !(ktNavState.indicatorWidth > 80)) failures.push('ktNavState=' + JSON.stringify(ktNavState));
+    if (ktNavState.twValue !== '2' || ktNavState.yrValue !== '2026') failures.push('ktFilterSync=' + ktNavState.twValue + '/' + ktNavState.yrValue);
+    if (!ktNavState.findingText.includes('TW II') || ktNavState.findingText.includes('43.2') || /\.$/.test(ktNavState.findingText)) failures.push('ktFinding=' + ktNavState.findingText);
+    if (ktNavState.hasGalanganInPodium) failures.push('galanganInPodium=true');
+    if (ktNavState.podiumHulls !== 3 || ktNavState.tableHulls !== 34) failures.push('ktHulls=' + ktNavState.podiumHulls + '/' + ktNavState.tableHulls);
+    if (ktNavState.rawToken) failures.push('ktRawToken=' + ktNavState.rawToken);
+    if (pkState.h1Text !== 'KP. ORCA 01') failures.push('pkH1=' + pkState.h1Text);
+    if (pkState.specCells !== 5) failures.push('pkSpecCells=' + pkState.specCells);
+    if (!pkState.hasHumanEnum || !pkState.hasHumanDate) failures.push('pkHuman=' + JSON.stringify(pkState));
+    if (pkState.rawToken) failures.push('pkRawToken=' + pkState.rawToken);
     if (mobileDockState.navBarDisplay !== 'none' || mobileDockState.dockDisplay !== 'grid' || mobileDockState.dockLeft !== 0 || mobileDockState.dockRight !== 390 || mobileDockState.dockBorderRadius !== '0px') {
       failures.push('mobileDockState=' + JSON.stringify(mobileDockState));
     }
-    ['login-desktop', 'login-mobile', 'overview-desktop', 'overview-1024', 'overview-mobile'].forEach((k) => {
+    ['login-desktop', 'login-mobile', 'overview-desktop', 'overview-1024', 'overview-mobile', 'kapal-terbaik-desktop', 'kapal-terbaik-mobile', 'profil-kapal-desktop', 'profil-kapal-mobile'].forEach((k) => {
       const r = reports[k];
       if (!r) return;
       if (r.overflowX !== 0) failures.push(k + ':overflowX=' + r.overflowX);

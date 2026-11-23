@@ -440,8 +440,16 @@ function dashboard_profilKapal(token, params) {
       };
     });
 
+    var totalNilaiBmn = asetKapal.reduce(function (sum, b) {
+      return sum + (Number(b['NilaiBuku']) || 0);
+    }, 0);
     var statusKesiapan = fleetSeed ? (fleetSeed.status !== 'GALANGAN') : kapalInfo.statusAktif;
     var dockingAktif = fleetSeed ? (fleetSeed.status === 'GALANGAN') : false;
+    var statusTaktis = fleetSeed ? fleetSeed.status : (statusKesiapan ? 'OPERASIONAL' : 'GALANGAN');
+    var statusLabel = statusTaktis === 'OPERASIONAL' ? 'Operasional di Laut'
+      : (statusTaktis === 'SIAP_PANGKALAN' ? 'Siap di Pangkalan' : 'Pemeliharaan Galangan');
+    kapalInfo.statusTaktis = statusTaktis;
+    kapalInfo.statusLabel = statusLabel;
 
     return {
       success: true,
@@ -449,14 +457,17 @@ function dashboard_profilKapal(token, params) {
         kapal: kapalInfo,
         summary: {
           statusKesiapan: statusKesiapan,
-          statusTaktis: fleetSeed ? fleetSeed.status : (statusKesiapan ? 'SIAP' : 'GALANGAN'),
+          statusTaktis: statusTaktis,
+          statusLabel: statusLabel,
           statusKesiapanPeriode: getCurrentPeriode(),
           penyebabTidakSiap: dockingAktif ? 'Pemeliharaan terencana di galangan' : '',
           dockingAktif: dockingAktif,
           lokasiDocking: dockingAktif && fleetSeed ? fleetSeed.pangkalan : '',
           totalHariOperasiLaut: fleetSeed ? fleetSeed.hari : 0,
           totalKruAktif: kruAktif.length,
-          totalBmnKapal: asetKapal.length
+          totalBmnKapal: asetKapal.length,
+          totalNilaiBmn: totalNilaiBmn,
+          totalNilaiBmnLabel: totalNilaiBmn > 0 ? ('Rp ' + _dashCompact(totalNilaiBmn)) : '\u2014'
         },
         kruAktif: kruAktif,
         asetKapal: asetList,
@@ -725,6 +736,8 @@ function dashboard_getScoringKapalTerbaik(token, filter) {
 
     var rawList = FLEET_34_TACTICAL_SEED.map(function (k, idx) {
       var clsInfo = _dashResolveShipClass(k.kelasKapal, k.kelas, k.panjangMeter);
+      var statusLabel = k.status === 'OPERASIONAL' ? 'Operasional di Laut'
+        : (k.status === 'SIAP_PANGKALAN' ? 'Siap di Pangkalan' : 'Pemeliharaan Galangan');
       var hari = Math.round(k.hari / 3.5);
       var kia = idx % 4 === 0 ? (idx % 8 === 0 ? 2 : 1) : 0;
       var kii = idx % 3 === 0 ? (idx % 6 === 0 ? 3 : 1) : 0;
@@ -736,7 +749,8 @@ function dashboard_getScoringKapalTerbaik(token, filter) {
         id: k.id, nama: k.nama, kelas: k.kelas,
         kelasKapal: clsInfo.kelasKapal, kelasRomawi: clsInfo.kelasRomawi,
         kelasLabel: clsInfo.kelasLabel, panjangMeter: clsInfo.panjangMeter,
-        wpp: k.wpp, pangkalan: k.pangkalan, komandan: k.komandan, status: k.status,
+        wpp: k.wpp, pangkalan: k.pangkalan, komandan: k.komandan,
+        status: k.status, statusLabel: statusLabel, eligiblePodium: k.status !== 'GALANGAN',
         hariLayar: hari, kia: kia, kii: kii, rumpon: rump,
         poinPenindakan: poinPenindakan, volumeRiksa: riksa, valuasi: valuasi
       };
@@ -759,17 +773,21 @@ function dashboard_getScoringKapalTerbaik(token, filter) {
     });
 
     rawList.sort(function (a, b) {
+      if (a.eligiblePodium !== b.eligiblePodium) return a.eligiblePodium ? -1 : 1;
       if (b.skor !== a.skor) return b.skor - a.skor;
       if (b.hariLayar !== a.hariLayar) return b.hariLayar - a.hariLayar;
       return b.poinPenindakan - a.poinPenindakan;
     });
 
     var sumHari = 0, sumTangkapan = 0, sumSkor = 0;
+    var eligibleCount = 0, galanganCount = 0;
     rawList.forEach(function (r, idx) {
       r.rank = idx + 1;
       sumHari += r.hariLayar;
       sumTangkapan += (r.kia + r.kii);
       sumSkor += r.skor;
+      if (r.eligiblePodium) eligibleCount++;
+      else galanganCount++;
     });
 
     var twNames = ['TW I (Jan \u2013 Mar)', 'TW II (Apr \u2013 Jun)', 'TW III (Jul \u2013 Sep)', 'TW IV (Okt \u2013 Des)'];
@@ -780,10 +798,12 @@ function dashboard_getScoringKapalTerbaik(token, filter) {
         triwulan: triwulan,
         triwulanLabel: twNames[triwulan - 1] + ' ' + year,
         totalArmada: 34,
+        eligibleCount: eligibleCount,
+        galanganCount: galanganCount,
         totalHariLayar: sumHari,
         totalTangkapan: sumTangkapan,
         rerataSkor: rawList.length > 0 ? Math.round((sumSkor / rawList.length) * 10) / 10 : 0,
-        top3: rawList.slice(0, 3),
+        top3: rawList.filter(function (r) { return r.eligiblePodium; }).slice(0, 3),
         leaderboard: rawList
       }
     };
