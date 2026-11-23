@@ -608,7 +608,25 @@ async function inspectPage(page, name) {
     await page.waitForSelector('#ov-map .ship-svg-wrap', { timeout: 10000 }).catch(() => {});
     await page.waitForSelector('#ov-map .ov-map-legend', { timeout: 6000 }).catch(() => {});
     await page.waitForTimeout(900);
+    const inspectWppMap = async (p, label) => {
+      const s = await p.evaluate(() => {
+        const mapEl = document.getElementById('ov-map');
+        const mr = mapEl ? mapEl.getBoundingClientRect() : null;
+        const wppPolygons = document.querySelectorAll('#ov-map svg path.leaflet-interactive').length;
+        const hasErrorNotice = !!document.querySelector('#ov-map .ops-map-notice');
+        const hasLegend = !!document.querySelector('#ov-map .ov-map-legend');
+        const markers = [...document.querySelectorAll('#ov-map .ship-svg-wrap')];
+        const shipsInBounds = mr ? markers.filter((m) => {
+          const r = m.getBoundingClientRect();
+          return r.width > 0 && r.left >= mr.left - 4 && r.right <= mr.right + 4 && r.top >= mr.top - 4 && r.bottom <= mr.bottom + 4;
+        }).length : 0;
+        return { wppPolygons, hasErrorNotice, hasLegend, shipsInBounds };
+      });
+      console.log(`[AUDIT] wpp-map-${label}:`, JSON.stringify(s));
+      return s;
+    };
     reports['overview-desktop'] = await inspectPage(page, 'overview-desktop');
+    const wppMapDesktop = await inspectWppMap(page, 'desktop');
     const overviewNavState = await page.evaluate(() => {
       const navBar = document.getElementById('app-nav-bar');
       const dock = document.getElementById('app-dock');
@@ -651,6 +669,7 @@ async function inspectPage(page, name) {
     await page.setViewportSize({ width: 1024, height: 768 });
     await page.waitForTimeout(550);
     reports['overview-1024'] = await inspectPage(page, 'overview-1024');
+    const wppMapLaptop = await inspectWppMap(page, '1024');
     await page.screenshot({ path: path.join(OUT_DIR, '03c-overview-1024.png') });
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.waitForTimeout(450);
@@ -672,6 +691,7 @@ async function inspectPage(page, name) {
     await mPage.waitForSelector('#ov-exec-body tr', { timeout: 10000 }).catch(() => {});
     await mPage.waitForTimeout(1500);
     reports['overview-mobile'] = await inspectPage(mPage, 'overview-mobile');
+    const wppMapMobile = await inspectWppMap(mPage, 'mobile');
     const mobileDockState = await mPage.evaluate(() => {
       const navBar = document.getElementById('app-nav-bar');
       const dock = document.getElementById('app-dock');
@@ -971,6 +991,17 @@ async function inspectPage(page, name) {
       if (ov.distinctBg > 16) failures.push('ov.distinctBg=' + ov.distinctBg + ':' + JSON.stringify(ov.distinctBgList));
       if (ov.docHeight > 2100) failures.push('ov.docHeight=' + ov.docHeight);
     }
+    [
+      ['desktop', wppMapDesktop],
+      ['1024', wppMapLaptop],
+      ['mobile', wppMapMobile]
+    ].forEach(([lbl, wm]) => {
+      if (!wm || wm.wppPolygons !== 11 || wm.hasErrorNotice || !wm.hasLegend || wm.shipsInBounds !== 34) {
+        failures.push(`wppMap-${lbl}=` + JSON.stringify(wm));
+      }
+      const r = reports[lbl === 'desktop' ? 'overview-desktop' : lbl === '1024' ? 'overview-1024' : 'overview-mobile'];
+      if (r && r.markerOverlaps !== 0) failures.push(`overview-${lbl}.markerOverlaps=` + r.markerOverlaps);
+    });
     if (failures.length) {
       console.error('[AUDIT GATES FAILED]:', failures.join(' | '));
       process.exitCode = 1;

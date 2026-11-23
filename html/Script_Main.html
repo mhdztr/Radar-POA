@@ -3148,7 +3148,13 @@
   if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
     window.addEventListener('resize', function () {
       if (typeof _OV_MAP !== 'undefined' && _OV_MAP.map) {
-        try { _OV_MAP.map.invalidateSize(); } catch (e) { }
+        try {
+          _OV_MAP.map.invalidateSize();
+          if (!_OV_MAP.userInteracted && typeof _ovMapFitIndonesia === 'function') {
+            _ovMapFitIndonesia();
+          }
+          _ovMapRenderFleetMarkers();
+        } catch (e) { }
       }
     });
   }
@@ -3157,19 +3163,24 @@
   // CACHE GEOJSON WPP — IKHTISAR
   // ===========================================================================
   var _OPS_GEO = { wppGeoJsonData: null, wppPromise: null };
-  var _OPS_GEO_SRC = 'https://raw.githubusercontent.com/mhdztr/wppnri/main/wpp_final.geojson';
-  var _OPS_GEO_TIMEOUT_MS = 30000;
-  var _OPS_GEO_RETRY = 2;
+  var _OPS_GEO_SRCS = [
+    'https://cdn.jsdelivr.net/gh/mhdztr/wppnri@main/wpp_final.geojson',
+    'https://raw.githubusercontent.com/mhdztr/wppnri/main/wpp_final.geojson'
+  ];
+  var _OPS_GEO_TIMEOUT_MS = 20000;
+  var _OPS_GEO_RETRY = 1;
 
-  function _opsFetchWppGeoJson(attempt) {
+  function _opsFetchWppGeoJson(attempt, srcIdx) {
     attempt = attempt || 1;
+    srcIdx = srcIdx || 0;
+    var url = _OPS_GEO_SRCS[srcIdx] || _OPS_GEO_SRCS[0];
     return new Promise(function (resolve, reject) {
       var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
       var opts = { cache: 'force-cache' };
       if (ctrl) opts.signal = ctrl.signal;
       var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, _OPS_GEO_TIMEOUT_MS);
 
-      fetch(_OPS_GEO_SRC, opts)
+      fetch(url, opts)
         .then(function (r) {
           if (!r.ok) throw new Error('HTTP ' + r.status);
           return r.json();
@@ -3184,7 +3195,11 @@
         .catch(function (e) {
           clearTimeout(timer);
           if (attempt < _OPS_GEO_RETRY) {
-            _opsFetchWppGeoJson(attempt + 1).then(resolve, reject);
+            _opsFetchWppGeoJson(attempt + 1, srcIdx).then(resolve, reject);
+            return;
+          }
+          if (srcIdx + 1 < _OPS_GEO_SRCS.length) {
+            _opsFetchWppGeoJson(1, srcIdx + 1).then(resolve, reject);
             return;
           }
           reject(new Error(
@@ -3198,8 +3213,14 @@
 
   function _opsGetGeoData(cb) {
     if (_OPS_GEO.wppGeoJsonData) { cb(_OPS_GEO.wppGeoJsonData, null); return; }
+    if (typeof window !== 'undefined' && window._WPP_GEOJSON_EMBEDDED &&
+        window._WPP_GEOJSON_EMBEDDED.features && window._WPP_GEOJSON_EMBEDDED.features.length) {
+      _OPS_GEO.wppGeoJsonData = window._WPP_GEOJSON_EMBEDDED;
+      cb(_OPS_GEO.wppGeoJsonData, null);
+      return;
+    }
     if (!_OPS_GEO.wppPromise) {
-      _OPS_GEO.wppPromise = _opsFetchWppGeoJson(1).then(function (data) {
+      _OPS_GEO.wppPromise = _opsFetchWppGeoJson(1, 0).then(function (data) {
         _OPS_GEO.wppGeoJsonData = data;
         return data;
       });
@@ -3276,15 +3297,19 @@
     metric: 'aktivitas',
     fleetFilter: 'ALL',
     classFilter: 'ALL',
+    userInteracted: false,
+    programmaticFit: false,
     data: null,      // payload wppMap dari server (termasuk .fleet & .fleetSummary)
     map: null,
     layer: null,
     fleetLayer: null
   };
 
-  // Ramp 1 hue navy, sama dengan peta Operasi (hex untuk atribut SVG Leaflet).
-  var _OV_MAP_RAMP = ['#E3EEF4', '#9BC5D9', '#3E8BB0', '#0B4F6C'];
-  var _OV_MAP_RAMP_LINE = 'rgba(11, 79, 108, 0.42)';
+  var _OV_MAP_BOUNDS = [[-13.5, 92.2], [7.8, 141.4]];
+
+  // Ramp biru hidrografis tenang agar ikon siluet kapal tetap kontras di atas poligon WPP.
+  var _OV_MAP_RAMP = ['#EAF2F6', '#C8DFEB', '#8FBCD4', '#4B8EB0'];
+  var _OV_MAP_RAMP_LINE = 'rgba(11, 79, 108, 0.45)';
 
   var _OV_MAP_META = {
     aktivitas: 'WPPNRI 571 s.d. 718 \u00B7 Siluet membedakan Kelas I\u2013V, warna menandakan status taktis',
@@ -3496,8 +3521,10 @@
   function _ovMapFocus(kode) {
     var l = _ovMapFindLayer(kode);
     if (!l || !_OV_MAP.layer) return;
+    var target = String(kode).trim();
     _OV_MAP.layer.eachLayer(function (x) {
-      x.setStyle({ weight: String(x.feature.properties.wppnri).trim() === String(kode).trim() ? 2.5 : 1 });
+      var on = String(x.feature.properties.wppnri).trim() === target;
+      x.setStyle({ weight: on ? 2.2 : 1.15, color: on ? '#0B4F6C' : _OV_MAP_RAMP_LINE, fillOpacity: on ? 0.68 : 0.52 });
     });
     if (l.bringToFront) l.bringToFront();
   }
@@ -3505,9 +3532,23 @@
   function _ovMapZoom(kode) {
     var l = _ovMapFindLayer(kode);
     if (!l || !_OV_MAP.map) return;
+    _OV_MAP.userInteracted = true;
     try {
       _OV_MAP.map.fitBounds(l.getBounds(), { padding: [28, 28], maxZoom: 7, animate: true });
     } catch (e) { }
+  }
+
+  function _ovMapFitIndonesia() {
+    if (!_OV_MAP.map) return;
+    _OV_MAP.programmaticFit = true;
+    try {
+      var mapEl = document.getElementById('ov-map');
+      var pad = mapEl && mapEl.clientWidth < 520 ? [6, 6] : [12, 12];
+      _OV_MAP.map.fitBounds(_OV_MAP_BOUNDS, { padding: pad, animate: false });
+    } catch (e) {
+    } finally {
+      _OV_MAP.programmaticFit = false;
+    }
   }
 
   function _ovMapInit() {
@@ -3525,9 +3566,23 @@
         try { delete h._leaflet_id; } catch (e) { }
       }
 
+      _OV_MAP.userInteracted = false;
       _OV_MAP.map = L.map('ov-map', {
         zoomControl: true,
-        scrollWheelZoom: false, center: [-2.3, 118.0], zoom: 5
+        scrollWheelZoom: false,
+        zoomSnap: 0.25,
+        zoomDelta: 0.5,
+        minZoom: 3,
+        maxZoom: 12,
+        center: [-2.8, 116.8],
+        zoom: 4.5
+      });
+      _ovMapFitIndonesia();
+      _OV_MAP.map.on('dragstart', function () {
+        if (!_OV_MAP.programmaticFit) _OV_MAP.userInteracted = true;
+      });
+      _OV_MAP.map.on('zoomstart', function () {
+        if (!_OV_MAP.programmaticFit) _OV_MAP.userInteracted = true;
       });
       _OV_MAP.map.on('zoomend', _ovMapRenderFleetMarkers);
 
@@ -3546,7 +3601,10 @@
 
       setTimeout(function () {
         if (_OV_MAP.map) {
-          try { _OV_MAP.map.invalidateSize(); } catch (e) { }
+          try {
+            _OV_MAP.map.invalidateSize();
+            if (!_OV_MAP.userInteracted) _ovMapFitIndonesia();
+          } catch (e) { }
           _ovMapRenderFleetMarkers();
         }
       }, 220);
@@ -3667,12 +3725,15 @@
     });
 
     // Separatif piksel deterministik agar ikon kapal tidak menumpuk pada zoom level rendah
-    for (var pass = 0; pass < 28; pass++) {
+    for (var pass = 0; pass < 42; pass++) {
       var moved = false;
       for (var i = 0; i < pts.length; i++) {
         var a = pts[i];
         if (a.inView && a.x - a.hw < 54 && a.y - a.hh < 88) {
           a.x = 54 + a.hw + 4;
+        }
+        if (a.inView && a.x - a.hw < 132 && a.y + a.hh > mh - 122) {
+          a.y = mh - 122 - a.hh - 4;
         }
         for (var j = i + 1; j < pts.length; j++) {
           var b = pts[j];
@@ -3786,7 +3847,7 @@
         style: function (f) {
           return {
             fillColor: scale.fill(_ovMapVal(f.properties.wppnri)),
-            fillOpacity: 0.85, weight: 1, opacity: 1, color: _OV_MAP_RAMP_LINE
+            fillOpacity: 0.52, weight: 1.15, opacity: 1, color: _OV_MAP_RAMP_LINE
           };
         },
         onEachFeature: function (feature, layer) {
