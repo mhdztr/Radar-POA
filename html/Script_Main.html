@@ -1150,7 +1150,8 @@
     _startAppHeartbeat();
     _runSyncTick(true); // inisialisasi versi live-sync server (Fase 15a)
     window.addEventListener('hashchange', function () {
-      _routeTo((window.location.hash || '').replace('#', ''));
+      var target = (window.location.hash || '').replace('#', '');
+      if (target && target !== APP.currentView) _routeTo(target);
     });
   }
 
@@ -1727,7 +1728,7 @@
       '<div class="chart-cell">' +
       '<div class="chart-cell-hd">' +
       '<div class="chart-cell-title">Realisasi Anggaran</div>' +
-      '<div class="chart-cell-chips">' +
+      '<div class="chart-cell-chips" id="ov-chart-real-chips">' +
       '<span class="chart-chip"><i style="background:var(--sat-sikap);"></i>SP2D</span>' +
       '<span class="chart-chip"><i class="is-dashed"></i>Akrual</span>' +
       '</div>' +
@@ -1824,6 +1825,34 @@
     if (execBody) execBody.innerHTML = '';
   }
 
+  function _openAdminSatelit() {
+    if (!APP.user || APP.user.role !== 'SUPERADMIN') return;
+    _ADN.initialTab = 'satelit';
+    _routeTo('kelola-akun');
+  }
+
+  function _ovEmptyCardHtml(title, desc, satConnected) {
+    var ico = '<div class="chart-empty-ico" aria-hidden="true">' +
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+      '<rect x="3" y="3" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="7" rx="2"/>' +
+      '<line x1="7" y1="6.5" x2="7.01" y2="6.5"/><line x1="7" y1="17.5" x2="7.01" y2="17.5"/>' +
+      '</svg></div>';
+    var act = '';
+    if (!satConnected) {
+      if (APP.user && APP.user.role === 'SUPERADMIN') {
+        act = '<div class="ctl-row ctl-md chart-empty-act">' +
+          '<button type="button" class="btn-outline" onclick="_openAdminSatelit()">Hubungkan di Admin &rarr;</button>' +
+          '</div>';
+      } else {
+        act = '<div class="chart-empty-desc">Hubungi Super Administrator untuk menautkan sumber satelit.</div>';
+      }
+    }
+    return ico +
+      '<div class="chart-empty-title">' + _esc(title) + '</div>' +
+      '<div class="chart-empty-desc">' + _esc(desc) + '</div>' +
+      act;
+  }
+
   function _ovRenderData(d) {
     if (!d) return;
 
@@ -1860,17 +1889,38 @@
 
     _ovMapLoad(d.wppMap);
 
+    var sikapConnected = !!(d.sikap && d.sikap.connected);
+    var nakhodaConnected = !!(d.nakhoda && d.nakhoda.connected);
+
     if (d.charts && d.charts.realisasi) {
       var labels = d.charts.trendMonths || [];
+      var sp2dArr = _asArray(d.charts.realisasi.sp2d);
+      var akruArr = _asArray(d.charts.realisasi.akrual);
+      var hasRealData = sp2dArr.concat(akruArr).some(function (v) { return Number(v) !== 0; });
+      var chipsEl = document.getElementById('ov-chart-real-chips');
+      if (chipsEl) chipsEl.hidden = !hasRealData;
+
+      var realEmptyHtml = !sikapConnected
+        ? _ovEmptyCardHtml(
+            'Satelit SIKAP belum terhubung',
+            'Tautkan ID Spreadsheet SIKAP agar grafik realisasi SP2D dan Akrual tampil otomatis.',
+            false
+          )
+        : _ovEmptyCardHtml(
+            'Belum ada realisasi pada rentang ini',
+            'Satelit SIKAP aktif, namun belum ada catatan realisasi SP2D atau Akrual hingga bulan terpilih.',
+            true
+          );
+
       _chartLine('ov-chart-real', labels, [
-        { label: 'SP2D', data: d.charts.realisasi.sp2d, color: _CHART_COLORS.sikap, fill: true, fillColor: 'rgba(15, 118, 110, 0.07)', borderWidth: 2.5 },
-        { label: 'Akrual', data: d.charts.realisasi.akrual, color: '#64748B', dashed: true, fill: false, borderWidth: 2 }
+        { label: 'SP2D', data: sp2dArr, color: _CHART_COLORS.sikap, fill: true, fillColor: 'rgba(15, 118, 110, 0.07)', borderWidth: 2.5 },
+        { label: 'Akrual', data: akruArr, color: '#64748B', dashed: true, fill: false, borderWidth: 2 }
       ], {
         noEndLabel: true,
         formatMonths: true,
         fmt: _chartCompact,
         yFmt: _chartYBillions,
-        emptyMsg: 'Belum ada data realisasi SIKAP pada rentang terpilih'
+        emptyMsg: { html: realEmptyHtml }
       });
     }
 
@@ -1885,7 +1935,18 @@
         if ((Number(kesArr[ai]) || 0) > maxAll) maxAll = Number(kesArr[ai]) || 0;
       }
       if (!lbls.length || maxAll <= 0) {
-        aknPanel.innerHTML = '<div class="chart-empty">Data postur AKN Nakhoda belum terhubung</div>';
+        var aknEmptyHtml = !nakhodaConnected
+          ? _ovEmptyCardHtml(
+              'Satelit Nakhoda belum terhubung',
+              'Tautkan ID Spreadsheet Nakhoda agar komposisi awak PNS, P3K, P3K Paruh Waktu, dan PJLP tampil.',
+              false
+            )
+          : _ovEmptyCardHtml(
+              'Belum ada data komposisi AKN',
+              'Satelit Nakhoda aktif, namun snapshot personel AKN pada periode ini masih kosong.',
+              true
+            );
+        aknPanel.innerHTML = '<div class="chart-empty">' + aknEmptyHtml + '</div>';
       } else {
         var sijil = (d.nakhoda && d.nakhoda.sijil) || {};
         var komp = (d.nakhoda && d.nakhoda.kompetensi) || {};
@@ -4124,12 +4185,18 @@
       if (isSA) tabSatelit.removeAttribute('hidden'); else tabSatelit.setAttribute('hidden', '');
     }
 
-    _ADN.tab = 'persetujuan';
+    var initTab = _ADN.initialTab;
+    _ADN.initialTab = null;
+    _ADN.tab = (initTab && (initTab === 'persetujuan' || isSA)) ? initTab : 'persetujuan';
     _ADN.users = [];
     _ADN.audit = [];
     _ADN.userFormId = null;
     _adnSyncTabs();
     _renderApprovalsInto('ka');
+    if (_ADN.tab === 'pengguna') { _adnLoadUsers(); _adnLoadDivisi(); }
+    if (_ADN.tab === 'audit') _adnLoadAudit();
+    if (_ADN.tab === 'reminder') _adnLoadReminder();
+    if (_ADN.tab === 'satelit') _adnLoadSatellites();
   }
 
   function _adnSyncTabs() {

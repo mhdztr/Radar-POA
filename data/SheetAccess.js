@@ -418,8 +418,16 @@ function _autoCreateLogSheet(ss, sheetName) {
   return created;
 }
 
+var _SATELLITE_FILE_NAMES = {
+  SIKAP_SS_ID:   ['RadarPOA_SIKAP_DB', 'SIKAP_DB'],
+  NAKHODA_SS_ID: ['RadarPOA_Nakhoda_DB', 'Nakhoda_DB'],
+  SISTIK_SS_ID:  ['RadarPOA_Sistik_DB'],
+  SIAGA_SS_ID:   ['RadarPOA_Siaga_DB']
+};
+
 /**
- * Resolusi ID Spreadsheet Satelit dari Script Properties (dengan prioritas key).
+ * Resolusi ID Spreadsheet Satelit dari Script Properties (dengan prioritas key)
+ * dan fallback auto-discovery satu kali di Google Drive berdasarkan nama baku.
  * @param {string|string[]} propKeys
  * @returns {string|null}
  */
@@ -430,6 +438,34 @@ function resolveSatelliteSpreadsheetId(propKeys) {
     var val = String(props.getProperty(keys[i]) || '').trim();
     if (val) return val;
   }
+
+  var primaryKey = String(keys[0] || '');
+  var candidates = _SATELLITE_FILE_NAMES[primaryKey];
+  if (!candidates || typeof DriveApp === 'undefined' || typeof DriveApp.getFilesByName !== 'function') {
+    return null;
+  }
+
+  var cache = (typeof CacheService !== 'undefined') ? CacheService.getScriptCache() : null;
+  var missKey = 'SAT_AUTO_MISS_' + primaryKey;
+  if (cache && cache.get(missKey) === '1') return null;
+
+  for (var c = 0; c < candidates.length; c++) {
+    try {
+      var it = DriveApp.getFilesByName(candidates[c]);
+      if (it && it.hasNext()) {
+        var file = it.next();
+        var foundId = file && typeof file.getId === 'function' ? String(file.getId() || '').trim() : '';
+        if (foundId) {
+          props.setProperty(primaryKey, foundId);
+          return foundId;
+        }
+      }
+    } catch (eDrv) {
+      Logger.log('[resolveSatelliteSpreadsheetId] Drive lookup "' + candidates[c] + '": ' + eDrv.message);
+    }
+  }
+
+  if (cache) { try { cache.put(missKey, '1', 600); } catch (eC) {} }
   return null;
 }
 

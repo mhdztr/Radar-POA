@@ -1198,6 +1198,51 @@ async function inspectPage(page, name) {
     await page.screenshot({ path: path.join(OUT_DIR, '11-riwayat-desktop.png'), fullPage: true });
     console.log('[AUDIT] riwayat-state:', JSON.stringify(riwState));
 
+    // ── 12. Disconnected Satellite Empty States & Admin Connector Shortcut ──
+    await page.evaluate(() => {
+      window.__auditSetUser({ role: 'SUPERADMIN' });
+      APP.user.role = 'SUPERADMIN';
+      _routeTo('overview');
+    });
+    await page.waitForSelector('#ov-map svg path.leaflet-interactive', { timeout: 10000 });
+    await page.waitForTimeout(350);
+    await page.evaluate((ovSrc) => {
+      const ovClone = JSON.parse(JSON.stringify(ovSrc));
+      ovClone.sikap.connected = false;
+      ovClone.nakhoda.connected = false;
+      ovClone.charts.realisasi = { sp2d: [0, 0, 0, 0, 0, 0], akrual: [0, 0, 0, 0, 0, 0] };
+      ovClone.charts.aknPostur = { labels: [], keseluruhan: [], poa: [] };
+      ovClone.executiveGrid = ovClone.executiveGrid.map((r) => {
+        if (r.satelit === 'SIKAP' || r.satelit === 'Nakhoda') {
+          return Object.assign({}, r, { statusTeks: 'Terputus', statusTone: 'warn' });
+        }
+        return r;
+      });
+      _ovRenderData(ovClone);
+    }, fixtures.overview.data);
+    await page.waitForTimeout(250);
+    reports['overview-disconnected'] = await inspectPage(page, 'overview-disconnected');
+    await page.screenshot({ path: path.join(OUT_DIR, '03d-overview-disconnected.png'), fullPage: true });
+    const discUiState = await page.evaluate(() => {
+      const chips = document.getElementById('ov-chart-real-chips');
+      const btns = [...document.querySelectorAll('.chart-empty-act button')];
+      const execTxt = (document.getElementById('ov-exec-body') || {}).textContent || '';
+      return {
+        chipsHidden: !!(chips && chips.hidden),
+        connectBtns: btns.length,
+        hasSikapEmpty: (document.body.textContent || '').includes('Satelit SIKAP belum terhubung'),
+        hasNakhodaEmpty: (document.body.textContent || '').includes('Satelit Nakhoda belum terhubung'),
+        execHasTerputus: execTxt.includes('Terputus') && !execTxt.includes('Terkendali')
+      };
+    });
+    await page.click('.chart-empty-act button >> nth=0');
+    await page.waitForSelector('#adn-panel-satelit:not([hidden])', { timeout: 5000 });
+    const routedToSatelit = await page.evaluate(() => {
+      const p = document.getElementById('adn-panel-satelit');
+      return !!(p && !p.hidden);
+    });
+    console.log('[AUDIT] overview-disconnected-state:', JSON.stringify(Object.assign({}, discUiState, { routedToSatelit })));
+
     console.log('[CONSOLE ERRORS]:', consoleErrors.length, consoleErrors);
     console.log('[PAGE ERRORS]:', pageErrors.length, pageErrors);
 
@@ -1242,12 +1287,15 @@ async function inspectPage(page, name) {
     if (!riwState.hasCleanTitle || riwState.stripCells !== 4 || !riwState.hasFixedDitimpaSub || riwState.hasRawUserId || riwState.periodWs !== 'nowrap') {
       failures.push('riwState=' + JSON.stringify(riwState));
     }
+    if (!discUiState.chipsHidden || discUiState.connectBtns !== 2 || !discUiState.hasSikapEmpty || !discUiState.hasNakhodaEmpty || !discUiState.execHasTerputus || !routedToSatelit) {
+      failures.push('discUiState=' + JSON.stringify(Object.assign({}, discUiState, { routedToSatelit })));
+    }
     if (mobileDockState.navBarDisplay !== 'none' || mobileDockState.dockDisplay !== 'grid' || mobileDockState.dockLeft !== 0 || mobileDockState.dockRight !== 390 || mobileDockState.dockBorderRadius !== '0px') {
       failures.push('mobileDockState=' + JSON.stringify(mobileDockState));
     }
     [
       'login-desktop', 'login-mobile',
-      'overview-desktop', 'overview-1024', 'overview-mobile',
+      'overview-desktop', 'overview-1024', 'overview-mobile', 'overview-disconnected',
       'kapal-terbaik-desktop', 'kapal-terbaik-mobile',
       'profil-kapal-desktop', 'profil-kapal-mobile',
       'kegiatan-desktop', 'notifikasi-desktop',

@@ -125,6 +125,21 @@ function createFullRadarSandbox() {
       },
       flush() {}
     },
+    DriveApp: {
+      getFilesByName(name) {
+        const hits = [];
+        for (const ss of spreadsheets.values()) {
+          if (ss.getName() === name) {
+            hits.push({ getId: () => ss.getId(), getName: () => ss.getName() });
+          }
+        }
+        let i = 0;
+        return {
+          hasNext() { return i < hits.length; },
+          next() { return hits[i++]; }
+        };
+      }
+    },
     ScriptApp: {
       WeekDay: { FRIDAY: 'FRIDAY' },
       getProjectTriggers() { return triggers.slice(); },
@@ -392,4 +407,45 @@ test('AdminService Satellite Config: SUPERADMIN CRUD, URL ID parsing, cache bump
   const clearRes = sb.admin_saveSatelliteConfig(saTok, { SISTIK_SS_ID: '' });
   assert.equal(clearRes.success, true);
   assert.equal(sb.PropertiesService.getScriptProperties().getProperty('SISTIK_SS_ID'), null);
+});
+
+test('AggregatorService & DashboardService: monthly split Reguler/ABT, Drive auto-discovery, & Terputus status badges', () => {
+  const sb = createFullRadarSandbox();
+  sb.setup_seedSuperadmin();
+  const dirTok = sb.auth_login({ identifier: 'direktur.poa@kkp.go.id', password: 'DirekturPOA2026!' }).data.token;
+
+  // 1. Disconnected state: Tata Usaha, BMN & Pengadaan, Pengawakan MUST show Terputus (warn), never Terkendali/Sinkron
+  const discOv = sb.dashboard_getOverview(dirTok, { mode: 'monthly', month: 6, year: 2026 });
+  assert.equal(discOv.success, true);
+  assert.equal(discOv.data.sikap.connected, false);
+  assert.equal(discOv.data.nakhoda.connected, false);
+  const gridMap = Object.fromEntries(Array.from(discOv.data.executiveGrid, (g) => [g.unit, g]));
+  assert.equal(gridMap['Tata Usaha'].statusTeks, 'Terputus');
+  assert.equal(gridMap['BMN & Pengadaan'].statusTeks, 'Terputus');
+  assert.equal(gridMap['BMN & Pengadaan'].statusTone, 'warn');
+  assert.equal(gridMap['Pengawakan'].statusTeks, 'Terputus');
+  assert.equal(gridMap['Pengawakan'].statusTone, 'warn');
+
+  // 2. Drive auto-discovery when RadarPOA_SIKAP_DB exists without SIKAP_SS_ID property + split Reguler/ABT monthly sum
+  const sikapSs = sb.SpreadsheetApp.create('RadarPOA_SIKAP_DB');
+  const tu = sikapSs.insertSheet('TX_TataUsaha');
+  tu.getRange(1, 1, 1, 11).setValues([[
+    'RowID', 'DivisiID', 'Periode', 'SubmittedBy', 'Timestamp', 'Status',
+    'PaguReguler', 'PaguABT', 'RealisasiSP2D_Reguler_Minggu', 'RealisasiSP2D_ABT_Minggu', 'RealisasiAkrual_Reguler_Minggu'
+  ]]);
+  tu.appendRow([
+    'TU-AUTO-01', 'DIV-TU', '2026-06-W02', 'USR-STAF-02', '2026-06-14T10:00:00Z', 'ACTIVE',
+    500000000, 100000000, 300000000, 60000000, 390000000
+  ]);
+
+  // Clear negative miss cache so resolveSatelliteSpreadsheetId discovers RadarPOA_SIKAP_DB
+  sb.CacheService.getScriptCache().remove('SAT_AUTO_MISS_SIKAP_SS_ID');
+  const resolvedId = sb.resolveSatelliteSpreadsheetId(['SIKAP_SS_ID', 'TU_SS_ID']);
+  assert.equal(resolvedId, sikapSs.getId());
+  assert.equal(sb.PropertiesService.getScriptProperties().getProperty('SIKAP_SS_ID'), sikapSs.getId());
+
+  const aggRes = sb.agg_collectAll({ mode: 'monthly', month: 6, year: 2026 }, true);
+  assert.equal(aggRes.sikap.connected, true);
+  assert.equal(aggRes.sikap.anggaran.sp2dMonthly[5], 360000000);   // June index 5 = Reguler + ABT
+  assert.equal(aggRes.sikap.anggaran.akrualMonthly[5], 390000000); // June index 5
 });

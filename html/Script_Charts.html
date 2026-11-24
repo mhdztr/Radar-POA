@@ -140,17 +140,22 @@ function _chartTeardownAll() {
 // ============================================================
 // EMPTY STATE — semua nilai 0 bukan "bug", tampilkan pesan netral
 // ============================================================
-function _chartEmpty(canvasId, msg) {
+function _chartEmpty(canvasId, msgOrHtml) {
   _chartDestroy(canvasId);
   var el = document.getElementById(canvasId);
   if (!el) return;
   el.style.display = 'none';
   var box = el.closest('.chart-box');
   if (!box) return;
-  if (box.querySelector('.chart-empty')) return;
+  var prev = box.querySelector('.chart-empty');
+  if (prev) prev.remove();
   var d = document.createElement('div');
   d.className = 'chart-empty';
-  d.textContent = msg;
+  if (msgOrHtml && typeof msgOrHtml === 'object' && msgOrHtml.html) {
+    d.innerHTML = msgOrHtml.html;
+  } else {
+    d.textContent = msgOrHtml || 'Belum ada data';
+  }
   box.appendChild(d);
 }
 

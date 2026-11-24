@@ -251,8 +251,8 @@ function dashboard_getOverview(token, filter) {
         indikatorKunci: 'Aset & Paket',
         capaian: _dashIntId(s.bmn.totalUnit) + ' unit \u00B7 ' + _dashIntId(s.paket.totalPaket) + ' paket',
         pembanding: 'Rusak berat ' + s.bmn.kondisi.RUSAK_BERAT + ' \u00B7 Fisik ' + _dashFmtDecId(s.paket.avgProgresFisik, 1) + '%',
-        statusTeks: s.bmn.dalamPenghapusan > 0 ? (s.bmn.dalamPenghapusan + ' Penghapusan') : 'Terkendali',
-        statusTone: s.bmn.kondisi.RUSAK_BERAT > 0 ? 'warn' : 'ok'
+        statusTeks: !s.connected ? 'Terputus' : (s.bmn.dalamPenghapusan > 0 ? (s.bmn.dalamPenghapusan + ' Penghapusan') : 'Terkendali'),
+        statusTone: !s.connected ? 'warn' : (s.bmn.kondisi.RUSAK_BERAT > 0 ? 'warn' : 'ok')
       },
       {
         unit: 'Pengawakan',
@@ -262,8 +262,8 @@ function dashboard_getOverview(token, filter) {
         indikatorKunci: 'AKN & Sijil',
         capaian: _dashIntId(n.akn.poa) + ' / ' + _dashIntId(n.akn.keseluruhan) + ' awak',
         pembanding: n.sijil.laikAwak + '/' + (n.sijil.totalKapalEvaluasi || totalArmada) + ' laik sijil \u00B7 ' + n.kompetensi.kedaluwarsa + ' habis',
-        statusTeks: s.kepegawaian.disparitasNakhoda > 0 ? (s.kepegawaian.disparitasNakhoda + ' Disparitas') : 'Sinkron',
-        statusTone: s.kepegawaian.disparitasNakhoda > 0 ? 'warn' : 'ok'
+        statusTeks: !n.connected ? 'Terputus' : (s.kepegawaian.disparitasNakhoda > 0 ? (s.kepegawaian.disparitasNakhoda + ' Disparitas') : 'Sinkron'),
+        statusTone: !n.connected ? 'warn' : (s.kepegawaian.disparitasNakhoda > 0 ? 'warn' : 'ok')
       },
       {
         unit: 'Direktorat',

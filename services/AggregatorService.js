@@ -246,12 +246,18 @@ function _aggIngestSikap(range, ytdRange, weekRange, months) {
 
   var sp2dMonthly = months.map(function (m) {
     return tuRows.reduce(function (acc, r) {
-      return acc + (_aggMonthKey(r['Timestamp']) === m ? _aggNum(r['RealisasiSP2D_Minggu']) : 0);
+      var mk = _aggMonthKey(r['Timestamp']) || (String(r['Periode'] || '').length >= 7 ? String(r['Periode']).substring(0, 7) : '');
+      if (mk !== m) return acc;
+      var val = (_aggNum(r['RealisasiSP2D_Reguler_Minggu']) + _aggNum(r['RealisasiSP2D_ABT_Minggu'])) || _aggNum(r['RealisasiSP2D_Minggu']);
+      return acc + val;
     }, 0);
   });
   var akrualMonthly = months.map(function (m) {
     return tuRows.reduce(function (acc, r) {
-      return acc + (_aggMonthKey(r['Timestamp']) === m ? _aggNum(r['RealisasiAkrual_Minggu']) : 0);
+      var mk = _aggMonthKey(r['Timestamp']) || (String(r['Periode'] || '').length >= 7 ? String(r['Periode']).substring(0, 7) : '');
+      if (mk !== m) return acc;
+      var val = (_aggNum(r['RealisasiAkrual_Reguler_Minggu']) + _aggNum(r['RealisasiAkrual_ABT_Minggu'])) || _aggNum(r['RealisasiAkrual_Minggu']);
+      return acc + val;
     }, 0);
   });
 
