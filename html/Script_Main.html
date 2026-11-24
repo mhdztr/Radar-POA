@@ -2566,7 +2566,7 @@
   }
 
   function _openDatePicker(el) {
-    try { if (el && typeof el.showPicker === 'function') el.showPicker(); } catch (e) {}
+    try { if (el && typeof el.showPicker === 'function') el.showPicker(); } catch (e) { }
   }
 
   function _renderBroadsheetStrip(cells) {
@@ -3250,7 +3250,7 @@
   function _opsGetGeoData(cb) {
     if (_OPS_GEO.wppGeoJsonData) { cb(_OPS_GEO.wppGeoJsonData, null); return; }
     if (typeof window !== 'undefined' && window._WPP_GEOJSON_EMBEDDED &&
-        window._WPP_GEOJSON_EMBEDDED.features && window._WPP_GEOJSON_EMBEDDED.features.length) {
+      window._WPP_GEOJSON_EMBEDDED.features && window._WPP_GEOJSON_EMBEDDED.features.length) {
       _OPS_GEO.wppGeoJsonData = window._WPP_GEOJSON_EMBEDDED;
       cb(_OPS_GEO.wppGeoJsonData, null);
       return;
@@ -4110,6 +4110,7 @@
     var tabPengguna = document.getElementById('adn-tab-pengguna');
     var tabAudit = document.getElementById('adn-tab-audit');
     var tabReminder = document.getElementById('adn-tab-reminder');
+    var tabSatelit = document.getElementById('adn-tab-satelit');
     if (tabPengguna) {
       if (isSA) tabPengguna.removeAttribute('hidden'); else tabPengguna.setAttribute('hidden', '');
     }
@@ -4118,6 +4119,9 @@
     }
     if (tabReminder) {
       if (isSA) tabReminder.removeAttribute('hidden'); else tabReminder.setAttribute('hidden', '');
+    }
+    if (tabSatelit) {
+      if (isSA) tabSatelit.removeAttribute('hidden'); else tabSatelit.setAttribute('hidden', '');
     }
 
     _ADN.tab = 'persetujuan';
@@ -4137,7 +4141,8 @@
       persetujuan: 'adn-panel-persetujuan',
       pengguna: 'adn-panel-pengguna',
       audit: 'adn-panel-audit',
-      reminder: 'adn-panel-reminder'
+      reminder: 'adn-panel-reminder',
+      satelit: 'adn-panel-satelit'
     };
     Object.keys(panels).forEach(function (k) {
       var el = document.getElementById(panels[k]);
@@ -4153,6 +4158,7 @@
     if (tab === 'pengguna') { _adnLoadUsers(); _adnLoadDivisi(); }
     if (tab === 'audit') _adnLoadAudit();
     if (tab === 'reminder') _adnLoadReminder();
+    if (tab === 'satelit') _adnLoadSatellites();
   }
 
   function _adnGoMasterData() { _routeTo('master-data'); }
@@ -4431,6 +4437,155 @@
 
   function _adnFmtDateTime(v) {
     return _fmtDateTimeId(v);
+  }
+
+  // ── TAB KONEKTOR SATELIT & DATA MART (SUPERADMIN) ────────
+  function _adnLoadSatellites(keepMsg) {
+    var wrap = document.getElementById('adn-sat-wrap');
+    if (!wrap) return;
+    wrap.innerHTML = _loadingInline('Memuat konfigurasi konektor satelit\u2026');
+    if (!keepMsg) _msg('adn-sat-msg', null);
+    _asyncArm('adn-sat', wrap, '_adnLoadSatellites()');
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        _asyncDisarm('adn-sat');
+        if (_asyncResErr(res)) {
+          _asyncResFail('adn-sat', wrap, res, '_adnLoadSatellites()');
+          return;
+        }
+        try {
+          _adnRenderSatellites(res.data || {});
+        } catch (e) {
+          _asyncRenderFail('adn-sat', wrap, e);
+        }
+      })
+      .withFailureHandler(function (err) {
+        _asyncDisarm('adn-sat');
+        wrap.innerHTML = '<div class="n-msg error">' + _esc(_failOrLogout(err) || 'Koneksi terputus.') + '</div>';
+      })
+      .admin_getSatelliteConfig(APP.token);
+  }
+
+  function _adnRenderSatellites(data) {
+    var wrap = document.getElementById('adn-sat-wrap');
+    if (!wrap) return;
+    var items = _asArray(data.items);
+    if (!items.length) {
+      wrap.innerHTML = _renderEmptyState('Belum ada konfigurasi konektor', 'Daftar konektor spreadsheet satelit akan tampil di sini.');
+      return;
+    }
+
+    var rows = items.map(function (item) {
+      var badge = item.connected
+        ? '<span class="badge badge-ok">Terhubung</span>'
+        : (item.ssId ? '<span class="badge badge-warn">Perlu Verifikasi</span>' : '<span class="badge badge-neutral">Belum Terhubung</span>');
+      var desc = item.spreadsheetName || item.error || (item.category === 'MART' ? 'Otomatis dibuat saat sinkronisasi' : 'Siap dihubungkan');
+      return '<tr>' +
+        '<td><strong>' + _esc(item.label || '') + '</strong>' +
+        '<span class="td-sub">' + _esc(desc) + '</span></td>' +
+        '<td>' + badge + '</td>' +
+        '<td><input type="text" class="adn-sat-input" data-sat-key="' + _esc(item.key) + '" value="' + _esc(item.ssId || '') + '" placeholder="Tempel ID atau tautan Google Spreadsheet" aria-label="' + _esc(item.label || '') + '"></td>' +
+        '</tr>';
+    }).join('');
+
+    wrap.innerHTML = '<div class="n-table-wrap"><table class="n-table n-table-full"><thead><tr>' +
+      '<th>Sumber Data &amp; Berkas</th><th>Status</th><th>ID / Tautan Spreadsheet</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+
+    _adnRenderLookerState(data.lookerTrigger || {});
+  }
+
+  function _adnRenderLookerState(trig) {
+    var statusEl = document.getElementById('adn-looker-status');
+    var btnToggle = document.getElementById('btn-adn-looker-toggle');
+    var lastText = trig && trig.lastSyncedAt ? _fmtDateTimeId(trig.lastSyncedAt) : 'Belum pernah dijalankan';
+    if (statusEl) {
+      statusEl.textContent = (trig && trig.aktif)
+        ? 'Jadwal otomatis aktif (' + (trig.jadwal || 'Setiap hari 06:00 WIB') + ') \u00b7 Sinkron terakhir: ' + lastText
+        : 'Jadwal otomatis nonaktif (' + (trig && trig.jadwal ? trig.jadwal : 'Setiap hari 06:00 WIB') + ') \u00b7 Sinkron terakhir: ' + lastText;
+    }
+    if (btnToggle) {
+      btnToggle.textContent = (trig && trig.aktif) ? 'Matikan Jadwal Harian' : 'Aktifkan Jadwal Harian';
+      btnToggle._aktif = !!(trig && trig.aktif);
+    }
+  }
+
+  function _adnSaveSatellites() {
+    var inputs = document.querySelectorAll('#adn-sat-wrap input[data-sat-key]');
+    if (!inputs.length) return;
+    var payload = {};
+    for (var i = 0; i < inputs.length; i++) {
+      payload[inputs[i].getAttribute('data-sat-key')] = inputs[i].value.trim();
+    }
+
+    var btn = document.getElementById('btn-adn-sat-save');
+    _setLoading(btn, true);
+    _msg('adn-sat-msg', null);
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        _setLoading(btn, false);
+        if (!res || !res.success) {
+          _msg('adn-sat-msg', 'error', (res && res.error) || 'Gagal menyimpan konfigurasi.');
+          return;
+        }
+        _adnRenderSatellites(res.data || {});
+        _msg('adn-sat-msg', 'success', (res.data && res.data.changed)
+          ? 'Konfigurasi konektor satelit disimpan.'
+          : 'Tidak ada perubahan konfigurasi.');
+      })
+      .withFailureHandler(function (err) {
+        _setLoading(btn, false);
+        _msg('adn-sat-msg', 'error', _failOrLogout(err) || 'Terjadi kesalahan. Coba lagi.');
+      })
+      .admin_saveSatelliteConfig(APP.token, payload);
+  }
+
+  function _adnSyncLookerMart() {
+    var btn = document.getElementById('btn-adn-looker-sync');
+    _setLoading(btn, true);
+    _msg('adn-sat-msg', null);
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        _setLoading(btn, false);
+        if (!res || !res.success) {
+          _msg('adn-sat-msg', 'error', (res && res.error) || 'Gagal menyinkronkan Data Mart.');
+          return;
+        }
+        var d = res.data || {};
+        _msg('adn-sat-msg', 'success', 'Data Mart Looker Studio disinkronkan untuk periode ' + (d.periode || 'berjalan') + '.');
+        _adnLoadSatellites(true);
+      })
+      .withFailureHandler(function (err) {
+        _setLoading(btn, false);
+        _msg('adn-sat-msg', 'error', _failOrLogout(err) || 'Terjadi kesalahan. Coba lagi.');
+      })
+      .looker_syncMart(APP.token, APP.filter);
+  }
+
+  function _adnToggleLookerTrigger() {
+    var btn = document.getElementById('btn-adn-looker-toggle');
+    var next = !(btn && btn._aktif);
+    _setLoading(btn, true);
+    _msg('adn-sat-msg', null);
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        _setLoading(btn, false);
+        if (!res || !res.success) {
+          _msg('adn-sat-msg', 'error', (res && res.error) || 'Gagal mengubah jadwal otomatis.');
+          return;
+        }
+        _adnRenderLookerState(res.data || {});
+        _msg('adn-sat-msg', 'success', next ? 'Jadwal sinkronisasi harian diaktifkan.' : 'Jadwal sinkronisasi harian dimatikan.');
+      })
+      .withFailureHandler(function (err) {
+        _setLoading(btn, false);
+        _msg('adn-sat-msg', 'error', _failOrLogout(err) || 'Terjadi kesalahan. Coba lagi.');
+      })
+      .looker_setTriggerAktif(APP.token, next);
   }
 
   // ── TAB PENGINGAT MINGGUAN (SUPERADMIN) ───────────────────

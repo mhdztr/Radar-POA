@@ -312,3 +312,169 @@ function admin_getAuditLog(token, params) {
     return { success: false, error: e.message };
   }
 }
+
+// ===========================================================================
+// KONFIGURASI KONEKTOR SATELIT & DATA MART (Fase 7 — SUPERADMIN ONLY)
+// ===========================================================================
+
+function _adnSatelliteDefs() {
+  return [
+    { key: PROP_KEY.SIKAP_SS_ID, fallbackKey: PROP_KEY.TU_SS_ID, label: 'SIKAP — Tata Usaha & BMN', category: 'SATELLITE' },
+    { key: PROP_KEY.NAKHODA_SS_ID, fallbackKey: PROP_KEY.AWAK_SS_ID, label: 'Nakhoda — Pengawakan & Sijil', category: 'SATELLITE' },
+    { key: PROP_KEY.SISTIK_SS_ID, fallbackKey: null, label: 'Sistik — Logistik & BBM', category: 'SATELLITE' },
+    { key: PROP_KEY.SIAGA_SS_ID, fallbackKey: null, label: 'Siaga — Pemeliharaan & Galangan', category: 'SATELLITE' },
+    { key: PROP_KEY.OPERASI_SS_ID, fallbackKey: null, label: 'Operasi & Pemantauan Armada', category: 'SATELLITE' },
+    { key: PROP_KEY.LOOKER_MART_SS_ID, fallbackKey: null, label: 'Looker Studio — Data Mart Nasional', category: 'MART' }
+  ];
+}
+
+function _adnExtractSpreadsheetId(raw) {
+  var s = String(raw === undefined || raw === null ? '' : raw).trim();
+  if (!s) return '';
+  var m = s.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]{10,})/);
+  if (m) return m[1];
+  if (/^[a-zA-Z0-9_-]{10,}$/.test(s)) return s;
+  throw new Error('Format ID atau tautan Google Spreadsheet tidak valid: "' + s.substring(0, 40) + '".');
+}
+
+function _adnBuildSatelliteStatus(props) {
+  return _adnSatelliteDefs().map(function (def) {
+    var primary = String(props.getProperty(def.key) || '').trim();
+    var fallback = def.fallbackKey ? String(props.getProperty(def.fallbackKey) || '').trim() : '';
+    var ssId = primary || fallback;
+    var connected = false;
+    var spreadsheetName = '';
+    var error = ssId ? null : 'Belum dikonfigurasi';
+
+    if (ssId) {
+      try {
+        var ss = _openSsCached(ssId);
+        if (ss) {
+          connected = true;
+          spreadsheetName = typeof ss.getName === 'function' ? String(ss.getName() || '') : '';
+        } else {
+          error = 'Spreadsheet tidak dapat dibuka';
+        }
+      } catch (eOpen) {
+        error = eOpen.message;
+      }
+    }
+
+    return {
+      key: def.key,
+      label: def.label,
+      category: def.category,
+      ssId: ssId,
+      connected: connected,
+      spreadsheetName: spreadsheetName,
+      error: error
+    };
+  });
+}
+
+function _adnGetLookerStateSnapshot(props) {
+  if (typeof _lookerTriggerState === 'function') {
+    return _lookerTriggerState();
+  }
+  return {
+    aktif: !!props.getProperty(PROP_KEY.LOOKER_TRIGGER_ID),
+    jadwal: 'Setiap hari 06:00 WIB',
+    lookerMartId: props.getProperty(PROP_KEY.LOOKER_MART_SS_ID) || null,
+    lastSyncedAt: props.getProperty(PROP_KEY.LOOKER_MART_LAST_SYNC) || null
+  };
+}
+
+/**
+ * Ambil konfigurasi & status konektivitas 5 satelit + Data Mart Looker Studio.
+ * Hanya SUPERADMIN.
+ *
+ * @param {string} token
+ */
+function admin_getSatelliteConfig(token) {
+  try {
+    var session = _requireSession(token);
+    assertScope(session, [ROLE.SUPERADMIN], null);
+
+    var props = PropertiesService.getScriptProperties();
+    var ids = getSpreadsheetIds();
+    return {
+      success: true,
+      data: {
+        pusatId: ids.pusatId || '',
+        items: _adnBuildSatelliteStatus(props),
+        lookerTrigger: _adnGetLookerStateSnapshot(props)
+      }
+    };
+  } catch (e) {
+    Logger.log('[admin_getSatelliteConfig] ' + e.message);
+    return { success: false, error: e.message };
+  }
+}
+
+/**
+ * Simpan pembaruan Script Properties konektor satelit & Data Mart Looker Studio.
+ * Hanya SUPERADMIN. Invalidasi cache aggregator bila ada perubahan.
+ *
+ * @param {string} token
+ * @param {Object} params - map PROP_KEY -> Spreadsheet ID / URL (kosong = hapus koneksi)
+ */
+function admin_saveSatelliteConfig(token, params) {
+  try {
+    return withLock(function () {
+      var session = _requireSession(token);
+      assertScope(session, [ROLE.SUPERADMIN], null);
+
+      var p = params || {};
+      var props = PropertiesService.getScriptProperties();
+      var defs = _adnSatelliteDefs();
+      var updatedKeys = [];
+
+      for (var i = 0; i < defs.length; i++) {
+        var def = defs[i];
+        if (!Object.prototype.hasOwnProperty.call(p, def.key)) continue;
+
+        var normalized = _adnExtractSpreadsheetId(p[def.key]);
+        var prev = String(props.getProperty(def.key) || '').trim();
+        var prevFallback = def.fallbackKey ? String(props.getProperty(def.fallbackKey) || '').trim() : '';
+
+        if (normalized) {
+          if (normalized !== prev) {
+            props.setProperty(def.key, normalized);
+            updatedKeys.push(def.key);
+          }
+        } else {
+          if (prev || prevFallback) {
+            props.deleteProperty(def.key);
+            if (def.fallbackKey && prevFallback) props.deleteProperty(def.fallbackKey);
+            updatedKeys.push(def.key);
+          }
+        }
+      }
+
+      if (updatedKeys.length > 0) {
+        if (typeof _aggBumpVersion === 'function') _aggBumpVersion();
+        try { bumpTxVersion('SATELLITE_CONFIG'); } catch (eBump) {}
+        _auditLog(
+          session.userId,
+          'UPDATE',
+          'SYSTEM_SATELLITES',
+          'CONNECTOR_CONFIG',
+          'Pembaruan konfigurasi satelit: ' + updatedKeys.join(', ')
+        );
+      }
+
+      return {
+        success: true,
+        data: {
+          changed: updatedKeys.length > 0,
+          updatedKeys: updatedKeys,
+          items: _adnBuildSatelliteStatus(props),
+          lookerTrigger: _adnGetLookerStateSnapshot(props)
+        }
+      };
+    });
+  } catch (e) {
+    Logger.log('[admin_saveSatelliteConfig] ' + e.message);
+    return { success: false, error: e.message };
+  }
+}

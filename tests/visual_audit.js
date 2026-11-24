@@ -566,7 +566,45 @@ function buildMockInitScript(fixtures) {
           respond(this, { success: true, data: (EVIDENCE_BY_ROW[rowId] || []).slice() });
         },
         admin_getUsers() { respond(this, { success: true, data: ADMIN_USERS }); },
-        admin_getAuditLog() { respond(this, { success: true, data: ADMIN_AUDIT }); }
+        admin_getAuditLog() { respond(this, { success: true, data: ADMIN_AUDIT }); },
+        admin_getSatelliteConfig() {
+          respond(this, {
+            success: true,
+            data: {
+              pusatId: 'DEMO_PUSAT_SS_ID',
+              items: (this._satItems || (this._satItems = [
+                { key: 'SIKAP_SS_ID', label: 'SIKAP — Tata Usaha & BMN', category: 'SATELLITE', ssId: '1AbC_SIKAP_DEMO_SS_ID_2026', connected: true, spreadsheetName: 'RadarPOA_SIKAP_DB', error: null },
+                { key: 'NAKHODA_SS_ID', label: 'Nakhoda — Pengawakan & Sijil', category: 'SATELLITE', ssId: '1XyZ_NAKHODA_DEMO_SS_ID_2026', connected: true, spreadsheetName: 'RadarPOA_Nakhoda_DB', error: null },
+                { key: 'SISTIK_SS_ID', label: 'Sistik — Logistik & BBM', category: 'SATELLITE', ssId: '', connected: false, spreadsheetName: '', error: 'Belum dikonfigurasi' },
+                { key: 'SIAGA_SS_ID', label: 'Siaga — Pemeliharaan & Galangan', category: 'SATELLITE', ssId: '', connected: false, spreadsheetName: '', error: 'Belum dikonfigurasi' },
+                { key: 'OPERASI_SS_ID', label: 'Operasi & Pemantauan Armada', category: 'SATELLITE', ssId: '', connected: false, spreadsheetName: '', error: 'Belum dikonfigurasi' },
+                { key: 'LOOKER_MART_SS_ID', label: 'Looker Studio — Data Mart Nasional', category: 'MART', ssId: '1LmN_LOOKER_MART_SS_ID_2026', connected: true, spreadsheetName: 'RadarPOA_Looker_Mart', error: null }
+              ])),
+              lookerTrigger: (this._lookerTrig || (this._lookerTrig = {
+                aktif: true,
+                jadwal: 'Setiap hari 06:00 WIB',
+                lookerMartId: '1LmN_LOOKER_MART_SS_ID_2026',
+                lastSyncedAt: '2026-06-15T06:00:00Z'
+              }))
+            }
+          });
+        },
+        admin_saveSatelliteConfig(token, params) {
+          respond(this, {
+            success: true,
+            data: { changed: true, updatedKeys: Object.keys(params || {}), items: this._satItems || [], lookerTrigger: this._lookerTrig || {} }
+          });
+        },
+        looker_syncMart() {
+          respond(this, {
+            success: true,
+            data: { periode: '2026-06-W02', action: 'UPDATED', totalRows: 1 }
+          });
+        },
+        looker_setTriggerAktif(token, aktif) {
+          this._lookerTrig = Object.assign({}, this._lookerTrig || {}, { aktif: !!aktif });
+          respond(this, { success: true, data: this._lookerTrig });
+        }
       });
       window.google = { script: { run: runObj } };
     })();
@@ -1100,11 +1138,19 @@ async function inspectPage(page, name) {
     await page.click('#adn-tab-reminder');
     await page.waitForTimeout(250);
     const reminderStatusText = await page.evaluate(() => (document.getElementById('adn-reminder-status') || {}).textContent || '');
+    await page.click('#adn-tab-satelit');
+    await page.waitForSelector('#adn-sat-wrap .n-table', { timeout: 10000 });
+    await page.waitForTimeout(250);
+    reports['admin-satelit'] = await inspectPage(page, 'admin-satelit');
+    await page.screenshot({ path: path.join(OUT_DIR, '09b-admin-satelit-desktop.png'), fullPage: true });
+    await page.click('#btn-adn-looker-sync');
+    await page.waitForSelector('#adn-sat-msg.show', { timeout: 5000 });
+    const satMsgText = await page.evaluate(() => (document.getElementById('adn-sat-msg') || {}).textContent || '');
     await page.evaluate(() => {
       window.__auditSetUser({ role: 'DIREKTUR' });
       APP.user.role = 'DIREKTUR';
     });
-    console.log('[AUDIT] admin-state:', JSON.stringify(Object.assign({}, adminState, { hasAuditRows: !adminAuditText.includes('USR-'), reminderStatusText })));
+    console.log('[AUDIT] admin-state:', JSON.stringify(Object.assign({}, adminState, { hasAuditRows: !adminAuditText.includes('USR-'), reminderStatusText, satMsgText })));
 
     // ── 10. Master Data (Desktop — Kapal Classes + Kawasan + WPP + Opsi) ──
     await page.evaluate(() => _routeTo('master-data'));
@@ -1187,8 +1233,8 @@ async function inspectPage(page, name) {
     if (!ntfState.summaryText.includes('3 belum dibaca') || ntfState.kpiGridCount !== 0 || ntfState.dots < 1 || ntfState.rows !== 5) {
       failures.push('ntfState=' + JSON.stringify(ntfState));
     }
-    if (adminState.approvalRows !== 2 || adminState.visibleTabs.length !== 4 || adminAuditText.includes('USR-')) {
-      failures.push('adminState=' + JSON.stringify(adminState));
+    if (adminState.approvalRows !== 2 || adminState.visibleTabs.length !== 5 || adminAuditText.includes('USR-') || !satMsgText.includes('Data Mart Looker Studio')) {
+      failures.push('adminState=' + JSON.stringify(Object.assign({}, adminState, { satMsgText })));
     }
     if (mdState.summaryCells !== 3 || mdState.hulls < 10 || mdState.hasPrd || mdState.rawToken || mdOpsiHasTypo) {
       failures.push('mdState=' + JSON.stringify(Object.assign({}, mdState, { mdOpsiHasTypo })));
@@ -1205,7 +1251,7 @@ async function inspectPage(page, name) {
       'kapal-terbaik-desktop', 'kapal-terbaik-mobile',
       'profil-kapal-desktop', 'profil-kapal-mobile',
       'kegiatan-desktop', 'notifikasi-desktop',
-      'admin-desktop', 'admin-pengguna', 'admin-audit',
+      'admin-desktop', 'admin-pengguna', 'admin-audit', 'admin-satelit',
       'master-data-desktop', 'master-opsi', 'riwayat-desktop'
     ].forEach((k) => {
       const r = reports[k];

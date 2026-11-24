@@ -10,6 +10,7 @@
     <button type="button" class="n-tab" data-tab="pengguna" id="adn-tab-pengguna" onclick="_adnSwitch('pengguna')" hidden>Pengguna</button>
     <button type="button" class="n-tab" data-tab="audit" id="adn-tab-audit" onclick="_adnSwitch('audit')" hidden>Audit Log</button>
     <button type="button" class="n-tab" data-tab="reminder" id="adn-tab-reminder" onclick="_adnSwitch('reminder')" hidden>Pengingat Mingguan</button>
+    <button type="button" class="n-tab" data-tab="satelit" id="adn-tab-satelit" onclick="_adnSwitch('satelit')" hidden>Konektor Satelit</button>
   </div>
 
   <!-- TAB 1 — PERSETUJUAN -->
@@ -83,6 +84,37 @@
         </div>
       </div>
       <div id="adn-reminder-result" class="adn-rem-result"></div>
+    </div>
+  </div>
+
+  <!-- TAB 5 — KONEKTOR SATELIT & DATA MART -->
+  <div id="adn-panel-satelit" hidden>
+    <div class="content-section">
+      <div class="sec-hd-bar">
+        <div class="content-section-hd sec-hd-flush">Konektor Satelit &amp; Data Mart</div>
+        <div class="ctl-row ctl-md">
+          <button type="button" class="btn-primary" id="btn-adn-sat-save" onclick="_adnSaveSatellites()">Simpan Konfigurasi</button>
+        </div>
+      </div>
+      <div class="n-info-static adn-info-mb">
+        Hubungkan ID atau tautan Google Spreadsheet masing-masing sistem satelit untuk pembacaan terfederasi lintas unit kerja secara aman.
+      </div>
+      <div id="adn-sat-msg" class="n-msg"></div>
+      <div class="sec-table-card" id="adn-sat-wrap">
+        <div class="n-pad-muted">Memuat status konektor satelit&hellip;</div>
+      </div>
+      <div class="n-card adn-looker-card">
+        <div class="adn-rem-row">
+          <div>
+            <div class="adn-rem-title">Sinkronisasi Data Mart Looker Studio</div>
+            <div id="adn-looker-status" class="adn-rem-sub">Memuat&hellip;</div>
+          </div>
+          <div class="ctl-row ctl-md">
+            <button type="button" class="btn-outline" id="btn-adn-looker-sync" onclick="_adnSyncLookerMart()">Sinkronkan Data Mart</button>
+            <button type="button" class="btn-outline" id="btn-adn-looker-toggle" onclick="_adnToggleLookerTrigger()">Aktifkan Jadwal Harian</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
