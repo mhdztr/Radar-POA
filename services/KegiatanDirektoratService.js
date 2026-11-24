@@ -56,6 +56,7 @@ function _kgdAuditLog(userId, aksi, rowIdTarget, alasan) {
 // Map DivisiID → NamaDivisi, untuk menampilkan asal pengunggah di feed.
 function _kgdDivisiMap() {
   var map = {};
+  map[DIVISI_ID.PUSAT] = 'Direktorat POA';
   try {
     sheetToObjects(openMasterSheet(SHEET_MASTER.DIVISI)).forEach(function (row) {
       map[String(row['DivisiID'])] = String(row['NamaDashboard'] || row['NamaResmi'] || '');
@@ -140,10 +141,27 @@ function kegiatanDirektorat_getHistory(token, filter) {
       var t = _kgdNormDate(row.Tanggal);
       if (!t) continue;
       if (t >= range.startDate && t <= range.endDate) {
-        row.divisiNama = divMap[String(row.DivisiID || '')] || String(row.DivisiID || '');
-        row.submittedByName = userMap[String(row.SubmittedBy || '')] || '';
-        row.voidedByName = userMap[String(row.VoidedBy || '')] || '';
-        history.push(row);
+        var divId = String(row.DivisiID || DIVISI_ID.PUSAT);
+        history.push({
+          RowID: String(row.RowID || ''),
+          DivisiID: divId,
+          Periode: String(row.Periode || ''),
+          SubmittedBy: String(row.SubmittedBy || ''),
+          Timestamp: _kgdIsoTs(row.Timestamp),
+          Status: String(row.Status || ''),
+          SupersedesRowID: String(row.SupersedesRowID || ''),
+          VoidReason: String(row.VoidReason || ''),
+          VoidedBy: String(row.VoidedBy || ''),
+          VoidedAt: _kgdIsoTs(row.VoidedAt),
+          JudulKegiatan: String(row.JudulKegiatan || ''),
+          Tanggal: _kgdIsoDate(t),
+          Deskripsi: String(row.Deskripsi || ''),
+          PihakHadir: String(row.PihakHadir || ''),
+          EvidenceUrl: String(row.EvidenceUrl || ''),
+          divisiNama: divMap[divId] || divId,
+          submittedByName: userMap[String(row.SubmittedBy || '')] || '',
+          voidedByName: userMap[String(row.VoidedBy || '')] || ''
+        });
       }
     }
 
@@ -163,9 +181,30 @@ function kegiatanDirektorat_getHistory(token, filter) {
 
 function _kgdNormDate(v) {
   if (!v) return null;
-  var d = new Date(v);
+  if (v instanceof Date) {
+    return isNaN(v.getTime()) ? null : v;
+  }
+  var s = String(v).trim();
+  var m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) {
+    return new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+  }
+  var d = new Date(s);
   if (isNaN(d.getTime())) return null;
   return d;
+}
+
+function _kgdIsoDate(d) {
+  if (!(d instanceof Date) || isNaN(d.getTime())) return '';
+  var m = d.getMonth() + 1;
+  var day = d.getDate();
+  return d.getFullYear() + '-' + (m < 10 ? '0' + m : m) + '-' + (day < 10 ? '0' + day : day);
+}
+
+function _kgdIsoTs(v) {
+  if (!v) return '';
+  if (v instanceof Date) return isNaN(v.getTime()) ? '' : v.toISOString();
+  return String(v);
 }
 
 // ===========================================================================
@@ -196,7 +235,7 @@ function kegiatanDirektorat_submit(token, params) {
       var rowId = 'KGD-' + Utilities.getUuid().replace(/-/g, '').substring(0, 10).toUpperCase();
       appendRowData(openTransaksiSheet(SHEET_TX.KEGIATAN_DIREKTORAT), {
         RowID: rowId,
-        DivisiID: session.divisiId,
+        DivisiID: session.divisiId || DIVISI_ID.PUSAT,
         Periode: dateToPeriode(tanggal),
         SubmittedBy: session.userId,
         Timestamp: new Date().toISOString(),
@@ -206,9 +245,10 @@ function kegiatanDirektorat_submit(token, params) {
         VoidedBy: '',
         VoidedAt: '',
         JudulKegiatan: judul,
-        Tanggal: tanggal,
+        Tanggal: _kgdIsoDate(tanggal),
         Deskripsi: deskripsi,
-        PihakHadir: pihakHadir
+        PihakHadir: pihakHadir,
+        EvidenceUrl: ''
       });
 
       _kgdAuditLog(session.userId, 'CREATE', rowId, 'Tambah kegiatan: ' + judul);
@@ -260,7 +300,7 @@ function kegiatanDirektorat_revisi(token, params) {
       var newRowId = 'KGD-' + Utilities.getUuid().replace(/-/g, '').substring(0, 10).toUpperCase();
       appendRowData(sheet, {
         RowID: newRowId,
-        DivisiID: session.divisiId,
+        DivisiID: session.divisiId || DIVISI_ID.PUSAT,
         Periode: dateToPeriode(tanggal),
         SubmittedBy: session.userId,
         Timestamp: new Date().toISOString(),
@@ -270,14 +310,26 @@ function kegiatanDirektorat_revisi(token, params) {
         VoidedBy: '',
         VoidedAt: '',
         JudulKegiatan: judul,
-        Tanggal: tanggal,
+        Tanggal: _kgdIsoDate(tanggal),
         Deskripsi: deskripsi,
-        PihakHadir: pihakHadir
+        PihakHadir: pihakHadir,
+        EvidenceUrl: ''
       });
+
+      var carriedEvidence = (typeof _evCarryRowsInternal === 'function')
+        ? _evCarryRowsInternal(SHEET_TX.KEGIATAN_DIREKTORAT, targetRowId, newRowId, session.userId)
+        : 0;
 
       _kgdAuditLog(session.userId, 'UPDATE', newRowId, 'Revisi kegiatan ' + targetRowId + ': ' + alasanRevisi);
 
-      return { success: true, data: { rowId: newRowId, message: 'Revisi berhasil disimpan.' } };
+      return {
+        success: true,
+        data: {
+          rowId: newRowId,
+          carriedEvidence: carriedEvidence,
+          message: 'Revisi berhasil disimpan.'
+        }
+      };
     } catch (e) {
       return { success: false, error: e.message };
     }

@@ -24,7 +24,7 @@ ROADMAP PENGEMBANGAN RADAR POA v2.0
 ├── [Fase R3] Selesai [x] — Redesign Kapal Terbaik (Non-Galangan Podium & Sync TW) & Profil Kapal (h1 Kapal + Enum Manusiawi)
 ├── [Fase R4] Selesai [x] — Standarisasi 5 Halaman Sekunder, Fix Error .map(), Jargon Clean-Up, Calendar Anti-Ketik, & 12-Screen Playwright Gate
 │
-├── [Fase 5]  [ ]         — Pengujian E2E Siklus Kegiatan Direktorat (Submit -> Revisi SUPERSEDED -> Anulir VOID) & Multi-Evidence Drive
+├── [Fase 5]  Selesai [x] — Pengujian E2E Siklus Kegiatan Direktorat (Submit -> Revisi SUPERSEDED -> Anulir VOID) & Multi-Evidence Drive
 ├── [Fase 6]  [ ]         — Pipeline Data Mart Looker Studio (LookerMartService.js), applyFormalSheetFormatting(), & Scheduled Trigger
 └── [Fase 7]  [ ]         — Admin Konektor Satelit, Linter Otomatis (lint_ui.js 10 Gates), & Automated Test Suite (tests/*.test.js)
 ```
@@ -141,11 +141,11 @@ ROADMAP PENGEMBANGAN RADAR POA v2.0
 ---
 
 ### Fase 5: Verifikasi E2E Modul Kegiatan Direktorat & Multi-Evidence Google Drive
-- **Status:** **Siap Dikerjakan (`[ ]`)** *(UX, pencarian, status filter, dan calendar picker anti-ketik telah digabungkan ke **Fase R4**)*
+- **Status:** **Selesai (`[x]`)** *(UX, pencarian, status filter, dan calendar picker anti-ketik telah digabungkan ke **Fase R4**)*
 - **Tujuan Utama:** Memastikan siklus penuh `Submit -> Revisi (SUPERSEDED + carry evidence) -> Anulir (VOID + VoidReason)` dan integrasi upload multi-file Google Drive folder `POA_Evidence_Pusat` (`EvidenceService.js` + `KegiatanDirektoratService.js`) teruji tuntas secara server-side maupun end-to-end.
 - **Kriteria Verifikasi:**
-  - [ ] Input tanggal tidak dapat diketik manual dan selalu membuka kalender.
-  - [ ] Siklus `Submit -> Revisi -> Anulir` beserta carry-over lampiran Drive berjalan dengan RBAC `SUPERADMIN`, `DIREKTUR`, dan `KADIV` di Node VM.
+  - [x] Input tanggal tidak dapat diketik manual dan selalu membuka kalender (diverifikasi di `tests/visual_audit.js` via `showPicker()` + keystrokes lock).
+  - [x] Siklus `Submit -> Revisi -> Anulir` beserta carry-over lampiran Drive idempoten & RBAC `SUPERADMIN`, `DIREKTUR`, dan `KADIV` lintas divisi teruji penuh di Node VM (`tests/kegiatan_e2e.test.js`) dan Playwright.
 
 ---
 

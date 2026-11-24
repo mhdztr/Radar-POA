@@ -6507,6 +6507,7 @@
     opsudara: 'modal-ops-udara-form',
     intel: 'modal-int-form',
     kgd: 'modal-kgd-form',
+    'kgd-revisi': 'modal-kgd-revisi',
     pem: 'modal-pem-form',
     rawk: 'modal-rawk-form',
     rawd: 'modal-rawd-form',
@@ -6734,9 +6735,11 @@
         }
         list.innerHTML = evList.map(function (e) {
           var tgl = _fmtDateTimeId(e.uploadedAt);
+          var srcMap = { UPLOAD: 'Unggah Langsung', DRIVE_LINK_COPY: 'Salinan Google Drive' };
+          var srcLbl = srcMap[String(e.sourceMode || '').toUpperCase()] || e.sourceMode || '';
           return '<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border-rule);">' +
             '<a href="' + _esc(e.viewUrl) + '" target="_blank" rel="noopener" style="color:var(--action-primary);">' + _esc(e.fileName) + '</a>' +
-            '<span class="ntf-read-lbl td-nowrap">' + _esc(e.sourceMode || '') + ' \u00b7 ' + _esc(tgl) + '</span>' +
+            '<span class="ntf-read-lbl td-nowrap">' + _esc(srcLbl) + (tgl ? ' \u00b7 ' + _esc(tgl) : '') + '</span>' +
             '</div>';
         }).join('');
       })
@@ -7548,6 +7551,12 @@
     if (!tanggal) { _msg('kgd-revisi-msg', 'error', 'Tanggal kegiatan wajib diisi.'); return; }
     if (!deskripsi || !deskripsi.trim()) { _msg('kgd-revisi-msg', 'error', 'Deskripsi kegiatan wajib diisi.'); return; }
 
+    var revAttach = _attachState('kgd-revisi');
+    if (revAttach && revAttach.link && !/drive\.google\.com/.test(revAttach.link) && !/youtube\.com|youtu\.be/.test(revAttach.link) && !/^[a-zA-Z0-9_\-]{20,}$/.test(revAttach.link)) {
+      _msg('kgd-revisi-msg', 'error', 'Link harus berupa URL Google Drive atau tautan YouTube yang valid.');
+      return;
+    }
+
     var params = {
       targetRowId: _KGD.pendingRowId,
       alasanRevisi: alasan,
@@ -7564,7 +7573,9 @@
       .withSuccessHandler(function (res) {
         _setLoading(btn, false);
         if (res.success) {
-          _attachCarry('TX_KegiatanDirektorat', params.targetRowId, res.data.rowId);
+          if (res.data && res.data.carriedEvidence === undefined) {
+            _attachCarry('TX_KegiatanDirektorat', params.targetRowId, res.data.rowId);
+          }
           _attachUploadAll('kgd-revisi', [res.data.rowId], function () {
             closeModal('modal-kgd-revisi');
             _msg('kgd-history-msg', 'success', res.data.message);

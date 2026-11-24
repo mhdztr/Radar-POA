@@ -31,7 +31,11 @@ function _evIsPrivileged(session) {
   return session.role === ROLE.SUPERADMIN || session.role === ROLE.DIREKTUR;
 }
 
-function _evAssertRowScope(session, divisiId) {
+function _evAssertRowScope(session, divisiId, refSheet) {
+  if (refSheet === SHEET_PUSAT.KEGIATAN_DIREKTORAT) {
+    assertScope(session, [ROLE.SUPERADMIN, ROLE.DIREKTUR, ROLE.KADIV], null);
+    return;
+  }
   if (_evIsPrivileged(session)) return;
   if (String(session.divisiId || '') !== String(divisiId || '')) {
     throw new Error('FORBIDDEN: Anda hanya dapat mengakses lampiran milik divisi Anda.');
@@ -53,7 +57,7 @@ function _evResolveContext(refSheet, refRowId, session) {
 
   var row = found.obj;
   var divisiId = String(row['DivisiID'] || '');
-  _evAssertRowScope(session, divisiId);
+  _evAssertRowScope(session, divisiId, refSheet);
 
   var periode = String(row['Periode'] || '');
   var ym = periode.length >= 7 ? periode.substring(0, 7) : '';
@@ -69,16 +73,20 @@ function _evResolveContext(refSheet, refRowId, session) {
 
 /** Nama folder divisi = NamaDashboard dari master Divisi (fallback DivisiID). */
 function _evDivisiFolderName(divisiId) {
+  var raw = String(divisiId || '').trim();
+  if (!raw || raw.toUpperCase() === DIVISI_ID.PUSAT) {
+    return 'Direktorat POA';
+  }
   try {
     var rows = sheetToObjects(openMasterSheet(SHEET_MASTER.DIVISI));
     for (var i = 0; i < rows.length; i++) {
-      if (String(rows[i]['DivisiID']) === String(divisiId)) {
+      if (String(rows[i]['DivisiID']) === raw) {
         var nm = String(rows[i]['NamaDashboard'] || '').trim();
         if (nm) return _evSanitize(nm);
       }
     }
   } catch (e) { /* fallback di bawah */ }
-  return _evSanitize(divisiId || 'Lainnya');
+  return _evSanitize(raw || 'Lainnya');
 }
 
 /** Nama konteks folder: `Jenis-Label`. */
@@ -371,6 +379,53 @@ function evidence_uploadFromLinkBatch(token, params) {
 // ── PUBLIC: CARRY (bawa lampiran lama ke baris revisi baru) ─
 
 /**
+ * Salin metadata TX_Evidence secara internal (idempoten, tanpa duplikasi DriveFileID)
+ * dari baris lama ke baris baru hasil revisi. Dipanggil dari dalam lock yang sama
+ * maupun oleh endpoint evidence_carry().
+ *
+ * @param {string} refSheet
+ * @param {string} fromRowId
+ * @param {string} toRowId
+ * @param {string} userId
+ * @returns {number} jumlah lampiran yang disalin
+ */
+function _evCarryRowsInternal(refSheet, fromRowId, toRowId, userId) {
+  var evRows = sheetToObjects(openTransaksiSheet(SHEET_TX.EVIDENCE));
+  var existingDriveIds = {};
+  evRows.forEach(function (r) {
+    if (String(r['RefSheet']) === String(refSheet) && String(r['RefRowID']) === String(toRowId)) {
+      var fid = String(r['DriveFileID'] || '');
+      if (fid) existingDriveIds[fid] = true;
+    }
+  });
+
+  var copied = 0;
+  evRows.forEach(function (r) {
+    if (String(r['RefSheet']) !== String(refSheet)) return;
+    if (String(r['RefRowID']) !== String(fromRowId)) return;
+    var driveFileId = String(r['DriveFileID'] || '');
+    if (driveFileId && existingDriveIds[driveFileId]) return;
+    _evAppendEvidence(
+      refSheet,
+      toRowId,
+      driveFileId,
+      String(r['FileName'] || ''),
+      String(r['FileType'] || ''),
+      String(r['SourceMode'] || ''),
+      userId
+    );
+    if (driveFileId) existingDriveIds[driveFileId] = true;
+    copied++;
+  });
+
+  if (copied > 0) {
+    _evAuditLog(userId, 'CREATE', toRowId,
+      'Bawa lampiran dari revisi baris ' + fromRowId + ' (' + copied + ' item).');
+  }
+  return copied;
+}
+
+/**
  * Setelah revisi membuat baris baru (lama → SUPERSEDED), lampiran baris lama
  * dibawa ke baris baru agar tidak tampak "hilang". File tidak di-copy ulang —
  * hanya baris TX_Evidence baru yang mereferensikan DriveFileID sama.
@@ -385,23 +440,20 @@ function evidence_carry(token, params) {
     var fromRowId  = _evReqText(p.fromRowId, 'fromRowId');
     var toRowId    = _evReqText(p.toRowId, 'toRowId');
 
-    _evAssertRowScope(session, _evRowDivisi(refSheet, fromRowId));
-    _evAssertRowScope(session, _evRowDivisi(refSheet, toRowId));
+    var sheet = openTransaksiSheet(refSheet);
+    if (!sheet) throw new Error('Sheet tujuan "' + refSheet + '" tidak ditemukan.');
+    var fromFound = findRowById(sheet, fromRowId);
+    if (!fromFound) throw new Error('Baris asal tidak ditemukan (RowID: ' + fromRowId + ').');
+    var toFound = findRowById(sheet, toRowId);
+    if (!toFound) throw new Error('Baris tujuan tidak ditemukan (RowID: ' + toRowId + ').');
 
-    var evRows = sheetToObjects(openTransaksiSheet(SHEET_TX.EVIDENCE));
-    var copied = 0;
-    evRows.forEach(function (r) {
-      if (String(r['RefSheet']) !== String(refSheet)) return;
-      if (String(r['RefRowID']) !== String(fromRowId)) return;
-      _evAppendEvidence(refSheet, toRowId, String(r['DriveFileID'] || ''),
-        String(r['FileName'] || ''), String(r['FileType'] || ''), String(r['SourceMode'] || ''), session.userId);
-      copied++;
+    _evAssertRowScope(session, String(fromFound.obj['DivisiID'] || ''), refSheet);
+    _evAssertRowScope(session, String(toFound.obj['DivisiID'] || ''), refSheet);
+
+    return withLock(function () {
+      var copied = _evCarryRowsInternal(refSheet, fromRowId, toRowId, session.userId);
+      return { success: true, data: { copied: copied, message: copied + ' lampiran dibawa ke baris baru.' } };
     });
-    if (copied > 0) {
-      _evAuditLog(session.userId, 'CREATE', toRowId,
-        'Bawa lampiran dari revisi baris ' + fromRowId + ' (' + copied + ' item).');
-    }
-    return { success: true, data: { copied: copied, message: copied + ' lampiran dibawa ke baris baru.' } };
   } catch (e) {
     Logger.log('[evidence_carry] ' + e.message);
     return { success: false, error: e.message };

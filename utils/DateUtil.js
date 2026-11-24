@@ -73,10 +73,38 @@ function parsePeriode(periodeStr) {
  * @param {{mode:string, month:number, year:number, dateFrom:string, dateTo:string}} filter
  * @returns {{startDate:Date, endDate:Date}}
  */
+function _parseLocalDate(val, endOfDay) {
+  if (!val) return null;
+  if (val instanceof Date) {
+    if (isNaN(val.getTime())) return null;
+    var copy = new Date(val.getTime());
+    if (endOfDay) copy.setHours(23, 59, 59, 999);
+    else copy.setHours(0, 0, 0, 0);
+    return copy;
+  }
+  var s = String(val).trim();
+  var m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) {
+    return new Date(
+      parseInt(m[1], 10),
+      parseInt(m[2], 10) - 1,
+      parseInt(m[3], 10),
+      endOfDay ? 23 : 0,
+      endOfDay ? 59 : 0,
+      endOfDay ? 59 : 0,
+      endOfDay ? 999 : 0
+    );
+  }
+  var d = new Date(s);
+  if (isNaN(d.getTime())) return null;
+  if (endOfDay) d.setHours(23, 59, 59, 999);
+  return d;
+}
+
 function filterToDateRange(filter) {
   if (filter.mode === 'range') {
-    var from = filter.dateFrom ? new Date(filter.dateFrom) : new Date(filter.year, 0, 1);
-    var to   = filter.dateTo   ? new Date(filter.dateTo)   : new Date();
+    var from = _parseLocalDate(filter.dateFrom, false) || new Date(filter.year || new Date().getFullYear(), 0, 1);
+    var to   = _parseLocalDate(filter.dateTo, true) || new Date();
     to.setHours(23, 59, 59, 999);
     return { startDate: from, endDate: to };
   }

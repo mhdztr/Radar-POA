@@ -32,14 +32,14 @@ function buildBackendFixture() {
     Object,
     Array,
     JSON,
-    Logger: { log: () => {} },
+    Logger: { log: () => { } },
     Utilities: {
       formatDate: () => '2026-06-15'
     },
     CacheService: {
       getScriptCache: () => ({
         get: (k) => (k === 'DASH_TX_VERSION' ? '14' : null),
-        put: () => {}
+        put: () => { }
       })
     },
     PropertiesService: {
@@ -58,7 +58,7 @@ function buildBackendFixture() {
         divisiId: null
       };
     },
-    assertScope: () => {},
+    assertScope: () => { },
     getCurrentPeriode: () => '2026-W24',
     utils_getTrendMonths: () => ['2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06'],
     openMasterSheet: () => ({}),
@@ -112,12 +112,12 @@ function buildBackendFixture() {
         year: 2026
       },
       satellites: {
-        PUSAT:   { label: 'Pusat (Dit. POA)',  connected: true },
-        SIKAP:   { label: 'SIKAP (TU)',        connected: true },
-        NAKHODA: { label: 'Nakhoda (Awak)',    connected: true },
-        SISTIK:  { label: 'Sistik (Logistik)', connected: false, error: 'Menunggu integrasi' },
-        SIAGA:   { label: 'Siaga (Harwat)',    connected: false, error: 'Menunggu integrasi' },
-        OPERASI: { label: 'Operasi & Pantau',  connected: false, error: 'Menunggu integrasi' }
+        PUSAT: { label: 'Pusat (Dit. POA)', connected: true },
+        SIKAP: { label: 'SIKAP (TU)', connected: true },
+        NAKHODA: { label: 'Nakhoda (Awak)', connected: true },
+        SISTIK: { label: 'Sistik (Logistik)', connected: false, error: 'Menunggu integrasi' },
+        SIAGA: { label: 'Siaga (Harwat)', connected: false, error: 'Menunggu integrasi' },
+        OPERASI: { label: 'Operasi & Pantau', connected: false, error: 'Menunggu integrasi' }
       },
       sikap: {
         connected: true,
@@ -131,7 +131,7 @@ function buildBackendFixture() {
           sp2dPct: 64.8,
           akrualPct: 69.8,
           sisaSP2D: 45200000000,
-          sp2dMonthly:   [8200000000, 12400000000, 14900000000, 15100000000, 16200000000, 16400000000],
+          sp2dMonthly: [8200000000, 12400000000, 14900000000, 15100000000, 16200000000, 16400000000],
           akrualMonthly: [9100000000, 13600000000, 15800000000, 16400000000, 17100000000, 17600000000]
         },
         paket: { totalPaket: 42, totalNilaiKontrak: 64500000000, totalRealisasiKeu: 41800000000, avgProgresFisik: 71.4 },
@@ -151,10 +151,10 @@ function buildBackendFixture() {
           keseluruhan: 512,
           poa: 396,
           byKategori: {
-            PNS:             { keseluruhan: 248, poa: 196 },
-            P3K:             { keseluruhan: 132, poa: 104 },
-            P3K_PARUH_WAKTU: { keseluruhan: 64,  poa: 48 },
-            PJLP:            { keseluruhan: 68,  poa: 48 }
+            PNS: { keseluruhan: 248, poa: 196 },
+            P3K: { keseluruhan: 132, poa: 104 },
+            P3K_PARUH_WAKTU: { keseluruhan: 64, poa: 48 },
+            PJLP: { keseluruhan: 68, poa: 48 }
           }
         },
         kompetensi: { totalSertifikat: 432, berlaku: 388, segeraHabis: 28, kedaluwarsa: 16 },
@@ -360,6 +360,21 @@ function buildMockInitScript(fixtures) {
         { rowId: 'KGD-2026-003', sheet: 'TX_KegiatanDirektorat', sheetLabel: 'Kegiatan Direktorat', periode: '2026-W23', divisiId: 'DIV-RAWAT', divisiNama: 'Pemeliharaan (Siaga)', submittedBy: 'USR-KADIV-02', submittedByName: 'Bambang Sutrisno, S.T.', timestamp: '2026-06-05T16:00:00+07:00', status: 'SUPERSEDED', ringkasan: 'Sinkronisasi Jadwal Docking Galangan Lamongan', detail: [['Tanggal', '5 Jun 2026']] },
         { rowId: 'TU-2026-W23-V', sheet: 'TX_TataUsaha', sheetLabel: 'SIKAP — Tata Usaha', periode: '2026-W23', divisiId: 'DIV-TU', divisiNama: 'Tata Usaha (SIKAP)', submittedBy: 'USR-STAF-02', submittedByName: 'Rina Kusuma, S.Kom.', timestamp: '2026-06-04T10:20:00+07:00', status: 'VOID', voidReason: 'Koreksi nilai pagu revisi anggaran Juni', voidedBy: 'USR-DIR-01', voidedByName: 'Ir. Haryo Prakoso, M.Si.', ringkasan: 'Draf realisasi minggu ke-23', detail: [['Catatan', 'Entri koreksi sebelum revisi DIPA']] }
       ];
+      const EVIDENCE_BY_ROW = {
+        'KGD-2026-001': [
+          {
+            evidenceId: 'EV-DEMO-001',
+            fileName: 'Risalah-Rapat-Operasi-TW2.pdf',
+            fileType: 'application/pdf',
+            driveFileId: 'DEMO_DRIVE_FILE_001',
+            viewUrl: 'https://drive.google.com/file/d/DEMO_DRIVE_FILE_001/view',
+            sourceMode: 'UPLOAD',
+            uploadedBy: 'USR-DIR-01',
+            uploadedAt: '2026-06-14T14:25:00+07:00'
+          }
+        ]
+      };
+      let kgdSeq = 10;
       const runObj = {};
       function cloneWith(base, patch) {
         const next = Object.create(base);
@@ -429,10 +444,127 @@ function buildMockInitScript(fixtures) {
         master_getOpsiJenis() { respond(this, { success: true, data: MASTER_OPSI }); },
         utils_getCartoKey() { respond(this, ''); },
         riwayat_getAll() { respond(this, { success: true, data: RIWAYAT_ROWS }); },
-        kegiatanDirektorat_getKPI() { respond(this, { success: true, data: { kegiatanPeriode: 4, kegiatanYtd: 19, terakhirDicatat: '2026-06-14T14:20:00+07:00' } }); },
-        kegiatanDirektorat_getHistory() { respond(this, { success: true, data: KEGIATAN_ROWS }); },
-        kegiatan_getList() { respond(this, { success: true, data: KEGIATAN_ROWS }); },
-        evidence_list() { respond(this, { success: true, data: [] }); },
+        kegiatanDirektorat_getKPI() {
+          const active = KEGIATAN_ROWS.filter((r) => r.Status === 'ACTIVE');
+          respond(this, {
+            success: true,
+            data: {
+              kegiatanPeriode: active.length,
+              kegiatanYtd: 17 + active.length,
+              terakhirDicatat: (active[0] && active[0].Timestamp) || '2026-06-14T14:20:00+07:00'
+            }
+          });
+        },
+        kegiatanDirektorat_getHistory() { respond(this, { success: true, data: KEGIATAN_ROWS.slice() }); },
+        kegiatan_getList() { respond(this, { success: true, data: KEGIATAN_ROWS.slice() }); },
+        kegiatanDirektorat_submit(token, params) {
+          kgdSeq++;
+          const newId = 'KGD-2026-0' + kgdSeq;
+          const tgl = String((params && params.tanggal) || '2026-06-15');
+          const dayNum = parseInt(tgl.slice(8, 10), 10) || 15;
+          const wk = Math.ceil(dayNum / 7);
+          const row = {
+            RowID: newId,
+            Periode: tgl.slice(0, 7) + '-W0' + wk,
+            Tanggal: tgl,
+            JudulKegiatan: String((params && params.judul) || ''),
+            Deskripsi: String((params && params.deskripsi) || ''),
+            PihakHadir: String((params && params.pihakHadir) || ''),
+            DivisiID: (CURRENT_USER && CURRENT_USER.divisiId) || 'PUSAT',
+            divisiNama: 'Direktorat POA',
+            SubmittedBy: (CURRENT_USER && CURRENT_USER.userId) || 'USR-DIR-01',
+            submittedByName: (CURRENT_USER && CURRENT_USER.nama) || 'Ir. Haryo Prakoso, M.Si.',
+            Timestamp: new Date().toISOString(),
+            Status: 'ACTIVE',
+            VoidReason: '',
+            VoidedBy: '',
+            voidedByName: ''
+          };
+          KEGIATAN_ROWS.unshift(row);
+          respond(this, { success: true, data: { rowIds: [newId], message: 'Kegiatan berhasil dicatat.' } });
+        },
+        kegiatanDirektorat_revisi(token, params) {
+          const old = KEGIATAN_ROWS.find((r) => r.RowID === params.targetRowId && r.Status === 'ACTIVE');
+          if (!old) {
+            respond(this, { success: false, error: 'Baris tidak ditemukan atau bukan status ACTIVE.' });
+            return;
+          }
+          old.Status = 'SUPERSEDED';
+          old.VoidReason = params.alasanRevisi;
+          old.VoidedBy = CURRENT_USER.userId;
+          old.voidedByName = CURRENT_USER.nama;
+          kgdSeq++;
+          const newId = 'KGD-2026-0' + kgdSeq;
+          const tgl = String(params.tanggal || old.Tanggal);
+          const newRow = {
+            RowID: newId,
+            Periode: old.Periode,
+            Tanggal: tgl,
+            JudulKegiatan: params.judul,
+            Deskripsi: params.deskripsi,
+            PihakHadir: params.pihakHadir || '',
+            DivisiID: 'PUSAT',
+            divisiNama: 'Direktorat POA',
+            SubmittedBy: CURRENT_USER.userId,
+            submittedByName: CURRENT_USER.nama,
+            Timestamp: new Date().toISOString(),
+            Status: 'ACTIVE',
+            SupersedesRowID: old.RowID,
+            VoidReason: '',
+            VoidedBy: '',
+            voidedByName: ''
+          };
+          KEGIATAN_ROWS.unshift(newRow);
+          const carried = (EVIDENCE_BY_ROW[old.RowID] || []).slice();
+          EVIDENCE_BY_ROW[newId] = carried.map((ev, idx) => Object.assign({}, ev, { evidenceId: 'EV-CARRY-' + kgdSeq + '-' + idx }));
+          respond(this, { success: true, data: { rowId: newId, carriedEvidence: carried.length, message: 'Revisi berhasil disimpan.' } });
+        },
+        kegiatanDirektorat_anulir(token, params) {
+          const target = KEGIATAN_ROWS.find((r) => r.RowID === params.targetRowId && r.Status === 'ACTIVE');
+          if (!target) {
+            respond(this, { success: false, error: 'Hanya entri ACTIVE yang dapat dianulir.' });
+            return;
+          }
+          target.Status = 'VOID';
+          target.VoidReason = params.alasan;
+          target.VoidedBy = CURRENT_USER.userId;
+          target.voidedByName = CURRENT_USER.nama;
+          respond(this, { success: true, message: 'Kegiatan berhasil dianulir.' });
+        },
+        evidence_upload(token, params) {
+          const list = EVIDENCE_BY_ROW[params.refRowId] || (EVIDENCE_BY_ROW[params.refRowId] = []);
+          const evId = 'EV-UP-' + (++kgdSeq);
+          list.push({
+            evidenceId: evId,
+            fileName: params.fileName,
+            fileType: params.mimeType,
+            driveFileId: 'DRV-' + kgdSeq,
+            viewUrl: 'https://drive.google.com/file/d/DRV-' + kgdSeq + '/view',
+            sourceMode: 'UPLOAD',
+            uploadedBy: CURRENT_USER.userId,
+            uploadedAt: new Date().toISOString()
+          });
+          respond(this, { success: true, data: { evidenceId: evId, fileName: params.fileName } });
+        },
+        evidence_uploadFromLink(token, params) {
+          const list = EVIDENCE_BY_ROW[params.refRowId] || (EVIDENCE_BY_ROW[params.refRowId] = []);
+          const evId = 'EV-LNK-' + (++kgdSeq);
+          list.push({
+            evidenceId: evId,
+            fileName: params.fileName || 'Dokumen-Tautan-Drive.pdf',
+            fileType: 'application/pdf',
+            driveFileId: 'DRV-LNK-' + kgdSeq,
+            viewUrl: params.url,
+            sourceMode: 'DRIVE_LINK_COPY',
+            uploadedBy: CURRENT_USER.userId,
+            uploadedAt: new Date().toISOString()
+          });
+          respond(this, { success: true, data: { evidenceId: evId, fileName: params.fileName || 'Dokumen-Tautan-Drive.pdf' } });
+        },
+        evidence_carry() { respond(this, { success: true, data: { copied: 0 } }); },
+        evidence_list(token, refSheet, rowId) {
+          respond(this, { success: true, data: (EVIDENCE_BY_ROW[rowId] || []).slice() });
+        },
         admin_getUsers() { respond(this, { success: true, data: ADMIN_USERS }); },
         admin_getAuditLog() { respond(this, { success: true, data: ADMIN_AUDIT }); }
       });
@@ -604,9 +736,9 @@ async function inspectPage(page, name) {
     await page.fill('#login-password', 'RadarPOA2026!');
     await page.click('#btn-login');
     await page.waitForSelector('#app-wrapper:not(.n-hidden)', { timeout: 10000 });
-    await page.waitForSelector('#ov-exec-body tr', { timeout: 10000 }).catch(() => {});
-    await page.waitForSelector('#ov-map .ship-svg-wrap', { timeout: 10000 }).catch(() => {});
-    await page.waitForSelector('#ov-map .ov-map-legend', { timeout: 6000 }).catch(() => {});
+    await page.waitForSelector('#ov-exec-body tr', { timeout: 10000 }).catch(() => { });
+    await page.waitForSelector('#ov-map .ship-svg-wrap', { timeout: 10000 }).catch(() => { });
+    await page.waitForSelector('#ov-map .ov-map-legend', { timeout: 6000 }).catch(() => { });
     await page.waitForTimeout(900);
     const inspectWppMap = async (p, label) => {
       const s = await p.evaluate(() => {
@@ -688,7 +820,7 @@ async function inspectPage(page, name) {
     await mPage.fill('#login-password', 'RadarPOA2026!');
     await mPage.click('#btn-login');
     await mPage.waitForSelector('#app-wrapper:not(.n-hidden)', { timeout: 10000 });
-    await mPage.waitForSelector('#ov-exec-body tr', { timeout: 10000 }).catch(() => {});
+    await mPage.waitForSelector('#ov-exec-body tr', { timeout: 10000 }).catch(() => { });
     await mPage.waitForTimeout(1500);
     reports['overview-mobile'] = await inspectPage(mPage, 'overview-mobile');
     const wppMapMobile = await inspectWppMap(mPage, 'mobile');
@@ -825,6 +957,102 @@ async function inspectPage(page, name) {
     await page.waitForTimeout(200);
     console.log('[AUDIT] kegiatan-state:', JSON.stringify(Object.assign({}, kgdState, { headerRangeLocked })));
 
+    // ── 7b. Fase 5 Browser E2E: Calendar showPicker() + Submit + Evidence + Revisi (SUPERSEDED + carry) + Anulir (VOID) ──
+    await page.evaluate(() => {
+      window.__showPickerCalls = 0;
+      const orig = HTMLInputElement.prototype.showPicker;
+      HTMLInputElement.prototype.showPicker = function () {
+        window.__showPickerCalls++;
+        if (typeof orig === 'function') {
+          try { return orig.call(this); } catch (e) { }
+        }
+      };
+    });
+    await page.click('#kgd-btn-open-form');
+    await page.waitForSelector('#modal-kgd-form:not(.n-hidden)', { timeout: 5000 });
+    await page.click('#kgd-tanggal');
+    const pickerCallsOnForm = await page.evaluate(() => window.__showPickerCalls);
+    const valBeforeType = await page.inputValue('#kgd-tanggal');
+    await page.keyboard.type('1999-01-01');
+    const valAfterType = await page.inputValue('#kgd-tanggal');
+
+    await page.fill('#kgd-judul', 'Rapat Uji Fase Lima E2E');
+    await page.fill('#kgd-deskripsi', 'Verifikasi siklus submit revisi anulir dan lampiran Drive.');
+    await page.fill('#kgd-pihak', 'Timja Operasi, Timja Pengawakan');
+    await page.fill('#kgd-link', 'https://drive.google.com/file/d/FASE5E2ETESTFILE12345/view');
+    await page.click('#kgd-btn-submit');
+    await page.waitForSelector('#modal-kgd-form.n-hidden', { state: 'attached', timeout: 8000 });
+    await page.waitForTimeout(250);
+
+    const afterSubmitCheck = await page.evaluate(() => {
+      const txt = (document.getElementById('kgd-history-wrap') || {}).textContent || '';
+      return txt.includes('Rapat Uji Fase Lima E2E');
+    });
+
+    // Klik Lihat pada entri baru untuk verifikasi label lampiran Drive manusiawi
+    await page.click('#kgd-history-wrap tbody tr:first-child button:has-text("Lihat")');
+    await page.waitForSelector('#modal-hd:not(.n-hidden)', { timeout: 5000 });
+    await page.waitForTimeout(200);
+    const hdSubmitEvidence = await page.evaluate(() => {
+      const txt = (document.getElementById('hd-evidence') || {}).textContent || '';
+      return {
+        hasHumanSource: txt.includes('Salinan Google Drive') && !txt.includes('DRIVE_LINK_COPY'),
+        hasFile: txt.includes('Dokumen-Tautan-Drive.pdf')
+      };
+    });
+    await page.evaluate(() => _hdClose());
+
+    // Klik Revisi pada entri baru -> cek calendar picker locked + simpan revisi + verifikasi carry-over lampiran
+    await page.click('#kgd-history-wrap tbody tr:first-child button:has-text("Revisi")');
+    await page.waitForSelector('#modal-kgd-revisi:not(.n-hidden)', { timeout: 5000 });
+    await page.click('#rv-kgd-tanggal');
+    const pickerCallsOnRev = await page.evaluate(() => window.__showPickerCalls);
+    const revDateBefore = await page.inputValue('#rv-kgd-tanggal');
+    await page.keyboard.type('2001-02-02');
+    const revDateAfter = await page.inputValue('#rv-kgd-tanggal');
+    await page.fill('#rv-kgd-judul', 'Rapat Uji Fase Lima E2E (Revisi)');
+    await page.fill('#rv-kgd-alasan', 'Pembaruan agenda koordinasi');
+    await page.click('#kgd-btn-revisi-save');
+    await page.waitForSelector('#modal-kgd-revisi.n-hidden', { state: 'attached', timeout: 5000 });
+    await page.waitForTimeout(250);
+
+    const afterRevisiCheck = await page.evaluate(() => {
+      const rows = [...document.querySelectorAll('#kgd-history-wrap tbody tr:not(.hist-void-note)')];
+      const txt = rows.slice(0, 2).map((r) => r.textContent).join(' | ');
+      return txt.includes('Rapat Uji Fase Lima E2E (Revisi)') && txt.includes('Aktif') && txt.includes('Ditimpa');
+    });
+
+    await page.click('#kgd-history-wrap tbody tr:first-child button:has-text("Lihat")');
+    await page.waitForSelector('#modal-hd:not(.n-hidden)', { timeout: 5000 });
+    await page.waitForTimeout(200);
+    const hdCarryEvidence = await page.evaluate(() => {
+      const txt = (document.getElementById('hd-evidence') || {}).textContent || '';
+      return txt.includes('Dokumen-Tautan-Drive.pdf') && txt.includes('Salinan Google Drive');
+    });
+    await page.evaluate(() => _hdClose());
+
+    // Klik Anulir pada baris hasil revisi -> isi alasan -> konfirmasi -> verifikasi status Dianulir + Alasan Anulir
+    await page.click('#kgd-history-wrap tbody tr:first-child button:has-text("Anulir")');
+    await page.waitForSelector('#modal-kgd-anulir:not(.n-hidden)', { timeout: 5000 });
+    await page.fill('#an-kgd-alasan', 'Dibatalkan dalam uji E2E Fase 5');
+    await page.click('#kgd-btn-anulir-save');
+    await page.waitForSelector('#modal-kgd-anulir.n-hidden', { state: 'attached', timeout: 5000 });
+    await page.waitForTimeout(250);
+
+    const fase5E2E = await page.evaluate((meta) => {
+      const wrapTxt = (document.getElementById('kgd-history-wrap') || {}).textContent || '';
+      return {
+        pickerCalled: meta.pickerCallsOnForm > 0 && meta.pickerCallsOnRev > meta.pickerCallsOnForm,
+        dateAntiTypeOk: meta.valBeforeType === meta.valAfterType && meta.revDateBefore === meta.revDateAfter,
+        afterSubmitCheck: meta.afterSubmitCheck,
+        hdSubmitEvidence: meta.hdSubmitEvidence,
+        afterRevisiCheck: meta.afterRevisiCheck,
+        hdCarryEvidence: meta.hdCarryEvidence,
+        afterAnulirOk: wrapTxt.includes('Dianulir') && wrapTxt.includes('Dibatalkan dalam uji E2E Fase 5')
+      };
+    }, { pickerCallsOnForm, pickerCallsOnRev, valBeforeType, valAfterType, revDateBefore, revDateAfter, afterSubmitCheck, hdSubmitEvidence, afterRevisiCheck, hdCarryEvidence });
+    console.log('[AUDIT] fase5-kegiatan-e2e:', JSON.stringify(fase5E2E));
+
     // ── 8. Notifikasi (Desktop) ──
     await page.evaluate(() => _routeTo('notifikasi'));
     await page.waitForSelector('#ntf-list .n-table', { timeout: 10000 });
@@ -952,6 +1180,9 @@ async function inspectPage(page, name) {
     if (pkState.rawToken) failures.push('pkRawToken=' + pkState.rawToken);
     if (!kgdState.hasTitle || kgdState.kpiCells !== 3 || kgdState.beforeSearch !== 4 || kgdState.afterSearch !== 1 || !kgdState.dateLockedForm || !kgdState.dateLockedRevisi || !headerRangeLocked || kgdState.hasRawUserId) {
       failures.push('kgdState=' + JSON.stringify(Object.assign({}, kgdState, { headerRangeLocked })));
+    }
+    if (!fase5E2E || !fase5E2E.pickerCalled || !fase5E2E.dateAntiTypeOk || !fase5E2E.afterSubmitCheck || !fase5E2E.hdSubmitEvidence.hasHumanSource || !fase5E2E.hdSubmitEvidence.hasFile || !fase5E2E.afterRevisiCheck || !fase5E2E.hdCarryEvidence || !fase5E2E.afterAnulirOk) {
+      failures.push('fase5E2E=' + JSON.stringify(fase5E2E));
     }
     if (!ntfState.summaryText.includes('3 belum dibaca') || ntfState.kpiGridCount !== 0 || ntfState.dots < 1 || ntfState.rows !== 5) {
       failures.push('ntfState=' + JSON.stringify(ntfState));
