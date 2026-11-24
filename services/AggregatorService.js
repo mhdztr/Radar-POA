@@ -578,8 +578,10 @@ function _aggIngestPusat(range, ytdRange) {
   var ytd = 0, periode = 0;
   var latest = null;
   rows.forEach(function (r) {
-    var t = r['Tanggal'] ? new Date(r['Tanggal']) : new Date(r['Timestamp']);
-    if (!isNaN(t.getTime())) {
+    var t = r['Tanggal']
+      ? (typeof _parseLocalDate === 'function' ? _parseLocalDate(r['Tanggal'], false) : new Date(r['Tanggal']))
+      : new Date(r['Timestamp']);
+    if (t && !isNaN(t.getTime())) {
       if (t >= ytdRange.startDate && t <= ytdRange.endDate) ytd++;
       if (t >= range.startDate && t <= range.endDate) periode++;
     }

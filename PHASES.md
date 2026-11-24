@@ -25,7 +25,7 @@ ROADMAP PENGEMBANGAN RADAR POA v2.0
 ├── [Fase R4] Selesai [x] — Standarisasi 5 Halaman Sekunder, Fix Error .map(), Jargon Clean-Up, Calendar Anti-Ketik, & 12-Screen Playwright Gate
 │
 ├── [Fase 5]  Selesai [x] — Pengujian E2E Siklus Kegiatan Direktorat (Submit -> Revisi SUPERSEDED -> Anulir VOID) & Multi-Evidence Drive
-├── [Fase 6]  [ ]         — Pipeline Data Mart Looker Studio (LookerMartService.js), applyFormalSheetFormatting(), & Scheduled Trigger
+├── [Fase 6]  Selesai [x] — Pipeline Data Mart Looker Studio (LookerMartService.js), applyFormalSheetFormatting(), & Scheduled Trigger
 └── [Fase 7]  [ ]         — Admin Konektor Satelit, Linter Otomatis (lint_ui.js 10 Gates), & Automated Test Suite (tests/*.test.js)
 ```
 
@@ -150,7 +150,7 @@ ROADMAP PENGEMBANGAN RADAR POA v2.0
 ---
 
 ### Fase 6: Pipeline Data Mart Looker Studio (`LookerMartService.js`), Sheet Formal, & Scheduled Trigger
-- **Status:** **Siap Dikerjakan (`[ ]`)**
+- **Status:** **Selesai (`[x]`)**
 - **Tujuan Utama:** Mengimplementasikan pipeline ETL terjadwal menuju spreadsheet `RadarPOA_Looker_Mart` (`Mart_Ikhtisar_Nasional`) sesuai `PRD.md` §3.4, `ARCHITECTURE.md` §2–§3, dan `DATA_SCHEMA.md` §2, serta menerapkan pemformatan Google Sheet formal (`applyFormalSheetFormatting`).
 - **Komponen yang Harus Dikerjakan:**
   1. **Pembuatan `services/LookerMartService.js`:**
@@ -161,7 +161,7 @@ ROADMAP PENGEMBANGAN RADAR POA v2.0
   2. **Standarisasi Format Fisik Google Sheet (`applyFormalSheetFormatting` di `data/SheetAccess.js`):**
      - Memformat `TX_KegiatanDirektorat`, `Mart_Ikhtisar_Nasional`, `Audit_Log`, `Users`, dan `Kapal` (`#0E1722` header teks putih `34px`, `setFrozenRows(1)`, baris data `26px` *zebra banding* `#FFFFFF`/`#F4F7F9`, format `@` untuk `NIP`, `yyyy-mm-dd`, dan `#,##0`).
 - **Kriteria Verifikasi:**
-  - [ ] `looker_syncMart()` menghasilkan baris `Mart_Ikhtisar_Nasional` yang akurat sesuai `agg_collectAll()` dan cocok 100% dengan `DATA_SCHEMA.md` §2.
+  - [x] `looker_syncMart()` menghasilkan baris `Mart_Ikhtisar_Nasional` yang akurat sesuai `agg_collectAll()` dan cocok 100% dengan `DATA_SCHEMA.md` §2 (teruji di `tests/looker_mart.test.js`).
 
 ---
 

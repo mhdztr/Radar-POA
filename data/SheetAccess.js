@@ -237,16 +237,12 @@ function _autoCreateMasterSheet(ss, sheetName) {
   }
 
   var created = ss.insertSheet(sheetName);
-  created.getRange(1, 1, 1, headers.length)
-    .setValues([headers])
-    .setFontWeight('bold')
-    .setBackground('#0E1722')
-    .setFontColor('#FFFFFF');
-  created.setFrozenRows(1);
+  created.getRange(1, 1, 1, headers.length).setValues([headers]);
 
   if (seedRows.length > 0) {
     created.getRange(2, 1, seedRows.length, seedRows[0].length).setValues(seedRows);
   }
+  applyFormalSheetFormatting(created);
   return created;
 }
 
@@ -401,12 +397,8 @@ function _autoCreatePusatSheet(ss, sheetName) {
   }
   if (!headers) return null;
   var created = ss.insertSheet(sheetName);
-  created.getRange(1, 1, 1, headers.length)
-    .setValues([headers])
-    .setFontWeight('bold')
-    .setBackground('#0F172A')
-    .setFontColor('#FFFFFF');
-  created.setFrozenRows(1);
+  created.getRange(1, 1, 1, headers.length).setValues([headers]);
+  applyFormalSheetFormatting(created);
   return created;
 }
 
@@ -421,12 +413,8 @@ function _autoCreateLogSheet(ss, sheetName) {
   }
   if (!headers) return null;
   var created = ss.insertSheet(sheetName);
-  created.getRange(1, 1, 1, headers.length)
-    .setValues([headers])
-    .setFontWeight('bold')
-    .setBackground('#0F172A')
-    .setFontColor('#FFFFFF');
-  created.setFrozenRows(1);
+  created.getRange(1, 1, 1, headers.length).setValues([headers]);
+  applyFormalSheetFormatting(created);
   return created;
 }
 
@@ -747,4 +735,113 @@ function logAudit(userId, aksi, sheetTarget, rowIdTarget, alasanOrDetail) {
   } catch (e) {
     Logger.log('[logAudit] ' + e.message);
   }
+}
+
+// ===========================================================================
+// STANDARISASI FORMAT FISIK GOOGLE SHEET (Fase 6)
+// ===========================================================================
+
+var _FORMAL_COL_FORMATS = {
+  // Plain text ID & periode
+  'NIP': '@', 'Periode': '@', 'BulanTahun': '@', 'RowID': '@', 'UserID': '@',
+  'LogID': '@', 'KapalID': '@', 'DivisiID': '@', 'WPPCode': '@', 'WPPDefault': '@',
+  'EvidenceID': '@', 'QueueID': '@', 'NotifID': '@',
+  // Tanggal & timestamp
+  'Tanggal': 'yyyy-mm-dd',
+  'Timestamp': 'yyyy-mm-dd hh:mm:ss', 'VoidedAt': 'yyyy-mm-dd hh:mm:ss',
+  'RegisteredAt': 'yyyy-mm-dd hh:mm:ss', 'ApprovedAt': 'yyyy-mm-dd hh:mm:ss',
+  'UploadedAt': 'yyyy-mm-dd hh:mm:ss', 'CreatedAt': 'yyyy-mm-dd hh:mm:ss',
+  'DecidedAt': 'yyyy-mm-dd hh:mm:ss',
+  // Numerik bilangan bulat & mata uang
+  'TotalPagu_Reguler': '#,##0', 'TotalPagu_ABT': '#,##0',
+  'TotalRealisasi_SP2D_Reguler': '#,##0', 'TotalRealisasi_SP2D_ABT': '#,##0',
+  'TotalKegiatanDirektorat': '#,##0', 'Aset_RusakBerat_Unit': '#,##0', 'PanjangMeter': '#,##0',
+  // Persentase desimal
+  'PctSerapan_Nasional': '0.00', 'Armada_Siap_Pct': '0.00'
+};
+
+/**
+ * Terapkan format formal instansional ke sebuah Google Sheet:
+ * header gelap (#0E1722, teks putih bold, tinggi 34px, freeze row 1),
+ * baris data 26px zebra striping (#FFFFFF / #F4F7F9), vertical-align middle,
+ * format angka/teks/tanggal sesuai kolom, dan auto-resize kolom.
+ *
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet
+ * @returns {GoogleAppsScript.Spreadsheet.Sheet|null}
+ */
+function applyFormalSheetFormatting(sheet) {
+  if (!sheet) return null;
+  var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
+  if (lastRow < 1 || lastCol < 1) return sheet;
+
+  var headerRange = sheet.getRange(1, 1, 1, lastCol);
+  if (typeof headerRange.setFontWeight === 'function') headerRange.setFontWeight('bold');
+  if (typeof headerRange.setBackground === 'function') headerRange.setBackground('#0E1722');
+  if (typeof headerRange.setFontColor === 'function') headerRange.setFontColor('#FFFFFF');
+  if (typeof headerRange.setVerticalAlignment === 'function') headerRange.setVerticalAlignment('middle');
+  if (typeof sheet.setRowHeight === 'function') sheet.setRowHeight(1, 34);
+  if (typeof sheet.setFrozenRows === 'function') sheet.setFrozenRows(1);
+
+  if (lastRow >= 2) {
+    var dataRowsCount = lastRow - 1;
+    var allDataRange = sheet.getRange(2, 1, dataRowsCount, lastCol);
+    if (typeof allDataRange.setVerticalAlignment === 'function') {
+      allDataRange.setVerticalAlignment('middle');
+    }
+
+    for (var r = 2; r <= lastRow; r++) {
+      if (typeof sheet.setRowHeight === 'function') sheet.setRowHeight(r, 26);
+      var rowRange = sheet.getRange(r, 1, 1, lastCol);
+      if (typeof rowRange.setBackground === 'function') {
+        rowRange.setBackground((r % 2 === 0) ? '#FFFFFF' : '#F4F7F9');
+      }
+    }
+
+    var headers = headerRange.getValues()[0] || [];
+    for (var c = 0; c < headers.length; c++) {
+      var fmt = _FORMAL_COL_FORMATS[String(headers[c] || '').trim()];
+      if (!fmt) continue;
+      var colRange = sheet.getRange(2, c + 1, dataRowsCount, 1);
+      if (typeof colRange.setNumberFormat === 'function') {
+        colRange.setNumberFormat(fmt);
+      }
+    }
+  }
+
+  if (typeof sheet.autoResizeColumn === 'function') {
+    for (var colIdx = 1; colIdx <= lastCol; colIdx++) {
+      try { sheet.autoResizeColumn(colIdx); } catch (eResize) {}
+    }
+  }
+  return sheet;
+}
+
+/**
+ * Terapkan applyFormalSheetFormatting() ke seluruh sheet utama Radar POA.
+ * @returns {string[]} daftar nama sheet yang diformat
+ */
+function formatFormalSheets() {
+  var formatted = [];
+  var targets = [
+    openTransaksiSheet(SHEET_PUSAT.KEGIATAN_DIREKTORAT),
+    openLogSheet(SHEET_LOG.AUDIT_LOG),
+    openMasterSheet(SHEET_MASTER.USERS),
+    openMasterSheet(SHEET_MASTER.KAPAL)
+  ];
+
+  var ids = getSpreadsheetIds();
+  if (ids.lookerMartId) {
+    try {
+      var martSs = _openSsCached(ids.lookerMartId);
+      if (martSs) targets.push(martSs.getSheetByName(SHEET_MART.IKHTISAR_NASIONAL));
+    } catch (eMart) {}
+  }
+
+  targets.forEach(function (sh) {
+    if (!sh) return;
+    applyFormalSheetFormatting(sh);
+    if (typeof sh.getName === 'function') formatted.push(sh.getName());
+  });
+  return formatted;
 }
