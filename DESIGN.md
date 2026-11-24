@@ -15,7 +15,7 @@ Agar **Radar POA** langsung dikenali sebagai portal agregasi tingkat Direktorat 
 |---|---|---|---|
 | **Dunia Visual** | Portal Bendahara Frosted Mineral | Buku Besar Akromatik (*Achromatic Ledger*) | **Full-Width Hydrographic Briefing & Two-Tier Deep Admiralty Header** |
 | **Navigasi Utama** | Top-Bar putih bersekat + glassmorphic subnav | Sidebar kiri terang `#F2F4F7` | **Two-Tier Header (`56px` Deep Admiralty Brand Bar berwatermark grid radar + `44px` Frosted Nav Tab Bar bergaris bawah `#0B4F6C`)** di desktop; **Flush Mobile Bottom Tab Bar (`<= 768px`)** |
-| **Kanvas & Ruang Kerja** | Porcelain `#F8FAFC` + blur header | Cool slate `#F2F4F7` | **Kanvas Hidrografis Penuh (`#F4F7F9` + tekstur Kontur Batimetri Laut `--pattern-bathymetry`, `max-width: 1440px`)** berbingkai kedalaman optik konsentris (`12px/10px/8px/6px`) |
+| **Kanvas & Ruang Kerja** | Porcelain `#F8FAFC` + blur header | Cool slate `#F2F4F7` | **Kanvas Hidrografis Penuh (`#F4F7F9` + tekstur Micro Dot Matrix `--pattern-dot-matrix` `20px`, `max-width: 1440px`)** berbingkai kedalaman optik konsentris (`12px/10px/8px/6px`) |
 | **Layar Autentikasi** | Kartu 2-ruang bergradasi hijau | Kartu form terpusat abu-abu dingin | **50/50 Photographic Split Screen** (#FAFCFD panel kanan berjangkar footer KKP/PSDKP + foto personel fokus tengah tanpa wajah terpotong) |
 | **Warna Aksi Primer** | Forest Jade `#064E3B` | Hitam Arang `#0F1720` | **Deep Admiralty Blue `#0B4F6C`** (`hover: #083B52`), hemat & fokus |
 | **Keluarga Huruf** | `Plus Jakarta Sans` | `Geist` + `Geist Mono` | **`Public Sans` tunggal** (`400 / 500 / 600`), **`<= 6` skala ukuran (`>= 12px`)**, wajib `tabular-nums`, format koma Indonesia |
@@ -58,12 +58,12 @@ Agar **Radar POA** langsung dikenali sebagai portal agregasi tingkat Direktorat 
 - `--dock-shadow`: `0 -2px 10px rgba(14, 23, 34, 0.05)`
 
 ### 3.2 Kanvas Hidrografis & Permukaan Kerja
-- `--bg-ground`: `#F4F7F9` (kanvas kerja utama aplikasi — sejuk dengan pendar atmosferik & pola kontur batimetri laut `--pattern-bathymetry`)
+- `--bg-ground`: `#F4F7F9` (kanvas kerja utama aplikasi — sejuk dengan pendar atmosferik & pola *Micro Dot Matrix* `--pattern-dot-matrix` `20px`)
 - `--bg-header`: `#FFFFFF` & `--bg-header-frost`: `rgba(255, 255, 255, 0.88)` (Tier 1 Deep Admiralty `#0B4F6C` + Tier 2 Frosted Nav Tab Bar `44px` + legenda peta kaca)
 - `--bg-surface`: `#FFFFFF` (pelat KPI, tabel, kontainer peta/grafik, modal, drawer dengan bayangan ambient berlapis & inner top specular bevel)
 - `--bg-raised`: `#E6EDF2` (trek segmen pasif, baris selang-seling, header kontrol netral)
 - `--bg-active`: `#D9E4EC`
-- `--bg-auth-panel`: `#FAFCFD` (latar panel form autentikasi kanan — bertekstur kontur batimetri laut halus dengan radial vignette tengah agar form tetap bersih)
+- `--bg-auth-panel`: `#FAFCFD` (latar panel form autentikasi kanan — bertekstur *Micro Dot Matrix* `20px` dengan radial vignette tengah agar form tetap bersih)
 - `--border-card`: `rgba(14, 23, 34, 0.09)` (border optik translusen + bayangan ambient halus, menggantikan tampilan flat kaku)
 - `--border-rule`: `rgba(14, 23, 34, 0.065)` (pemisah baris tabel & antarsel KPI)
 - `--border-ctl`: `rgba(14, 23, 34, 0.14)` (tepi jelas input, select, dan tombol sekunder + inner highlight)
