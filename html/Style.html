@@ -47,6 +47,7 @@
     --bg-raised: #E6EDF2;
     --bg-active: #D9E4EC;
     --bg-auth-panel: #FAFCFD;
+    --pattern-bathymetry: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360' viewBox='0 0 360 360'%3E%3Cg fill='none' stroke='%230B4F6C' stroke-linecap='round'%3E%3Cpath d='M0 64 C90 24, 150 108, 230 78 C290 56, 315 84, 360 64' stroke-width='1.15' stroke-opacity='0.12'/%3E%3Cpath d='M0 88 C86 48, 152 132, 232 102 C292 80, 318 108, 360 88' stroke-width='0.9' stroke-opacity='0.085'/%3E%3Cpath d='M0 114 C82 78, 156 154, 236 126 C294 106, 320 132, 360 114' stroke-width='0.8' stroke-opacity='0.06' stroke-dasharray='6 6'/%3E%3Cpath d='M0 242 C72 274, 148 196, 224 226 C284 250, 318 224, 360 242' stroke-width='1.1' stroke-opacity='0.115'/%3E%3Cpath d='M0 268 C72 300, 148 222, 224 252 C284 276, 318 250, 360 268' stroke-width='0.85' stroke-opacity='0.08' stroke-dasharray='5 5'/%3E%3Cpath d='M0 332 C95 306, 175 352, 265 328 C308 317, 330 342, 360 332' stroke-width='0.9' stroke-opacity='0.075'/%3E%3Cpath d='M220 156 C224 134, 258 126, 286 136 C312 146, 318 172, 294 186 C268 200, 216 180, 220 156 Z' stroke-width='1.05' stroke-opacity='0.105'/%3E%3Cpath d='M238 158 C242 145, 262 140, 278 147 C292 153, 294 168, 280 175 C264 182, 234 171, 238 158 Z' stroke-width='0.85' stroke-opacity='0.08' stroke-dasharray='4 4'/%3E%3Cpath d='M52 168 C56 148, 86 142, 114 150 C138 157, 142 180, 120 192 C96 204, 48 188, 52 168 Z' stroke-width='1.0' stroke-opacity='0.095'/%3E%3Cpath d='M72 170 C75 159, 92 155, 108 160 C120 164, 122 176, 110 182 C96 188, 69 180, 72 170 Z' stroke-width='0.8' stroke-opacity='0.07'/%3E%3Cpath d='M264 159 H270 M267 156 V162 M92 171 H98 M95 168 V174' stroke-width='0.9' stroke-opacity='0.13'/%3E%3C/g%3E%3C/svg%3E");
 
     --border-card: rgba(14, 23, 34, 0.09);
     --border-rule: rgba(14, 23, 34, 0.065);
@@ -515,6 +516,8 @@
 
   /* Right Panel — Quiet Institutional Form Workspace with Bottom Anchor */
   .auth-panel {
+    position: relative;
+    overflow: hidden;
     min-height: 100dvh;
     background-color: var(--bg-auth-panel);
     background-image: radial-gradient(ellipse 80% 300px at 50% 0%, rgba(11, 79, 108, 0.055) 0%, transparent 70%);
@@ -527,12 +530,28 @@
     gap: 24px;
   }
 
+  .auth-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image: var(--pattern-bathymetry);
+    background-size: 360px 360px;
+    background-repeat: repeat;
+    background-position: center center;
+    mask-image: radial-gradient(ellipse 90% 82% at 50% 48%, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.85) 58%, rgba(0, 0, 0, 1) 100%);
+    -webkit-mask-image: radial-gradient(ellipse 90% 82% at 50% 48%, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.85) 58%, rgba(0, 0, 0, 1) 100%);
+  }
+
   .auth-panel-spacer {
     height: 16px;
     flex: 0 0 auto;
   }
 
   .auth-panel-inner {
+    position: relative;
+    z-index: 1;
     width: 100%;
     max-width: 396px;
     animation: _authIn 300ms var(--ease-spring);
@@ -551,6 +570,8 @@
   }
 
   .auth-panel-foot {
+    position: relative;
+    z-index: 1;
     width: 100%;
     max-width: 396px;
     padding-top: 16px;
@@ -1145,12 +1166,26 @@
    5. TOP INSTITUTIONAL BAR, FLOATING MARITIME DOCK & WORKSPACE SHELL
    ============================================================================ */
   #app-wrapper {
+    position: relative;
+    isolation: isolate;
     display: flex;
     flex-direction: column;
     min-height: 100dvh;
     width: 100%;
     background-color: var(--bg-ground);
     background-image: radial-gradient(ellipse 90% 340px at 50% 0%, rgba(11, 79, 108, 0.045) 0%, rgba(11, 79, 108, 0) 72%);
+  }
+
+  #app-wrapper::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image: var(--pattern-bathymetry);
+    background-size: 360px 360px;
+    background-repeat: repeat;
+    background-position: center top;
   }
 
   /* Sticky Two-Tier Institutional Top Header (Tier 1: Deep Admiralty 56px + Tier 2 Frosted Nav: 44px) */
@@ -1772,6 +1807,8 @@
 
   /* Main Content Area (Equal Margins & Clean Bottom Rhythm) */
   .app-main {
+    position: relative;
+    z-index: 1;
     flex: 1 1 auto;
     width: 100%;
     max-width: var(--canvas-max);
@@ -5810,6 +5847,14 @@
 
     .n-overlay {
       background-color: rgba(14, 23, 34, 0.72) !important;
+    }
+  }
+
+  @media (prefers-contrast: more) {
+
+    #app-wrapper::before,
+    .auth-panel::before {
+      opacity: 0.25;
     }
   }
 </style>
