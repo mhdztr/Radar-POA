@@ -19,7 +19,7 @@ ROADMAP PENGEMBANGAN RADAR POA v2.0
 ├── [Fase 4]  Selesai [x] — Dasbor Strategis Awal, Kalimat Temuan, Peta 34 Kapal, & Playwright Visual Audit
 │
 ├── [Fase R0] Selesai [x] — Penyelarasan Dokumentasi & Kontrak Redesign Ultra-Detail di Seluruh *.md
-├── [Fase R1] Selesai [x] — Shell Baru (Top Bar 56px + Floating Bottom Maritime Dock), Toolbar 32px, Sync Popover, & Login 50/50
+├── [Fase R1] Selesai [x] — Shell Baru (Two-Tier Deep Admiralty + Frosted Nav Header & Flush Mobile Bar), Toolbar 32px, Sync Popover, & Login 50/50
 ├── [Fase R2] Selesai [x] — Redesign Ikhtisar: Peta 68/32 Berikon Siluet Kapal Kelas I–V, Grafik Asimetris 65/35, & Tabel Eksekutif Lintas Satelit
 ├── [Fase R3] Selesai [x] — Redesign Kapal Terbaik (Non-Galangan Podium & Sync TW) & Profil Kapal (h1 Kapal + Enum Manusiawi)
 ├── [Fase R4] Selesai [x] — Standarisasi 5 Halaman Sekunder, Fix Error .map(), Jargon Clean-Up, Calendar Anti-Ketik, & 12-Screen Playwright Gate
@@ -51,17 +51,15 @@ ROADMAP PENGEMBANGAN RADAR POA v2.0
 
 ---
 
-### Fase R1: Shell Baru (Top Institutional Bar `56px` + Floating Bottom Maritime Dock), Toolbar `32px`, Sync Popover, & Login 50/50
+### Fase R1: Shell Baru (Two-Tier Deep Admiralty + Frosted Nav Header & Flush Mobile Bar), Toolbar `32px`, Sync Popover, & Login 50/50
 - **Status:** **Selesai (`[x]`)**
-- **Tujuan Utama:** Mengganti navigasi sidebar rail kiri dengan **Floating Bottom Maritime Dock (`#0E1722`)** + **Top Institutional Bar (`56px`)**, merampingkan sticky header agar tidak pecah di lebar `1024px`, menseragamkan kontrol `32px`, dan menyempurnakan layar autentikasi 50/50.
+- **Tujuan Utama:** Mengganti navigasi sidebar rail kiri dengan **Two-Tier Deep Admiralty Institutional Header (`56px` Deep Admiralty Brand Bar + `44px` Frosted Nav Bar)** di desktop dan **Flush Mobile Bottom Tab Bar (`<= 768px`)**, merampingkan sticky header agar tidak pecah di lebar `1024px`, menseragamkan kontrol `32px`, menyuntikkan kedalaman optik Apple HIG (`v2.1`), dan menyempurnakan layar autentikasi 50/50.
 - **Komponen yang Harus Dikerjakan:**
   1. **Shell HTML & CSS Baru (`html/Index.html`, `html/Style.html`, `html/Script_Main.html`):**
      - Hapus `<aside class="sidebar">`, `#mobile-topbar`, dan `#sidebar-backdrop`.
-     - Bangun `#app-topbar` (`56px` solid `#FFFFFF`, hairline `#D9E2EA`): crest PSDKP (`28×32px`) + lockup `RADAR POA · Rekapitulasi Data Strategis` (**tanpa pil `[Dit. POA]`**), `#sync-indicator` (`32px`), `#topbar-notif-btn` (`32px`), dan `#user-menu-btn` (`32px`) dengan dropdown menu akun.
-     - Bangun `#app-dock` (*Floating Bottom Maritime Dock*):
-       - Desktop (`> 768px`): terpusat di bawah (`bottom: 18px`), permukaan `#0E1722`, radius `14px`, highlight atas `inset 0 1px 0 rgba(255,255,255,0.08)`, item terfilter RBAC (`Ikhtisar`, `Kegiatan`, `Kapal Terbaik`, `Riwayat` | `Notifikasi`, `Master Data`, `Admin`) berindikator aktif `#1D2E42` + bar bawah `2px solid #C88A2E`.
-       - Mobile (`<= 768px`): dock melebar penuh berisi 4 menu inti + tombol `Lainnya` yang membuka `#dock-more-sheet`.
-     - Atur `.app-main` (`max-width: 1440px; margin: 0 auto; padding: 24px 28px 108px;` desktop; `16px 16px 96px` mobile).
+     - Bangun `#app-topbar`: Tier 1 (`56px` gradien *Deep Admiralty* + watermark grid radar nautikal, crest PSDKP `30×34px`, lockup `RADAR POA` + subjudul `Rekapitulasi Data Strategis · Dit. POA` tanpa pil `[Dit. POA]`), kontrol kaca `32px` (`#sync-indicator` ber-live-dot, `#topbar-notif-btn`, `#topbar-user-btn` berinisial 2-huruf) serta Tier 2 `#app-nav-bar` (`44px` *frosted glass*) berindikator pegas `#0B4F6C`.
+     - Bangun `#app-dock` (*Flush Mobile Bottom Tab Bar*, tampil khusus `<= 768px`): menempel penuh di dasar layar berisi 4 menu inti + tombol `Lainnya` yang membuka `#dock-more-sheet`.
+     - Atur `.app-main` (`max-width: 1440px; margin: 0 auto; padding: 20px 28px 40px;` desktop; `16px 16px 84px` mobile).
   2. **Perampingan Header, Kontrol `32px`, & Popover Sync (`html/Script_Main.html`, `html/Style.html`):**
      - Pindahkan `#page-finding` keluar dari baris toolbar sticky ke bawah `h1` di area konten halaman agar header tetap 1 baris bersih di `1440px` maupun `1024px`.
      - Samakan tinggi semua kontrol dalam satu baris (`Bulanan | Rentang`, `select.filter-sel`, `input[type="date"]`, tombol aksi halaman) ke **`32px` tepat** (`brokenControlRows === 0`).

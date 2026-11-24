@@ -305,8 +305,10 @@ function _chartBase(opts, extra) {
         backgroundColor: '#0E1722',
         titleColor: '#F5F2EB',
         bodyColor: '#D2DAE4',
-        padding: 10,
-        cornerRadius: 4,
+        padding: 11,
+        cornerRadius: 8,
+        borderColor: 'rgba(255, 255, 255, 0.12)',
+        borderWidth: 1,
         displayColors: false,
         titleFont: { family: "'Public Sans', system-ui, sans-serif", size: 12, weight: '600' },
         bodyFont: { family: "'Public Sans', system-ui, sans-serif", size: 12 }
@@ -363,16 +365,31 @@ function _chartLine(canvasId, labels, datasets, opts) {
     var ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    var chartH = (canvas && canvas.clientHeight) || 224;
     var dsOut = (datasets || []).map(function (d) {
+      var bgFill = d.fillColor;
+      if (d.fill && !bgFill) {
+        var grad = ctx.createLinearGradient(0, 0, 0, chartH);
+        grad.addColorStop(0, _chartRgba(d.color, 0.20));
+        grad.addColorStop(1, _chartRgba(d.color, 0.01));
+        bgFill = grad;
+      } else if (d.fill && typeof d.fillColor === 'string' && d.color) {
+        var g2 = ctx.createLinearGradient(0, 0, 0, chartH);
+        g2.addColorStop(0, _chartRgba(d.color, 0.18));
+        g2.addColorStop(1, _chartRgba(d.color, 0.01));
+        bgFill = g2;
+      }
       return {
         label: d.label,
         data: d.data,
         borderColor: d.color,
-        backgroundColor: d.fillColor || _chartRgba(d.color, 0.07),
-        borderWidth: d.borderWidth !== undefined ? d.borderWidth : 2.25,
-        pointRadius: d.pointRadius !== undefined ? d.pointRadius : 3,
-        pointHoverRadius: 5,
+        backgroundColor: bgFill || _chartRgba(d.color, 0.07),
+        borderWidth: d.borderWidth !== undefined ? d.borderWidth : 2.5,
+        pointRadius: d.pointRadius !== undefined ? d.pointRadius : 3.5,
+        pointHoverRadius: 6,
         pointBackgroundColor: d.color,
+        pointBorderColor: '#FFFFFF',
+        pointBorderWidth: 2,
         borderDash: d.dashed ? [5, 4] : [],
         fill: !!d.fill,
         tension: 0.30

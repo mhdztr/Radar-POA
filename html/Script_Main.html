@@ -1159,10 +1159,27 @@
     _renderDock();
   }
 
+  function _userInitials(nama) {
+    var clean = String(nama || '').replace(/\b(Ir|Dr|Capt|Prof|H|Hj|Drs|Dra)\.\s*/gi, '').replace(/,.*$/, '').trim();
+    if (!clean) return '';
+    var parts = clean.split(/\s+/).filter(Boolean);
+    if (!parts.length) return '';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
   function _renderDock() {
     var user = APP.user || {};
     var nameEl = document.getElementById('sb-user-name');
     if (nameEl) nameEl.textContent = user.nama || 'Pengguna';
+    var avatarEl = document.getElementById('sb-avatar');
+    if (avatarEl) {
+      var ini = _userInitials(user.nama);
+      if (ini) {
+        avatarEl.textContent = ini;
+        avatarEl.classList.add('has-initials');
+      }
+    }
     var roleEl = document.getElementById('sb-user-role');
     if (roleEl) roleEl.textContent = ROLE_LABEL[user.role] || user.role || '\u2014';
 
@@ -1822,7 +1839,19 @@
     if (kpiRow) {
       if (d.headline && d.headline.length) {
         kpiRow.innerHTML = d.headline.map(function (h) {
-          return _kpiHeadline(h.label, _ovNum(h.value, h.unit), h.unit, h.sub, h);
+          var opt = Object.assign({}, h);
+          var rawNum = Number(String(h.value).replace(',', '.'));
+          if (!isNaN(rawNum)) {
+            if (h.unit === '%') {
+              opt.progress = { pct: Math.min(100, Math.max(0, rawNum)), tone: h.sourceTone || 'sikap' };
+            } else if (typeof h.unit === 'string') {
+              var mRatio = h.unit.match(/\/\s*(\d+)/);
+              if (mRatio && Number(mRatio[1]) > 0) {
+                opt.progress = { pct: Math.min(100, Math.max(0, (rawNum / Number(mRatio[1])) * 100)), tone: h.sourceTone || 'radar' };
+              }
+            }
+          }
+          return _kpiHeadline(h.label, _ovNum(h.value, h.unit), h.unit, h.sub, opt);
         }).join('');
       } else {
         kpiRow.innerHTML = '<div class="chart-empty">Belum ada data pada rentang terpilih</div>';
@@ -2387,8 +2416,7 @@
   }
 
   function _fmtTs(ts) {
-    var d = new Date(ts);
-    return isNaN(d) ? (ts || '\u2014') : d.toLocaleString('id-ID');
+    return typeof _fmtDateTimeId === 'function' ? _fmtDateTimeId(ts) : (ts || '\u2014');
   }
 
   function _fmtDecId(n, digits) {
@@ -2628,6 +2656,13 @@
       ? '<div class="kpi-source-row"><span class="kpi-src"><i class="kpi-src-dot dot-' + _esc(opt.sourceTone || 'radar') + '"></i>' + _esc(opt.source) + '</span></div>'
       : '';
 
+    var progressHtml = '';
+    if (opt.progress && hasData && !isNaN(Number(opt.progress.pct))) {
+      var pPct = Math.min(100, Math.max(0, Math.round(Number(opt.progress.pct))));
+      var pToneCls = opt.progress.tone === 'sikap' ? ' is-sikap' : '';
+      progressHtml = '<div class="kpi-micro-track"><div class="kpi-micro-fill' + pToneCls + '" style="width:' + pPct + '%;"></div></div>';
+    }
+
     return '<div class="kpi-card">' +
       sourceHtml +
       '<div class="kpi-head">' +
@@ -2637,6 +2672,7 @@
       '<div class="kpi-value">' + value +
       (unit ? '<span class="kpi-unit">' + _esc(unit) + '</span>' : '') +
       '</div>' +
+      progressHtml +
       footHtml +
       '</div>';
   }
@@ -6656,7 +6692,7 @@
     for (var j = 0; j < d.fields.length; j++) {
       rows += '<tr><td class="hd-k">' + d.fields[j][0] + '</td><td class="hd-v">' + d.fields[j][1] + '</td></tr>';
     }
-    if (body) body.innerHTML = rows || '<tr><td colspan="2" style="padding:12px;color:var(--n-text-muted);font-size:.85rem;">Tidak ada detail tambahan.</td></tr>';
+    if (body) body.innerHTML = rows || '<tr><td colspan="2" class="hd-empty-note">Tidak ada detail tambahan.</td></tr>';
     var manageEl = document.getElementById('hd-evidence-manage');
     if (manageEl) manageEl.innerHTML = d.manage ? '<button class="btn-mini" onclick="' + d.manage + '">Kelola</button>' : '';
     _hdLoadEvidence(d.refSheet, d.rowId);
@@ -6682,7 +6718,7 @@
     if (!list) return;
     list.innerHTML = _loadingInline('Memuat lampiran\u2026');
     if (!refSheet || !rowId) {
-      list.innerHTML = '<div style="color:var(--n-text-muted);font-size:.85rem;">Tidak ada lampiran.</div>';
+      list.innerHTML = '<div class="hd-empty-note">Tidak ada lampiran.</div>';
       return;
     }
     google.script.run

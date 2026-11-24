@@ -13,9 +13,9 @@ Agar **Radar POA** langsung dikenali sebagai portal agregasi tingkat Direktorat 
 
 | Dimensi Visual | **SIKAP** *(Subbag TU)* | **Nakhoda** *(Timja Pengawakan)* | **Radar POA v2.0** *(Pusat Agregasi Dit. POA)* |
 |---|---|---|---|
-| **Dunia Visual** | Portal Bendahara Frosted Mineral | Buku Besar Akromatik (*Achromatic Ledger*) | **Full-Width Hydrographic Briefing & Two-Tier Institutional Header** |
-| **Navigasi Utama** | Top-Bar putih bersekat + glassmorphic subnav | Sidebar kiri terang `#F2F4F7` | **Two-Tier Top Header (`52px` Brand Bar + `44px` Nav Tab Bar bergaris bawah `#0B4F6C`)** di desktop; **Flush Mobile Bottom Tab Bar (`<= 768px`)** |
-| **Kanvas & Ruang Kerja** | Porcelain `#F8FAFC` + blur header | Cool slate `#F2F4F7` | **Kanvas Hidrografis Penuh (`#F4F7F9`, `max-width: 1440px`, margin kiri-kanan seimbang)** tanpa bilah samping permanen |
+| **Dunia Visual** | Portal Bendahara Frosted Mineral | Buku Besar Akromatik (*Achromatic Ledger*) | **Full-Width Hydrographic Briefing & Two-Tier Deep Admiralty Header** |
+| **Navigasi Utama** | Top-Bar putih bersekat + glassmorphic subnav | Sidebar kiri terang `#F2F4F7` | **Two-Tier Header (`56px` Deep Admiralty Brand Bar berwatermark grid radar + `44px` Frosted Nav Tab Bar bergaris bawah `#0B4F6C`)** di desktop; **Flush Mobile Bottom Tab Bar (`<= 768px`)** |
+| **Kanvas & Ruang Kerja** | Porcelain `#F8FAFC` + blur header | Cool slate `#F2F4F7` | **Kanvas Hidrografis Penuh (`#F4F7F9` + glow atmosferik maritim halus, `max-width: 1440px`)** berbingkai kedalaman optik konsentris (`12px/10px/8px/6px`) |
 | **Layar Autentikasi** | Kartu 2-ruang bergradasi hijau | Kartu form terpusat abu-abu dingin | **50/50 Photographic Split Screen** (#FAFCFD panel kanan berjangkar footer KKP/PSDKP + foto personel fokus tengah tanpa wajah terpotong) |
 | **Warna Aksi Primer** | Forest Jade `#064E3B` | Hitam Arang `#0F1720` | **Deep Admiralty Blue `#0B4F6C`** (`hover: #083B52`), hemat & fokus |
 | **Keluarga Huruf** | `Plus Jakarta Sans` | `Geist` + `Geist Mono` | **`Public Sans` tunggal** (`400 / 500 / 600`), **`<= 6` skala ukuran (`>= 12px`)**, wajib `tabular-nums`, format koma Indonesia |
@@ -27,14 +27,14 @@ Agar **Radar POA** langsung dikenali sebagai portal agregasi tingkat Direktorat 
 
 1. **Product (Produk):** Portal rekapitulasi data strategis dan monitoring disposisi armada nasional bagi Direktur POA, Pejabat Eselon, dan Kepala Divisi untuk mengawasi konsolidasi dari **SIKAP**, **Nakhoda**, **Sistik**, **Siaga**, dan **Operasi**, serta mencatat **Kegiatan Direktorat**.
 2. **Character (Karakter):** *Berwibawa, tenang, ringkas, presisi — berformat briefing eksekutif negara, bukan tumpukan kartu SaaS.*
-3. **World (Dunia & Material):** **Peta Hidrografis Resmi & Briefing Maritim Negara** — kanvas biru-abu sejuk yang netral dan tenang (`#F4F7F9`), header putih dua tingkat yang tegas & langsung terbaca (`52px` + `44px`), pelat tabel putih bertepi tajam (`#FFFFFF`), serta aksen primer biru maritim (`#0B4F6C`).
+3. **World (Dunia & Material):** **Peta Hidrografis Resmi & Briefing Maritim Negara** — kanvas biru-abu sejuk yang netral dan tenang (`#F4F7F9`), Tier 1 header maritim *Deep Admiralty* (`56px`) bermotif grid radar nautikal dengan kontrol kaca translusen, Tier 2 bilah tab *frosted glass* (`44px`), pelat kartu berbayangan optik berlapis (`12px` konsentris) dan bevel cahaya atas, serta aksen primer biru maritim (`#0B4F6C`).
 4. **Moments (Hanya 2 Momen Visual Utama, Sisanya Tenang):**
    - **Momen 1 — Peta Taktis 34 Kapal Berikon Siluet Kelas I–V (`68% / 32%`):** Peta Indonesia berskala jelas dengan **5 bentuk/skala ikon kapal berbeda** berdasarkan Kelas I–V PSDKP, warna status taktis, 0 pil label bertumpuk (`markerOverlaps === 0`), berdampingan dengan panel ringkasan WPP & disposisi armada di kanan.
-   - **Momen 2 — Analitik Asimetris (`65% / 35%`) & Tabel Monitoring Eksekutif Lintas Satelit:** Satu grafik kurva garis ganda SIKAP dominan (tanpa tumpukan area keruh) didampingi daftar postur AKN Nakhoda di sisi kanan, diikuti tepat **1 Tabel Terpadu Lintas Satelit** di bawah (menggantikan 6 kartu divisi duplikatif).
+   - **Momen 2 — Analitik Asimetris (`65% / 35%`) & Tabel Monitoring Eksekutif Lintas Satelit:** Satu grafik kurva garis ganda SIKAP dominan (gradien area vertikal halus + titik berbingkai putih) didampingi daftar postur AKN Nakhoda di sisi kanan, diikuti tepat **1 Tabel Terpadu Lintas Satelit** di bawah (menggantikan 6 kartu divisi duplikatif).
 5. **Signature (Detail Khas Konsisten):**
-   - **Two-Tier Institutional Top Header** (desktop `52px` + tab horizontal `44px` berindikator `#0B4F6C`) & **Flush Mobile Bottom Tab Bar** (`<= 768px`) menempel rapi di dasar layar.
-   - **Lambang Resmi Ditjen PSDKP (`#psdkp-crest-outline`)** pada panel masuk (`58×66px`), Top Bar (`28×32px`), dan Loading Splash (`48×54px`), tanpa lencana `[Dit. POA]` di sebelah merek.
-   - **Garis Tajuk Publikasi (`2px solid #0E1722`)** khusus untuk **1 strip ringkasan utama** per halaman, dipadukan angka `tabular-nums` rata kanan dengan koma desimal Indonesia.
+   - **Two-Tier Deep Admiralty + Frosted Header** (desktop `56px` Deep Admiralty + `44px` frosted nav bar berindikator pegas `#0B4F6C`) & **Flush Mobile Bottom Tab Bar** (`<= 768px`) menempel rapi di dasar layar.
+   - **Lambang Resmi Ditjen PSDKP (`#psdkp-crest-outline`)** pada panel masuk (`58×66px`), Top Bar (`30×34px`), dan Loading Splash (`48×54px`), tanpa lencana `[Dit. POA]` di sebelah merek.
+   - **Garis Tajuk Publikasi (`2.5px solid #0B4F6C`)** khusus untuk **1 strip ringkasan utama** per halaman, dipadukan angka `tabular-nums` rata kanan dengan koma desimal Indonesia.
 
 ---
 
@@ -58,15 +58,15 @@ Agar **Radar POA** langsung dikenali sebagai portal agregasi tingkat Direktorat 
 - `--dock-shadow`: `0 -2px 10px rgba(14, 23, 34, 0.05)`
 
 ### 3.2 Kanvas Hidrografis & Permukaan Kerja
-- `--bg-ground`: `#F4F7F9` (kanvas kerja utama aplikasi — sangat netral agar konten berbicara)
-- `--bg-header`: `#FFFFFF` (Two-Tier Top Header: Tier 1 `52px` + Tier 2 Nav Tab Bar `44px`, hairline `#D1DCE5`)
-- `--bg-surface`: `#FFFFFF` (pelat KPI, tabel, kontainer peta/grafik, modal, drawer)
+- `--bg-ground`: `#F4F7F9` (kanvas kerja utama aplikasi — sejuk dengan pendar atmosferik maritim ultra-halus)
+- `--bg-header`: `#FFFFFF` & `--bg-header-frost`: `rgba(255, 255, 255, 0.88)` (Tier 1 Deep Admiralty `#0B4F6C` + Tier 2 Frosted Nav Tab Bar `44px` + legenda peta kaca)
+- `--bg-surface`: `#FFFFFF` (pelat KPI, tabel, kontainer peta/grafik, modal, drawer dengan bayangan ambient berlapis & inner top specular bevel)
 - `--bg-raised`: `#E6EDF2` (trek segmen pasif, baris selang-seling, header kontrol netral)
 - `--bg-active`: `#D9E4EC`
 - `--bg-auth-panel`: `#FAFCFD` (latar panel form autentikasi kanan — tidak menyilaukan)
-- `--border-card`: `#D1DCE5` (tepi pelat tunggal `1px`, **tanpa `box-shadow` pada kartu statis**)
-- `--border-rule`: `#E2EAF0` (pemisah baris tabel & antarsel KPI)
-- `--border-ctl`: `#B5C4D1` (tepi jelas input, select, dan tombol sekunder — kontras lebih tegas pada Login & Filter)
+- `--border-card`: `rgba(14, 23, 34, 0.09)` (border optik translusen + bayangan ambient halus, menggantikan tampilan flat kaku)
+- `--border-rule`: `rgba(14, 23, 34, 0.065)` (pemisah baris tabel & antarsel KPI)
+- `--border-ctl`: `rgba(14, 23, 34, 0.14)` (tepi jelas input, select, dan tombol sekunder + inner highlight)
 - `--ink-primary`: `#14191F` (kontras AAA pada `#FFFFFF`)
 - `--ink-secondary`: `#3E4752`
 - `--ink-muted`: `#535D68`
@@ -109,17 +109,17 @@ Agar **Radar POA** langsung dikenali sebagai portal agregasi tingkat Direktorat 
 
 ## 5. Arsitektur Shell Baru (Two-Tier Top Header + Flush Mobile Bar + Kontrol 3-Tier)
 
-### 5.1 Baris Atas Institusional (`#app-topbar`, Tier 1 `52px`)
-- **Kontainer:** Tier 1 bertinggi `52px` (`max-width: 1440px; margin: 0 auto; padding: 0 28px; display: flex; align-items: center; justify-content: space-between;`), terintegrasi di dalam `<header id="app-topbar" class="app-topbar">` (`position: sticky; top: 0; z-index: 120; background: #FFFFFF; border-bottom: 1px solid #D1DCE5;`).
-- **Kiri:** Crest resmi Ditjen PSDKP (`28×32px`, filter `#psdkp-crest-outline`) + lockup **`RADAR POA`** + `/ Rekapitulasi Data Strategis`. **Dilarang memasang pil lencana `[Dit. POA]`**.
-- **Kanan (`.ctl-row.ctl-md`, semua tombol tepat `32px`):**
-  1. **`#sync-indicator` (`32px`):** Menampilkan dot status (`Tersinkron` / `Menyinkronkan` / `Tertunda`) + label ringkas. **Klik `#sync-indicator` HANYA membuka/menutup `#sync-popover`** (menampilkan cap waktu terakhir dan daftar status 6 satelit: `Pusat`, `SIKAP`, `Nakhoda`, `Sistik`, `Siaga`, `Operasi`). Di bagian bawah `#sync-popover` ditempatkan tombol eksplisit **`Sinkronkan Data Satelit`** (`_triggerManualSync()`) — mencegah sinkronisasi ganda & double-toast saat menutup popover.
-  2. **Pintasan Notifikasi (`#topbar-notif-btn`, `32px`):** Satu-satunya pintu masuk `Notifikasi` pada bilah utama (dengan badge angka unread bila `> 0` dan status `.active` biru maritim saat halaman Notifikasi terbuka).
-  3. **Akun Pengguna (`#topbar-user-btn`, `32px`):** Inisial/ikon user + nama singkat + chevron yang membuka dropdown menu akun (Identitas & Role, Admin Panel bila `SUPERADMIN`/`DIREKTUR`, dan tombol `Keluar`).
+### 5.1 Baris Atas Institusional (`#app-topbar`, Tier 1 `56px` Deep Admiralty)
+- **Kontainer:** Tier 1 bertinggi `56px` berlatar gradien maritim *Deep Admiralty* (`#092234 → #0B3B54 → #0B4F6C`) dengan watermark grid radar nautikal tipis (`::before`), terintegrasi di dalam `<header id="app-topbar" class="app-topbar">` (`position: sticky; top: 0; z-index: 120;`).
+- **Kiri:** Crest resmi Ditjen PSDKP (`30×34px`, filter `#psdkp-crest-outline`) + lockup **`RADAR POA`** dan subjudul **`Rekapitulasi Data Strategis · Dit. POA`**. **Dilarang memasang pil lencana `[Dit. POA]`**.
+- **Kanan (`.ctl-row.ctl-md`, kontrol kaca translusen tepat `32px`):**
+  1. **`#sync-indicator` (`32px`):** Menampilkan dot live status berdenyut halus (`.sync-live-dot`) + label ringkas di atas kaca translusen (`rgba(255,255,255,0.13)`). **Klik `#sync-indicator` HANYA membuka/menutup `#sync-popover`** (menampilkan cap waktu terakhir dan daftar status 6 satelit: `Pusat`, `SIKAP`, `Nakhoda`, `Sistik`, `Siaga`, `Operasi`). Di bagian bawah `#sync-popover` ditempatkan tombol eksplisit **`Sinkronkan Data Satelit`** (`_triggerManualSync()`).
+  2. **Pintasan Notifikasi (`#topbar-notif-btn`, `32px`):** Satu-satunya pintu masuk `Notifikasi` pada bilah utama (dengan badge angka unread bila `> 0` dan status aktif kontras tinggi saat halaman Notifikasi terbuka).
+  3. **Akun Pengguna (`#topbar-user-btn`, `32px`):** Avatar inisial 2-huruf putih kontras tinggi + nama singkat + chevron berotasi pegas yang membuka popover kaca menu akun (Identitas & Role, Admin Panel bila `SUPERADMIN`/`DIREKTUR`, dan tombol `Keluar`).
 
-### 5.2 Navigasi Utama: Tier 2 Tab Bar (Desktop) & Flush Bottom Tab Bar (Mobile)
-- **Desktop (`> 768px`, `#app-nav-bar` bertinggi `44px` di bawah Tier 1):**
-  - Sejajar lurus pada grid `28px` dengan logo dan judul `h1`:
+### 5.2 Navigasi Utama: Tier 2 Frosted Tab Bar (Desktop) & Flush Bottom Tab Bar (Mobile)
+- **Desktop (`> 768px`, `#app-nav-bar` bertinggi `44px` *frosted glass* di bawah Tier 1):**
+  - Berlatar kaca translusen (`--bg-header-frost`, `backdrop-filter: blur(20px) saturate(180%)`) dengan bayangan lembut dan garis bawah sejajar lurus pada grid `28px`:
     - **Utama:** `Ikhtisar` (`overview`), `Kegiatan` (`kegiatan` — hanya `SUPERADMIN`/`DIREKTUR`/`KADIV`), `Kapal Terbaik` (`kapal-terbaik`), `Riwayat` (`riwayat`).
     - **Sistem (dipisah garis vertikal `#D1DCE5`):** `Master Data` (`master-data` — hanya `SUPERADMIN`/`DIREKTUR`), `Admin` (`kelola-akun` — hanya `SUPERADMIN`/`DIREKTUR`). *`Notifikasi` tidak diduplikasi sebagai tab.*
   - Tab aktif memakai teks `#0B4F6C` (`font-weight: 600`) dengan indikator garis bawah meluncur `2px solid #0B4F6C` (`.topnav-indicator`).
@@ -218,7 +218,7 @@ Setiap dari **34 Kapal Pengawas Besar** di peta diwakili oleh **ikon SVG siluet 
 2. **Zero Huruf Teknis / Non-`Public Sans`:** Termasuk di dalam Leaflet map & Chart.js tooltips (`Helvetica Neue`/`Lucida Console` terlarang).
 3. **Zero Jargon Developer & Database di UI:** Dilarang tampil `PRD §6`, `SUPERSEDED & VOID`, `USR-DIR-01`, `RUSAK_RINGAN`, `715 (OPERASIONAL)` tanpa konversi label manusiawi.
 4. **Zero Kata Terlarang:** Dilarang keras memakai istilah non-resmi atau singkatan keliru terkait ruang kemudi/direktorat di kode, CSS, dan dokumen.
-5. **Zero Anti-Patterns Teknis:** Tidak ada `transition: all`, `text-transform: uppercase`, `scale(0)`, `backdrop-filter` blur header, warna violet `#2B3674`, inline `style="height:..."`, maupun form input harian satelit.
+5. **Zero Anti-Patterns Teknis:** Tidak ada `transition: all`, `text-transform: uppercase`, `scale(0)`, backdrop blur tak terkendali yang membuat teks kabur, warna violet `#2B3674`, inline `style="height:..."`, maupun form input harian satelit.
 
 ### Automated Playwright Acceptance Gates (`tests/visual_audit.js` — 12 Skenario)
 | Gate | Target Ambang Batas Kelulusan |
